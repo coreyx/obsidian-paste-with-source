@@ -1,0 +1,16 @@
+{
+  "name": "source-link",
+  "version": "1.0.0",
+  "description": "Add source links when pasting content from the web.",
+  "main": "main.js",
+  "scripts": {
+    "build": "ts-node build.ts",
+    "deploy": "ts-node deploy.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.115",
+    "obsidian": "latest",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
