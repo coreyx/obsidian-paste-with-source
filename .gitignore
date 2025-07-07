@@ -1,0 +1,47 @@
+# Node modules
+node_modules/
+
+# Build output
+dist/
+*.js
+*.js.map
+
+# Plugin manifest cache (optional)
+.obsidian/plugins.json
+
+# Plugin local settings
+data.json
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.sw?
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional: test coverage
+coverage/
+
+# Executable files
+*.exe
+*.dll
+*.pdb
+
+# .NET
+*.runtimeconfig.json
+*.deps.json
