@@ -9,19 +9,23 @@ import {
 import { execFile } from "child_process";
 import * as path from "path";
 
+type InterceptShortcut = "ctrl+v" | "shift+insert" | "both";
+
 type PasteMode = "default+source" | "clipboard+source";
 
 type CitationStyle = "OneNote" | "Source";
 
 interface PasteWithSourceSettings {
   interceptPaste: boolean;
+  interceptShortcut: InterceptShortcut;
   pasteMode: PasteMode;
   citationStyle: CitationStyle;
   useUrlAsLinkLabel: boolean;
 }
 
 const DEFAULT_SETTINGS: PasteWithSourceSettings = {
-  interceptPaste: false,
+  interceptPaste: true,
+  interceptShortcut: "both",
   pasteMode: "default+source",
   citationStyle: "OneNote",
   useUrlAsLinkLabel: true,
@@ -72,36 +76,40 @@ export default class PasteWithSourcePlugin extends Plugin {
     );
 
     // Intercept paste via keyboard shortcut
-    this.registerDomEvent(document, "keydown", async (event: KeyboardEvent) => {
-      if (!this.settings.interceptPaste) return;
+	this.registerDomEvent(document, "keydown", async (event: KeyboardEvent) => {
+	  if (!this.settings.interceptPaste) return;
 
-      const isMac = navigator.platform.toUpperCase().includes("MAC");
-      const isPasteShortcut =
-        (isMac && event.metaKey && event.key === "v") ||
-        (!isMac && event.ctrlKey && event.key === "v") ||
-        (!isMac && event.shiftKey && event.key === "Insert");
+	  const isMac = navigator.platform.toUpperCase().includes("MAC");
+	  const isCtrlV =
+		(isMac && event.metaKey && event.key === "v") ||
+		(!isMac && event.ctrlKey && event.key === "v");
+	  const isShiftInsert = !isMac && event.shiftKey && event.key === "Insert";
 
-      if (!isPasteShortcut) return;
+	  const shouldIntercept =
+		(this.settings.interceptShortcut === "both" && (isCtrlV || isShiftInsert)) ||
+		(this.settings.interceptShortcut === "ctrl+v" && isCtrlV) ||
+		(this.settings.interceptShortcut === "shift+insert" && isShiftInsert);
 
-      const editor = this.app.workspace.activeEditor?.editor;
-      if (!editor) return;
+	  if (!shouldIntercept) return;
 
-      const sourceUrl = await this.getClipboardSourceUrl();
+	  const editor = this.app.workspace.activeEditor?.editor;
+	  if (!editor) return;
 
-      if (this.settings.pasteMode === "clipboard+source") {
-        event.preventDefault();
-        const clipboardText = await navigator.clipboard.readText();
-        const sourceLink = sourceUrl ? this.getSourceLinkMarkdown(sourceUrl) : "";
-        editor.replaceSelection(clipboardText + sourceLink);
-      } else if (this.settings.pasteMode === "default+source") {
-        // Let default paste happen, then append source
-        setTimeout(() => {
-          if (sourceUrl) {
-            editor.replaceSelection(this.getSourceLinkMarkdown(sourceUrl));
-          }
-        }, 50);
-      }
-    });
+	  const sourceUrl = await this.getClipboardSourceUrl();
+
+	  if (this.settings.pasteMode === "clipboard+source") {
+		event.preventDefault();
+		const clipboardText = await navigator.clipboard.readText();
+		const sourceLink = sourceUrl ? this.getSourceLinkMarkdown(sourceUrl) : "";
+		editor.replaceSelection(clipboardText + sourceLink);
+	  } else if (this.settings.pasteMode === "default+source") {
+		setTimeout(() => {
+		  if (sourceUrl) {
+			editor.replaceSelection(this.getSourceLinkMarkdown(sourceUrl));
+		  }
+		}, 50);
+	  }
+	});
   }
   
   getSourceLinkMarkdown(url: string): string {
@@ -198,7 +206,7 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Intercept Paste")
-      .setDesc("Automatically replace Ctrl+V or Shift+Insert with a source-aware paste")
+      .setDesc("Automatically replace paste operation with a source-aware paste")
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.interceptPaste)
@@ -207,6 +215,21 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+	new Setting(containerEl)
+	  .setName("Intercept Shortcut")
+	  .setDesc("Choose which keyboard shortcut(s) to intercept")
+	  .addDropdown((dropdown) =>
+		dropdown
+		  .addOption("both", "Both Ctrl+V and Shift+Insert")
+		  .addOption("ctrl+v", "Ctrl+V only")
+		  .addOption("shift+insert", "Shift+Insert only")
+		  .setValue(this.plugin.settings.interceptShortcut)
+		  .onChange(async (value: string) => {
+			this.plugin.settings.interceptShortcut = value as InterceptShortcut;
+			await this.plugin.saveSettings();
+		  })
+	  );
 
     new Setting(containerEl)
       .setName("Paste Mode")
@@ -228,7 +251,7 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
       .addDropdown((dropdown) =>
         dropdown
 		  .addOption("OneNote", "OneNote-style From <...> links")
-          .addOption("Source", "Simple 'Source' link")
+          .addOption("Source", "Simple 'Source' markdown link")
           .setValue(this.plugin.settings.citationStyle)
           .onChange(async (value: string) => {
             this.plugin.settings.citationStyle = value as CitationStyle;
