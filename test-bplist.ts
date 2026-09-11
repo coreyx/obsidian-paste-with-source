@@ -239,7 +239,64 @@ function runTests() {
   assert.strictEqual(BplistParser.extractSourceUrl(nonHttpBuf), "");
   console.log("  [PASS] Test 4: Non-http URL filtered out");
 
-  console.log("All BplistParser tests passed successfully! 🎉");
+  console.log("\nRunning Windows CF_HTML parser unit tests...");
+
+  function parseWindowsSourceUrl(buf: Buffer): string {
+    try {
+      const text = buf.toString("utf8");
+      const match = text.match(/SourceURL:(https?:\/\/[^\r\n]+)/i);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    } catch {
+      // ignore
+    }
+    return "";
+  }
+
+  // Windows Test 1: Standard Chromium CF_HTML header
+  const sampleCfHtml = Buffer.from(
+    "Version:0.9\r\nStartHTML:0000000105\r\nEndHTML:0000000780\r\nStartFragment:0000000141\r\nEndFragment:0000000744\r\nSourceURL:https://en.wikipedia.org/wiki/Obsidian_(software)\r\n<html><body><!--StartFragment-->Obsidian<!--EndFragment--></body></html>",
+    "utf-8"
+  );
+  assert.strictEqual(
+    parseWindowsSourceUrl(sampleCfHtml),
+    "https://en.wikipedia.org/wiki/Obsidian_(software)"
+  );
+  console.log("  [PASS] Win Test 1: Standard CF_HTML with CRLF");
+
+  // Windows Test 2: CF_HTML with LF only and lowercase sourceurl
+  const sampleLfHtml = Buffer.from(
+    "Version:0.9\nSourceUrl:https://example.com/page?id=123&ref=test\n<html><body>Fragment</body></html>",
+    "utf-8"
+  );
+  assert.strictEqual(
+    parseWindowsSourceUrl(sampleLfHtml),
+    "https://example.com/page?id=123&ref=test"
+  );
+  console.log("  [PASS] Win Test 2: Case-insensitive SourceUrl with LF");
+
+  // Windows Test 3: HTML content missing SourceURL header
+  const noSourceHtml = Buffer.from("<html><body><p>Hello world without source</p></body></html>", "utf-8");
+  assert.strictEqual(parseWindowsSourceUrl(noSourceHtml), "");
+  console.log("  [PASS] Win Test 3: Missing SourceURL header returns empty string");
+
+  // Windows Test 4: Empty buffer
+  assert.strictEqual(parseWindowsSourceUrl(Buffer.alloc(0)), "");
+  console.log("  [PASS] Win Test 4: Empty buffer returns empty string");
+
+  // Performance benchmark: 10,000 parses
+  const iterations = 10000;
+  const start = process.hrtime.bigint();
+  for (let i = 0; i < iterations; i++) {
+    parseWindowsSourceUrl(sampleCfHtml);
+  }
+  const end = process.hrtime.bigint();
+  const totalMs = Number(end - start) / 1_000_000;
+  const perOpUs = (totalMs / iterations) * 1000;
+  console.log(`  [BENCHMARK] ${iterations} operations in ${totalMs.toFixed(2)}ms (${perOpUs.toFixed(3)} µs per operation)`);
+
+  console.log("\nAll unit tests and benchmarks passed successfully! 🎉");
 }
 
 runTests();

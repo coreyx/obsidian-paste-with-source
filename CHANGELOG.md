@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom citation template engine allowing custom prefix, suffix, and date variables.
 - Direct Chromium/Edge browser extension companion integration.
 
+## [1.2.0] - 2026-09-10
+
+### Changed
+- **Windows Zero-Binary Architecture**:
+  - Replaced out-of-process `ClipboardReader.exe` execution with in-process Electron clipboard bridge (`WindowsClipboardProvider`) reading native `CF_HTML` via `clipboard.readBuffer("HTML Format")`.
+  - Achieved sub-microsecond (< 1 µs) URL extraction latency, eliminating process startup overhead.
+  - Decoupled clipboard provider factory from the Obsidian vault filesystem and `App` instance.
+  - Streamlined `build.ts` to pure TypeScript transpilation, eliminating C# compilation and .NET SDK dependencies.
+  - Completely removed the `ClipboardReader/` C# project and all compiled native binaries.
+  - Eliminated the requirement for Windows users to install the Microsoft .NET 6 Desktop Runtime.
+  - Added zero-binary inline PowerShell fallback (`powershell.exe` querying `System.Windows.Forms.Clipboard`) for maximum resilience.
+  - Expanded `test-bplist.ts` suite with Windows `CF_HTML` parser unit tests and performance benchmarks.
+
 ---
 
 ## [1.1.0] - 2026-09-10

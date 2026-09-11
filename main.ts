@@ -3,12 +3,9 @@ import {
   PluginSettingTab,
   Setting,
   Editor,
-  FileSystemAdapter,
-  Menu,
-  App
+  Menu
 } from "obsidian";
-import { execFile } from "child_process";
-import * as path from "path";
+import { exec } from "child_process";
 
 type InterceptShortcut = "ctrl+v" | "shift+insert" | "both";
 
@@ -210,40 +207,65 @@ export class MacOSClipboardProvider implements IClipboardSourceProvider {
 }
 
 /**
- * Windows Native Process Clipboard Provider
- * Invokes bundled ClipboardReader.exe to parse CF_HTML
+ * Windows In-Process Clipboard Provider
+ * Reads raw CF_HTML via Electron clipboard.readBuffer("HTML Format")
+ * with a zero-binary PowerShell CLI fallback for maximum resilience.
  */
 export class WindowsClipboardProvider implements IClipboardSourceProvider {
-  constructor(private app: App) {}
-
   async getSourceUrl(): Promise<string> {
+    // 1. In-process Electron raw buffer read (< 1ms)
+    try {
+      const electron = (window as any).require
+        ? (window as any).require("electron")
+        : require("electron");
+
+      if (electron && electron.clipboard) {
+        // Try standard registered Windows format
+        let buf: Buffer = electron.clipboard.readBuffer("HTML Format");
+
+        // Try extended OS clipboard format identifier if standard returns empty
+        if (!buf || buf.length === 0) {
+          buf = electron.clipboard.readBuffer('electron application/osclipboard;format="HTML Format"');
+        }
+
+        if (buf && buf.length > 0) {
+          const url = this.parseSourceUrlFromBuffer(buf);
+          if (url) return url;
+        }
+      }
+    } catch (err) {
+      console.warn("PasteWithSource: Electron clipboard read failed on Windows:", err);
+    }
+
+    // 2. Zero-binary fallback: Windows built-in PowerShell CLI
+    return this.executePowerShellFallback();
+  }
+
+  parseSourceUrlFromBuffer(buf: Buffer): string {
+    try {
+      const text = buf.toString("utf8");
+      const match = text.match(/SourceURL:(https?:\/\/[^\r\n]+)/i);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    } catch {
+      // ignore
+    }
+    return "";
+  }
+
+  private async executePowerShellFallback(): Promise<string> {
     return new Promise((resolve) => {
-      (process as any).noAsar = true;
+      const script = "Add-Type -AssemblyName System.Windows.Forms; $h = [System.Windows.Forms.Clipboard]::GetText([System.Windows.Forms.TextDataFormat]::Html); if ($h -match 'SourceURL:(https?://[^\\r\\n]+)') { $matches[1] }";
+      const cmd = `powershell.exe -NoProfile -NonInteractive -Command "${script}"`;
 
-      const adapter = this.app.vault.adapter;
-      const basePath = (adapter instanceof FileSystemAdapter)
-        ? adapter.getBasePath()
-        : "";
-
-      const exePath = path.join(
-        basePath,
-        ".obsidian",
-        "plugins",
-        "paste-with-source",
-        "ClipboardReader.exe"
-      );
-
-      execFile(exePath, [], (error, stdout, stderr) => {
-        if (error) {
-          console.error("ClipboardReader.exe failed:", error);
-          if (stderr) console.error("stderr:", stderr);
+      exec(cmd, (error, stdout) => {
+        if (error || !stdout) {
           resolve("");
           return;
         }
-
-        const sourceUrl = typeof stdout === "string" ? stdout.trim() : "";
-        const isValid = sourceUrl.startsWith("http");
-        resolve(isValid ? sourceUrl : "");
+        const url = stdout.trim();
+        resolve(url.startsWith("http") ? url : "");
       });
     });
   }
@@ -258,11 +280,11 @@ export class NullClipboardProvider implements IClipboardSourceProvider {
   }
 }
 
-export function createClipboardProvider(app: App): IClipboardSourceProvider {
+export function createClipboardProvider(): IClipboardSourceProvider {
   if (process.platform === "darwin") {
     return new MacOSClipboardProvider();
   } else if (process.platform === "win32") {
-    return new WindowsClipboardProvider(app);
+    return new WindowsClipboardProvider();
   }
   return new NullClipboardProvider();
 }
@@ -277,7 +299,7 @@ export default class PasteWithSourcePlugin extends Plugin {
 
   async onload() {
     await this.loadSettings();
-    this.clipboardProvider = createClipboardProvider(this.app);
+    this.clipboardProvider = createClipboardProvider();
     this.addSettingTab(new PasteWithSourceSettingTab(this));
 
     this.addCommand({

@@ -37,11 +37,4 @@ yarn-error.log*
 # Optional: test coverage
 coverage/
 
-# Executable files
-*.exe
-*.dll
-*.pdb
 
-# .NET
-*.runtimeconfig.json
-*.deps.json

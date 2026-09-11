@@ -6,7 +6,7 @@ This Obsidian plugin enhances your clipboard pasting workflow by automatically a
 
 - 📎 **Source-Aware Pasting**: Appends the origin webpage URL when pasting content copied from browsers
 - 🍎 **macOS Support**: In-process Electron clipboard extraction supporting Chromium browsers (Google Chrome, Arc, Microsoft Edge, Brave, Opera) and Apple Safari (via built-in `bplist00` WebArchive decoding)
-- 🪟 **Windows Support**: Native extraction via bundled lightweight helper (`ClipboardReader.exe`)
+- 🪟 **Windows Support**: In-process Electron clipboard extraction with native `CF_HTML` parsing and zero external binary dependencies
 - ⌨️ **Keyboard Interception**: Optionally intercepts `Cmd+V` (macOS) or `Ctrl+V` / `Shift+Insert` (Windows) to auto-append source
 - 🖱 **Context Menu Actions**: Adds right-click editor menu options for source-aware pasting
 - 🧾 **Multiple Citation Styles**:
@@ -20,8 +20,8 @@ This Obsidian plugin enhances your clipboard pasting workflow by automatically a
 
 | Platform | Supported | Details & Requirements |
 | :--- | :---: | :--- |
-| **macOS Desktop** | ✅ Yes | In-process Electron extraction. No external binary or runtime installation required. Works with Chrome, Safari, Arc, Edge, Brave. |
-| **Windows Desktop** | ✅ Yes | Uses bundled `ClipboardReader.exe`. Requires [.NET 6 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/6.0). |
+| **macOS Desktop** | ✅ Yes | In-process Electron extraction. Zero external binary or runtime installation required. Works with Chrome, Safari, Arc, Edge, Brave. |
+| **Windows Desktop** | ✅ Yes | In-process Electron extraction (`CF_HTML`). Zero external binary or runtime installation required (.NET no longer needed). Works with Chrome, Edge, Firefox, Brave, Arc, Opera. |
 | **Linux Desktop** | ⚠️ No | Linux clipboard targets currently unsupported. |
 | **Mobile (iOS/Android)**| ⚠️ No | Obsidian Mobile does not support native desktop clipboard APIs. |
 
@@ -34,7 +34,6 @@ Copy `main.js` and `manifest.json` from the [`dist/`](dist/) folder into your Ob
 ```bash
 <Your-Vault>/.obsidian/plugins/paste-with-source/
 ```
-*(On Windows, also copy `ClipboardReader.exe` into that folder).*
 
 Then enable the plugin in Obsidian under **Settings → Community Plugins**.
 
@@ -113,9 +112,9 @@ If "Intercept Paste" is enabled, the plugin intercepts:
 
 ## 🛠 Build Details
 
-- **TypeScript Plugin**: Transpiles `main.ts` into `main.js` using `tsc`.
-- **Windows Companion**: Compiles `ClipboardReader/ClipboardReader.csproj` into `ClipboardReader.exe` using `dotnet build -c Release` (automatically skipped when building on macOS).
-- **Distribution**: Artifacts are automatically staged into the `dist/` directory.
+- **Pure TypeScript Architecture**: 100% in-process TypeScript transpiled to `main.js` using `tsc`. Zero external compilers, .NET SDKs, or native binaries required.
+- **Cross-Platform**: Unified codebase running on both macOS and Windows via Electron's clipboard APIs.
+- **Distribution**: Build outputs (`main.js` and `manifest.json`) are staged automatically into [`dist/`](dist/).
 
 ---
 
@@ -123,21 +122,18 @@ If "Intercept Paste" is enabled, the plugin intercepts:
 
 ```text
 paste-with-source/
-├── ClipboardReader/          # Native C# helper for Windows CF_HTML
-│   ├── ClipboardReader.csproj
-│   └── Program.cs
 ├── dist/                     # Distribution files (ready to copy to vault)
 │   ├── main.js
-│   ├── manifest.json
-│   └── ClipboardReader.exe   # (Windows only)
+│   └── manifest.json
 ├── spec/                     # Architecture, requirements, and tech specs
 │   ├── paste-with-source/
-│   └── macos-support/
-├── main.ts                   # Core plugin logic & macOS Electron provider
+│   ├── macos-support/
+│   └── windows-zero-binary/
+├── main.ts                   # Core plugin logic & cross-platform Electron providers
 ├── manifest.json             # Obsidian plugin manifest
-├── build.ts                  # Cross-platform build script
+├── build.ts                  # Pure TypeScript build script
 ├── deploy.ts                 # Vault deployment script
-└── test-bplist.ts            # Unit tests for Safari WebArchive decoder
+└── test-bplist.ts            # Unit tests for macOS WebArchive & Windows CF_HTML parsers
 ```
 
 ---
