@@ -162,8 +162,41 @@ export class BplistParser {
 }
 
 /**
+ * Executes a clipboard read operation while suppressing Electron's renderer-process
+ * deprecation warnings in the DevTools console.
+ */
+function safelyReadClipboard<T>(fn: () => T): T {
+  const proc = typeof process !== "undefined" ? (process as any) : null;
+  const prevNoDeprecation = proc ? proc.noDeprecation : undefined;
+  const originalWarn = console.warn;
+
+  try {
+    if (proc) {
+      proc.noDeprecation = true;
+    }
+    console.warn = (...args: any[]) => {
+      if (
+        args.length > 0 &&
+        typeof args[0] === "string" &&
+        (args[0].includes("clipboard") || args[0].includes("contextBridge"))
+      ) {
+        return;
+      }
+      originalWarn.apply(console, args);
+    };
+    return fn();
+  } finally {
+    console.warn = originalWarn;
+    if (proc) {
+      proc.noDeprecation = prevNoDeprecation;
+    }
+  }
+}
+
+/**
  * macOS In-Process Clipboard Provider
- * Supports Chromium browsers (Chrome, Edge, Brave, Arc, Opera) and Safari
+ * Reads org.chromium.source-url (Chromium) and com.apple.webarchive (Safari)
+ * directly from Electron's in-process clipboard API.
  */
 export class MacOSClipboardProvider implements IClipboardSourceProvider {
   async getSourceUrl(): Promise<string> {
@@ -180,13 +213,13 @@ export class MacOSClipboardProvider implements IClipboardSourceProvider {
       const clipboard = electron.clipboard;
 
       // 1. Check Chromium family (org.chromium.source-url)
-      const chromiumUrl = clipboard.read("org.chromium.source-url");
+      const chromiumUrl = safelyReadClipboard(() => clipboard.read("org.chromium.source-url"));
       if (typeof chromiumUrl === "string" && chromiumUrl.trim().startsWith("http")) {
         return chromiumUrl.trim();
       }
 
       // 2. Check Safari (com.apple.webarchive)
-      const webArchiveBuf: Buffer = clipboard.readBuffer("com.apple.webarchive");
+      const webArchiveBuf: Buffer = safelyReadClipboard(() => clipboard.readBuffer("com.apple.webarchive"));
       if (webArchiveBuf && webArchiveBuf.length > 8) {
         const safariUrl = BplistParser.extractSourceUrl(webArchiveBuf);
         if (safariUrl && safariUrl.trim().startsWith("http")) {
@@ -195,7 +228,7 @@ export class MacOSClipboardProvider implements IClipboardSourceProvider {
       }
 
       // 3. Fallback: public.url
-      const publicUrl = clipboard.read("public.url");
+      const publicUrl = safelyReadClipboard(() => clipboard.read("public.url"));
       if (typeof publicUrl === "string" && publicUrl.trim().startsWith("http")) {
         return publicUrl.trim();
       }
@@ -220,13 +253,14 @@ export class WindowsClipboardProvider implements IClipboardSourceProvider {
         : require("electron");
 
       if (electron && electron.clipboard) {
-        // Try standard registered Windows format
-        let buf: Buffer = electron.clipboard.readBuffer("HTML Format");
-
-        // Try extended OS clipboard format identifier if standard returns empty
-        if (!buf || buf.length === 0) {
-          buf = electron.clipboard.readBuffer('electron application/osclipboard;format="HTML Format"');
-        }
+        // Read buffer with deprecation warning suppression
+        let buf: Buffer = safelyReadClipboard(() => {
+          let b = electron.clipboard.readBuffer("HTML Format");
+          if (!b || b.length === 0) {
+            b = electron.clipboard.readBuffer('electron application/osclipboard;format="HTML Format"');
+          }
+          return b;
+        });
 
         if (buf && buf.length > 0) {
           const url = this.parseSourceUrlFromBuffer(buf);
