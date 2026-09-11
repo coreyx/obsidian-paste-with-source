@@ -10,11 +10,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Cross-platform support investigation for macOS and Linux clipboard providers.
 - Custom citation template engine allowing custom prefix, suffix, and date variables.
 - Direct Chromium/Edge browser extension companion integration.
 
 ---
+
+## [1.1.0] - 2026-09-10
+
+### Added
+- **Native macOS Support**:
+  - In-process Electron clipboard integration (`MacOSClipboardProvider`) using `require('electron').clipboard`.
+  - Chromium browser support: extracts origin URL directly from `org.chromium.source-url` for Google Chrome, Arc, Microsoft Edge, Brave, and Opera.
+  - Safari browser support: built-in lightweight zero-dependency Apple binary property list (`bplist00`) decoder (`BplistParser`) to extract `WebResourceURL` from `com.apple.webarchive`.
+  - Zero native binary dependencies on macOS (no compilation, codesigning, or Gatekeeper friction).
+  - Native `Cmd+V` keyboard paste interception on macOS with settings UI localized for Mac.
+  - Added `"isDesktopOnly": true` to `manifest.json`.
+  - Updated `build.ts` to output clean distribution bundle in `dist/` and handle cross-platform builds gracefully.
 
 ## [1.0.0] - 2025-07-08
 

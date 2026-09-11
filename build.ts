@@ -26,18 +26,31 @@ function buildPlugin() {
 }
 
 function buildCSharp() {
-  run(`dotnet build "${csProjPath}" -c Release`);
+  if (process.platform !== "win32") {
+    console.log("> Skipping C# build (ClipboardReader.exe is only needed on Windows)");
+    return;
+  }
+  try {
+    run(`dotnet build "${csProjPath}" -c Release`);
+  } catch (e) {
+    console.warn("Warning: dotnet build failed. ClipboardReader.exe may not be updated.");
+  }
 }
 
-function copyOutputs() {
-  ensureDir(pluginOutDir);
+const distDir = path.resolve(__dirname, "dist");
 
-  // Copy plugin files
+function copyOutputs() {
+  ensureDir(distDir);
+
+  // Copy plugin files to dist/
   for (const file of pluginFiles) {
-    copyFile(path.join(__dirname, file), path.join(pluginOutDir, file));
+    const src = path.join(__dirname, file);
+    if (fs.existsSync(src)) {
+      copyFile(src, path.join(distDir, file));
+    }
   }
 
-  // Copy compiled .exe
+  // Copy compiled .exe if it exists (for Windows root and dist)
   const exePath = path.join(
     __dirname,
     "ClipboardReader",
@@ -46,7 +59,10 @@ function copyOutputs() {
     "net6.0-windows",
     "ClipboardReader.exe"
   );
-  copyFile(exePath, path.join(pluginOutDir, "ClipboardReader.exe"));
+  if (fs.existsSync(exePath)) {
+    copyFile(exePath, path.join(__dirname, "ClipboardReader.exe"));
+    copyFile(exePath, path.join(distDir, "ClipboardReader.exe"));
+  }
 }
 
 buildPlugin();

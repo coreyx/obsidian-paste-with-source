@@ -1,17 +1,35 @@
 # Release Notes: Paste with Source for Obsidian
 
-Welcome to the official release of **Paste with Source** (v1.0.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+Welcome to **Paste with Source** (v1.1.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
 
 ---
 
-## 🌟 Version 1.0.0 Release Highlights
+## 🌟 What's New in Version 1.1.0: Native macOS Support
 
-### 📎 Native Clipboard Source URL Detection
-When copying text, snippets, or articles from modern web browsers (Google Chrome, Microsoft Edge, Mozilla Firefox, Brave), the browser attaches metadata to the Windows clipboard containing the source webpage URL. **Paste with Source** leverages a bundled lightweight native companion utility (`ClipboardReader.exe`) to read the Win32 `CF_HTML` format and extract the `SourceURL` header without user intervention.
+### 🍎 In-Process macOS Clipboard Integration
+We are excited to bring full native macOS support to **Paste with Source**! 
+- **Chromium Browsers**: Automatically extracts the canonical source URL via `org.chromium.source-url` for **Google Chrome**, **Arc**, **Microsoft Edge**, **Brave**, and **Opera**.
+- **Apple Safari**: Embedded a zero-dependency in-memory Apple Binary Property List (`bplist00`) parser to extract the `WebResourceURL` directly from Safari's `com.apple.webarchive` clipboard data.
+- **Zero Native Binaries on macOS**: Operates entirely in-process using Obsidian's embedded Electron clipboard API. No native helper executable, no Gatekeeper security warnings, and no codesigning or notarization issues.
+- **Universal Architecture**: Runs natively on both **Apple Silicon** (M1/M2/M3/M4) and **Intel** Macs.
+
+### ⌨️ Native `Cmd+V` Keyboard Interception
+- Automatically intercepts `Cmd+V` on macOS keyboards when paste interception is enabled.
+- Settings UI dynamically displays Mac-specific keybindings (`Cmd+V only` / `Cmd+V (Default)`).
+
+### 📦 Enhanced Cross-Platform Build & Distribution
+- The build script now outputs clean distribution artifacts directly to [`dist/`](dist/).
+- On macOS developer machines, `npm run build` gracefully skips Windows `.NET` builds.
+
+---
+
+## 🌟 Core Features (v1.0.0 & v1.1.0)
+
+### 📎 Source-Aware Pasting
+Whenever you copy text or articles from web browsers, the plugin identifies the origin URL and appends it to your pasted notes.
 
 ### ⌨️ Transparent Paste Interception
-- **Default On**: Intercept paste events automatically when pressing `Ctrl+V` or `Shift+Insert`.
-- **Granular Keystroke Filter**: Choose whether to intercept `Ctrl+V`, `Shift+Insert`, or both.
+- **Default On**: Intercept paste events automatically when pressing `Cmd+V` (macOS) or `Ctrl+V` / `Shift+Insert` (Windows).
 - **Flexible Modes**:
   - **Default Handler + Source** (`default+source`): Permits Obsidian's native rich markdown paste processing to run normally, then appends the citation link 50ms later.
   - **Clipboard Text + Source** (`clipboard+source`): Intercepts the raw plain text from `navigator.clipboard` and pastes text and citation in a single atomic editor replacement.
@@ -39,52 +57,43 @@ When copying text, snippets, or articles from modern web browsers (Google Chrome
 - **Context Menu**: Right-click anywhere in the Obsidian editor to trigger:
   - `Paste (Default Handler) + Source URL`
   - `Paste Clipboard with Source URL`
-- **Command Palette**: Access actions via `Ctrl+P` / `Cmd+P` without overwriting default clipboard habits.
+- **Command Palette**: Access actions via `Cmd+P` (macOS) / `Ctrl+P` (Windows).
 
 ---
 
-## 💻 System Requirements
+## 💻 System Compatibility
 
-| Requirement | Specification |
-| :--- | :--- |
-| **Obsidian Version** | Desktop App `v0.15.0` or later |
-| **Operating System** | Microsoft Windows 10 or Windows 11 |
-| **Architecture** | x64 or ARM64 (with Windows x64 emulation) |
-| **Runtime Dependency** | [.NET 6.0 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/6.0) |
-| **Browser Compatibility** | Any browser providing `CF_HTML` `SourceURL` on copy (Chrome, Edge, Firefox, Brave, Opera) |
+| Requirement | macOS | Windows |
+| :--- | :--- | :--- |
+| **Obsidian Version** | Desktop App `v0.15.0`+ | Desktop App `v0.15.0`+ |
+| **Operating System** | macOS 10.15 (Catalina) through macOS 15+ (Sequoia) | Windows 10 or Windows 11 |
+| **Architecture** | Apple Silicon (`arm64`) & Intel (`x86_64`) | x64 & ARM64 |
+| **Runtime Dependency** | *None* (runs in-process via Electron) | [.NET 6.0 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/6.0) |
+| **Supported Browsers** | Chrome, Safari, Arc, Edge, Brave, Opera | Chrome, Edge, Firefox, Brave, Opera |
 
-> [!WARNING]  
-> **Platform Restriction**: This plugin requires Windows and does not support macOS, Linux, or Obsidian Mobile (iOS/Android) due to its dependency on the native Win32 `ClipboardReader.exe` helper.
+> [!NOTE]  
+> Mobile platforms (iOS and Android) and Linux desktop clipboard targets are currently not supported.
 
 ---
 
-## 📦 Installation & Setup
+## 📦 Installation & Quickstart
 
-### Building and Deploying from Source
-
-1. Clone or download this repository into your development directory:
-   ```powershell
-   git clone https://github.com/your-username/paste-with-source.git
-   cd paste-with-source
+### Option 1: Copy Distribution Files
+1. Copy `main.js` and `manifest.json` from [`dist/`](dist/) into:
+   ```bash
+   <Your-Obsidian-Vault>/.obsidian/plugins/paste-with-source/
    ```
+   *(On Windows, also include `ClipboardReader.exe` in that directory).*
+2. Open Obsidian, go to **Settings → Community Plugins**, click **Reload plugins**, and enable **Paste with Source**.
 
-2. Install dependencies:
-   ```powershell
-   npm install
-   ```
-
-3. Build the TypeScript plugin and compile the C# native helper:
-   ```powershell
-   npm run build
-   ```
-
-4. Deploy directly to your Obsidian vault:
-   ```powershell
-   npm run deploy
-   ```
-   *(By default, this copies files to `%USERPROFILE%\Documents\Obsidian Vault\.obsidian\plugins\paste-with-source`)*
-
-5. In Obsidian, navigate to **Settings** > **Community Plugins**, reload plugins, and enable **Paste with Source**.
+### Option 2: Build from Source
+```bash
+git clone https://github.com/your-username/paste-with-source.git
+cd paste-with-source
+npm install
+npm run build
+npm run deploy
+```
 
 ---
 
@@ -95,7 +104,7 @@ Open Obsidian Settings and locate **Paste with Source Settings**:
 | Option | Default | Description |
 | :--- | :--- | :--- |
 | **Intercept Paste** | `true` (Enabled) | Automatically replaces keyboard paste keystrokes with source-aware pasting. |
-| **Intercept Shortcut** | `Both Ctrl+V and Shift+Insert` | Selects which shortcut to monitor: `Both`, `Ctrl+V only`, or `Shift+Insert only`. |
+| **Intercept Shortcut** | Platform default (`Cmd+V` on macOS; `Both` on Windows) | Choose which shortcut to monitor (`Cmd+V`, `Both`, `Ctrl+V only`, or `Shift+Insert only`). |
 | **Paste Mode** | `Default handler + source` | Chooses between running Obsidian's rich paste first or inserting raw clipboard plain text. |
 | **Citation Style** | `OneNote` | Formats citations either as OneNote-style `From <...>` or markdown quote `> — ...`. |
 | **Use URL as Link Label** | `true` (Enabled) | Renders links as `[https://...](https://...)` instead of `[Source](https://...)`. |
@@ -104,6 +113,8 @@ Open Obsidian Settings and locate **Paste with Source Settings**:
 
 ## 🔍 Troubleshooting & Known Behaviors
 
-- **Source URL not appending**: The application from which content was copied must write the registered Windows `CF_HTML` format with a `SourceURL` header to the clipboard. Web browsers do this when copying text; plain text editors (e.g. Notepad) or certain terminal apps do not.
-- **Antivirus / Execution Warnings**: Because `ClipboardReader.exe` is a standalone executable invoked by Electron via Node `child_process.execFile`, enterprise security software or Windows Defender SmartScreen might inspect the local binary. Ensure the plugin directory is allowed in your local environment.
-- **50ms Delay in Default Mode**: In `Default handler + source` mode, the citation is inserted with a 50ms delay to allow Obsidian's built-in paste pipeline to complete. On high-latency systems or during heavy vault indexing, if paste interleaves, switch to `Paste content + source` (`clipboard+source`) mode for immediate atomic replacement.
+- **Source URL not appearing**:
+  - **macOS**: Ensure you are copying from a supported browser (Google Chrome, Apple Safari, Arc, Microsoft Edge, Brave, Opera). Browsers that do not populate `org.chromium.source-url` or `com.apple.webarchive` (such as Mozilla Firefox for regular text selections) cannot provide source URLs.
+  - **Windows**: Content must be copied from an application that populates the `CF_HTML` format with a `SourceURL:` header. Ensure [.NET 6.0 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/6.0) is installed.
+- **50ms Delay in Default Mode**: In `Default handler + source` mode, the citation is appended after a 50ms delay to allow Obsidian's internal markdown parser to finish. If cursor positioning feels inconsistent during heavy load, switch to `Paste content + source` (`clipboard+source`) mode for atomic paste replacement.
+
