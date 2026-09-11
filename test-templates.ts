@@ -23,12 +23,13 @@ Module.prototype.require = function (id: string, ...rest: any[]) {
   return originalRequire.apply(this, [id, ...rest]);
 };
 
-import {
+import PasteWithSourcePlugin, {
   TemplateEngine,
   PresetManager,
   BUILTIN_PRESETS,
   TemplatePreset,
   PresetImportExportService,
+  DEFAULT_SETTINGS,
 } from "./main";
 
 function assert(condition: boolean, message: string) {
@@ -270,4 +271,74 @@ console.log("Running TemplateEngine unit tests...");
   console.log(`\n  [BENCHMARK] ${iterations} template renders in ${totalMs.toFixed(2)}ms (${perOpUs.toFixed(3)} µs per render)`);
 }
 
-console.log("\nAll TemplateEngine and Preset tests passed successfully! 🎉\n");
+// Test 10: Active Preset Slot Switching & Template Resolution
+(async () => {
+  console.log("\nRunning Preset Slot Switching & Resolution tests...");
+
+  const plugin = new PasteWithSourcePlugin({} as any, {} as any);
+  plugin.settings = Object.assign({}, DEFAULT_SETTINGS);
+  plugin.saveData = async () => {};
+
+  // Initial state: Slot A active
+  assert(plugin.settings.activeSlot === "A", "Initial activeSlot is 'A'");
+  const initialActive = plugin.getActiveTemplate();
+  assert(initialActive.slot === "A", "Active template slot is 'A'");
+  assert(initialActive.template === DEFAULT_SETTINGS.templateString, "Slot A uses editable templateString");
+  assert(
+    plugin.getSourceLinkMarkdown("https://example.com") === "\n\nFrom <[https://example.com](https://example.com)>",
+    "getSourceLinkMarkdown uses Slot A template initially"
+  );
+
+  // Switch to Slot B (Minimal Domain)
+  await plugin.switchToSlot("B");
+  assert(plugin.settings.activeSlot === "B", "activeSlot switched to 'B'");
+  const slotBActive = plugin.getActiveTemplate();
+  assert(slotBActive.slot === "B", "Active template slot is 'B'");
+  assert(slotBActive.name === "Minimal Domain", "Slot B name is 'Minimal Domain'");
+  assert(
+    plugin.getSourceLinkMarkdown("https://example.com") === "\n\nSource: [example.com](https://example.com)",
+    "getSourceLinkMarkdown renders Slot B (Minimal Domain)"
+  );
+
+  // Switch to Slot C (Academic Citation)
+  await plugin.switchToSlot("C");
+  assert(plugin.settings.activeSlot === "C", "activeSlot switched to 'C'");
+  const slotCActive = plugin.getActiveTemplate();
+  assert(slotCActive.slot === "C", "Active template slot is 'C'");
+  assert(slotCActive.name === "Academic Citation", "Slot C name is 'Academic Citation'");
+  assert(
+    plugin.getSourceLinkMarkdown("https://example.com/research-paper").includes("via example.com"),
+    "getSourceLinkMarkdown renders Slot C (Academic Citation)"
+  );
+
+  // Switch back to Slot A and test editable template reflection
+  await plugin.switchToSlot("A");
+  assert(plugin.settings.activeSlot === "A", "activeSlot switched back to 'A'");
+  plugin.settings.templateString = "Custom Edit: {url}";
+  const editedActive = plugin.getActiveTemplate();
+  assert(editedActive.template === "Custom Edit: {url}", "Slot A immediately reflects templateString edits");
+  assert(
+    plugin.getSourceLinkMarkdown("https://example.com") === "Custom Edit: https://example.com",
+    "getSourceLinkMarkdown renders newly edited Slot A template"
+  );
+
+  // Custom preset assignment for Slot B
+  const customPreset: TemplatePreset = {
+    id: "user-preset-special",
+    name: "Special Format",
+    template: "Special: {url}",
+    isBuiltIn: false,
+  };
+  plugin.settings.userPresets.push(customPreset);
+  plugin.settings.presetSlotB = "user-preset-special";
+  await plugin.switchToSlot("B");
+  assert(plugin.getActiveTemplate().name === "Special Format", "Slot B resolves custom user preset");
+  assert(plugin.getActiveTemplate().template === "Special: {url}", "Slot B uses custom template");
+
+  // Fallback if custom preset deleted
+  plugin.settings.presetSlotB = "non-existent-preset-id";
+  const fallbackActive = plugin.getActiveTemplate();
+  assert(fallbackActive.name === "Minimal Domain", "Deleted Slot B preset falls back to default slot preset");
+
+  console.log("\nAll TemplateEngine and Preset tests passed successfully! 🎉\n");
+})();

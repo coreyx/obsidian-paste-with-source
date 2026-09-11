@@ -70,9 +70,10 @@ Then enable the plugin in Obsidian under **Settings → Community Plugins**.
 | **Use URL as Link Label** | Format `{link}` as `[url](url)` instead of `[Source](url)` |
 | **Template Preset** | Select from 11 built-in presets (OneNote, Italic Attribution, Minimal Domain, Parenthetical, Academic, Obsidian Callout, Timestamped ISO 8601, Zulu Log, 12h Casual, Markdown Quote, Raw URL) or your custom presets |
 | **Preset Actions** | Save As New, Update, Delete, Export JSON, and Import JSON |
-| **Citation Template** | **Authoritative template box** evaluated on paste; accepts `{var}` tags and multi-line markdown |
+| **Citation Template** | **Authoritative template box** (Preset Slot A) evaluated on paste; accepts `{var}` tags and multi-line markdown |
 | **Click to Insert Variable** | Quick-insertion buttons for `{url}`, `{domain}`, `{page}`, `{path}`, `{date}`, etc. |
 | **Live Preview** | Real-time preview of the rendered citation using a sample URL |
+| **Quick Preset Hotkeys** | Switch active citation preset on the fly via hotkeys (`Ctrl+Shift+A`, `B`, `C`) |
 
 ---
 
@@ -186,6 +187,9 @@ Source: [Article Name](https://example.com/article) (2026-09-11 at 02:30 PM)
 ## 🧪 Commands & Menu Options
 
 ### Commands (Command Palette)
+- `Activate Citation Preset A (Editable Template)` (`Ctrl+Shift+A` / `Cmd+Shift+A`)
+- `Activate Citation Preset B` (`Ctrl+Shift+B` / `Cmd+Shift+B`)
+- `Activate Citation Preset C` (`Ctrl+Shift+C` / `Cmd+Shift+C`)
 - `Paste (Default) + Source URL`
 - `Paste with Source URL`
 
@@ -194,10 +198,13 @@ Source: [Article Name](https://example.com/article) (2026-09-11 at 02:30 PM)
 - `Paste Clipboard with Source URL`
 
 ### Keyboard Shortcuts
-If "Intercept Paste" is enabled, the plugin intercepts:
-- `Cmd+V` (macOS)
-- `Ctrl+V` (Windows)
-- `Shift+Insert` (Windows)
+- **Standard Paste**: If "Intercept Paste" is enabled, intercepts `Cmd+V` (macOS), `Ctrl+V` (Windows), or `Shift+Insert` (Windows) to append the currently active citation preset.
+- **Preset Switcher Hotkeys**:
+  - `Ctrl+Shift+A` (`Cmd+Shift+A`): Activate Preset Slot A (Always uses the editable Citation Template from settings)
+  - `Ctrl+Shift+B` (`Cmd+Shift+B`): Activate Preset Slot B (Configurable preset, default: *Minimal Domain*)
+  - `Ctrl+Shift+C` (`Cmd+Shift+C`): Activate Preset Slot C (Configurable preset, default: *Academic Citation*)
+  - *Activating a slot displays a brief Obsidian notification. Normal paste (`Ctrl+V`) always pastes using the active preset.*
+  - *All hotkeys can be customized or cleared in Obsidian's **Settings → Hotkeys** menu.*
 
 ---
 

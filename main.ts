@@ -33,6 +33,9 @@ export interface PasteWithSourceSettings {
   selectedPresetId: string;
   userPresets: TemplatePreset[];
   citationStyle?: CitationStyle;
+  activeSlot: "A" | "B" | "C";
+  presetSlotB: string;
+  presetSlotC: string;
 }
 
 export const BUILTIN_PRESETS: TemplatePreset[] = [
@@ -124,6 +127,9 @@ export const DEFAULT_SETTINGS: PasteWithSourceSettings = {
   selectedPresetId: "builtin-onenote",
   userPresets: [],
   citationStyle: "OneNote",
+  activeSlot: "A",
+  presetSlotB: "builtin-minimal-domain",
+  presetSlotC: "builtin-academic",
 };
 
 export class PresetManager {
@@ -716,11 +722,55 @@ export function createClipboardProvider(): IClipboardSourceProvider {
 export default class PasteWithSourcePlugin extends Plugin {
   settings!: PasteWithSourceSettings;
   clipboardProvider!: IClipboardSourceProvider;
+  settingTab!: PasteWithSourceSettingTab;
 
   async onload() {
     await this.loadSettings();
     this.clipboardProvider = createClipboardProvider();
-    this.addSettingTab(new PasteWithSourceSettingTab(this));
+    this.settingTab = new PasteWithSourceSettingTab(this);
+    this.addSettingTab(this.settingTab);
+
+    this.addCommand({
+      id: "activate-preset-slot-a",
+      name: "Activate Citation Preset A (Editable Template)",
+      hotkeys: [
+        {
+          modifiers: ["Mod", "Shift"],
+          key: "A",
+        },
+      ],
+      callback: async () => {
+        await this.switchToSlot("A");
+      },
+    });
+
+    this.addCommand({
+      id: "activate-preset-slot-b",
+      name: "Activate Citation Preset B",
+      hotkeys: [
+        {
+          modifiers: ["Mod", "Shift"],
+          key: "B",
+        },
+      ],
+      callback: async () => {
+        await this.switchToSlot("B");
+      },
+    });
+
+    this.addCommand({
+      id: "activate-preset-slot-c",
+      name: "Activate Citation Preset C",
+      hotkeys: [
+        {
+          modifiers: ["Mod", "Shift"],
+          key: "C",
+        },
+      ],
+      callback: async () => {
+        await this.switchToSlot("C");
+      },
+    });
 
     this.addCommand({
       id: "paste-default-plus-source",
@@ -794,9 +844,38 @@ export default class PasteWithSourcePlugin extends Plugin {
     });
   }
 
+  getActiveTemplate(): { template: string; name: string; slot: "A" | "B" | "C" } {
+    if (this.settings.activeSlot === "B") {
+      const preset = PresetManager.getPresetById(this.settings.presetSlotB, this.settings.userPresets);
+      if (preset) return { template: preset.template, name: preset.name, slot: "B" };
+      const fallbackB = PresetManager.getPresetById(DEFAULT_SETTINGS.presetSlotB, this.settings.userPresets);
+      if (fallbackB) return { template: fallbackB.template, name: fallbackB.name, slot: "B" };
+    } else if (this.settings.activeSlot === "C") {
+      const preset = PresetManager.getPresetById(this.settings.presetSlotC, this.settings.userPresets);
+      if (preset) return { template: preset.template, name: preset.name, slot: "C" };
+      const fallbackC = PresetManager.getPresetById(DEFAULT_SETTINGS.presetSlotC, this.settings.userPresets);
+      if (fallbackC) return { template: fallbackC.template, name: fallbackC.name, slot: "C" };
+    }
+    // Slot A (default): editable preset from settings
+    const selectedPreset = PresetManager.getPresetById(this.settings.selectedPresetId, this.settings.userPresets);
+    const name = selectedPreset ? selectedPreset.name : "Custom Template";
+    return { template: this.settings.templateString, name, slot: "A" };
+  }
+
+  async switchToSlot(slot: "A" | "B" | "C") {
+    this.settings.activeSlot = slot;
+    await this.saveSettings();
+    const active = this.getActiveTemplate();
+    new Notice(`Active Citation Preset: [Slot ${slot}] ${active.name}`);
+    if (this.settingTab) {
+      this.settingTab.display();
+    }
+  }
+
   getSourceLinkMarkdown(url: string): string {
     const context = TemplateEngine.buildContext(url, this.settings.useUrlAsLinkLabel);
-    return TemplateEngine.render(this.settings.templateString, context);
+    const active = this.getActiveTemplate();
+    return TemplateEngine.render(active.template, context);
   }
 
   formatSourceLink(url: string): string {
@@ -851,6 +930,16 @@ export default class PasteWithSourcePlugin extends Plugin {
 
     if (!Array.isArray(this.settings.userPresets)) {
       this.settings.userPresets = [];
+    }
+
+    if (!this.settings.activeSlot) {
+      this.settings.activeSlot = "A";
+    }
+    if (!this.settings.presetSlotB) {
+      this.settings.presetSlotB = DEFAULT_SETTINGS.presetSlotB;
+    }
+    if (!this.settings.presetSlotC) {
+      this.settings.presetSlotC = DEFAULT_SETTINGS.presetSlotC;
     }
   }
 
@@ -1100,10 +1189,10 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
       styleActionButton(btn);
     });
 
-    // Authoritative Template Text Area
+    // Authoritative Template Text Area (Preset Slot A)
     new Setting(containerEl)
-      .setName("Citation Template (Authoritative)")
-      .setDesc("Directly edit the active template string. Literal newlines and \\n are evaluated when pasting.");
+      .setName("Citation Template (Preset Slot A)")
+      .setDesc("Directly edit the primary template string. This defines Preset Slot A (Ctrl+Shift+A). Literal newlines and \\n are evaluated when pasting.");
 
     const textAreaEl = containerEl.createEl("textarea", {
       cls: "paste-with-source-template-textarea",
@@ -1212,5 +1301,117 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
 
     // Initial preview render
     updateLivePreview();
+
+    // -----------------------------------------------------------------------
+    // Quick Preset Hotkeys Section
+    // -----------------------------------------------------------------------
+    containerEl.createEl("hr");
+    containerEl.createEl("h3", { text: "Quick Preset Hotkeys (Slots A, B, C)" });
+
+    const hotkeysDescEl = containerEl.createEl("p", {
+      text: "Switch the active citation preset on the fly using hotkeys without opening settings. Standard paste (Ctrl+V) will append the citation from whichever slot is currently active.",
+    });
+    hotkeysDescEl.style.fontSize = "0.9em";
+    hotkeysDescEl.style.color = "var(--text-muted)";
+
+    // Active Preset Slot Status & Quick Switcher Buttons
+    const activeInfo = this.plugin.getActiveTemplate();
+    const activeSlotSetting = new Setting(containerEl)
+      .setName("Active Preset Slot")
+      .setDesc(`Currently active: Slot ${this.plugin.settings.activeSlot} (${activeInfo.name})`);
+
+    activeSlotSetting.addButton((btn) => {
+      btn
+        .setButtonText("Slot A")
+        .setTooltip("Activate Preset Slot A (Editable Template)")
+        .onClick(async () => {
+          await this.plugin.switchToSlot("A");
+        });
+      if (this.plugin.settings.activeSlot === "A") btn.setCta();
+      else btn.removeCta();
+    });
+
+    activeSlotSetting.addButton((btn) => {
+      btn
+        .setButtonText("Slot B")
+        .setTooltip("Activate Preset Slot B")
+        .onClick(async () => {
+          await this.plugin.switchToSlot("B");
+        });
+      if (this.plugin.settings.activeSlot === "B") btn.setCta();
+      else btn.removeCta();
+    });
+
+    activeSlotSetting.addButton((btn) => {
+      btn
+        .setButtonText("Slot C")
+        .setTooltip("Activate Preset Slot C")
+        .onClick(async () => {
+          await this.plugin.switchToSlot("C");
+        });
+      if (this.plugin.settings.activeSlot === "C") btn.setCta();
+      else btn.removeCta();
+    });
+
+    // Slot A information
+    new Setting(containerEl)
+      .setName("Preset Slot A (Ctrl+Shift+A)")
+      .setDesc("Always uses the editable Citation Template above. Edits to the template take effect immediately.");
+
+    // Slot B dropdown
+    const presetB =
+      PresetManager.getPresetById(this.plugin.settings.presetSlotB, this.plugin.settings.userPresets) ||
+      PresetManager.getPresetById(DEFAULT_SETTINGS.presetSlotB, this.plugin.settings.userPresets) ||
+      allPresets[0];
+
+    const slotBSetting = new Setting(containerEl)
+      .setName("Preset Slot B (Ctrl+Shift+B)")
+      .setDesc(presetB.description || presetB.template.replace(/\\n/g, " ").trim())
+      .addDropdown((dropdown) => {
+        for (const preset of allPresets) {
+          const prefix = preset.isBuiltIn ? "★ " : "✎ ";
+          dropdown.addOption(preset.id, `${prefix}${preset.name}`);
+        }
+        dropdown.setValue(presetB.id);
+        dropdown.onChange(async (presetId) => {
+          this.plugin.settings.presetSlotB = presetId;
+          await this.plugin.saveSettings();
+          const chosen = PresetManager.getPresetById(presetId, this.plugin.settings.userPresets);
+          if (chosen) {
+            slotBSetting.setDesc(chosen.description || chosen.template.replace(/\\n/g, " ").trim());
+          }
+          if (this.plugin.settings.activeSlot === "B") {
+            this.display();
+          }
+        });
+      });
+
+    // Slot C dropdown
+    const presetC =
+      PresetManager.getPresetById(this.plugin.settings.presetSlotC, this.plugin.settings.userPresets) ||
+      PresetManager.getPresetById(DEFAULT_SETTINGS.presetSlotC, this.plugin.settings.userPresets) ||
+      allPresets[0];
+
+    const slotCSetting = new Setting(containerEl)
+      .setName("Preset Slot C (Ctrl+Shift+C)")
+      .setDesc(presetC.description || presetC.template.replace(/\\n/g, " ").trim())
+      .addDropdown((dropdown) => {
+        for (const preset of allPresets) {
+          const prefix = preset.isBuiltIn ? "★ " : "✎ ";
+          dropdown.addOption(preset.id, `${prefix}${preset.name}`);
+        }
+        dropdown.setValue(presetC.id);
+        dropdown.onChange(async (presetId) => {
+          this.plugin.settings.presetSlotC = presetId;
+          await this.plugin.saveSettings();
+          const chosen = PresetManager.getPresetById(presetId, this.plugin.settings.userPresets);
+          if (chosen) {
+            slotCSetting.setDesc(chosen.description || chosen.template.replace(/\\n/g, " ").trim());
+          }
+          if (this.plugin.settings.activeSlot === "C") {
+            this.display();
+          }
+        });
+      });
   }
 }
