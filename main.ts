@@ -93,7 +93,6 @@ export interface TemplateContext {
   month: string;
   day: string;
   link: string;
-  source: string;
 }
 
 export class TemplateEngine {
@@ -128,7 +127,6 @@ export class TemplateEngine {
       month,
       day,
       link,
-      source: "Source",
     };
   }
 
@@ -973,7 +971,6 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
       { tag: "{time}", desc: "HH:mm" },
       { tag: "{datetime}", desc: "Date & Time" },
       { tag: "{link}", desc: "Markdown Link" },
-      { tag: "{source}", desc: "'Source' label" },
       { tag: "\\n", desc: "Newline" },
     ];
 

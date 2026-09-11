@@ -49,7 +49,6 @@ console.log("Running TemplateEngine unit tests...");
   assert(/^\d{4}-\d{2}-\d{2}$/.test(context.date), "Date matches YYYY-MM-DD");
   assert(/^\d{2}:\d{2}$/.test(context.time), "Time matches HH:mm");
   assert(context.link === `[${url}](${url})`, "Link matches [url](url) when useUrlAsLinkLabel is true");
-  assert(context.source === "Source", "Source is literal 'Source'");
 
   const template = "Source: {domain} at {url} on {date}";
   const rendered = TemplateEngine.render(template, context);
