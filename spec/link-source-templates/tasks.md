@@ -6,21 +6,21 @@ This document provides a detailed implementation checklist for the **Link Source
 
 ## Task Checklist Overview
 
-- [ ] **Task 1: Implement `TemplateEngine` with Context Generator and `{var}` Replacement**
-- [ ] **Task 2: Define Built-In Presets (OneNote & Markdown Quote) and `PresetManager`**
-- [ ] **Task 3: Migrate Plugin Settings Schema & Backward Compatibility Loader**
-- [ ] **Task 4: Refactor Plugin Citation Generation Pipeline to use `TemplateEngine`**
-- [ ] **Task 5: Implement `PresetImportExportService` (JSON File Export & Import)**
-- [ ] **Task 6: Build Rich Settings UI (Dropdown, Action Toolbar, Textarea, Variable Badges, Live Preview)**
-- [ ] **Task 7: Comprehensive Unit Testing & Benchmarking Suite (`test-templates.ts`)**
-- [ ] **Task 8: Update Documentation Suite (`README.md`, `RELEASE_NOTES.md`, `CHANGELOG.md`)**
+- [x] **Task 1: Implement `TemplateEngine` with Context Generator and `{var}` Replacement**
+- [x] **Task 2: Define Built-In Presets (OneNote & Markdown Quote) and `PresetManager`**
+- [x] **Task 3: Migrate Plugin Settings Schema & Backward Compatibility Loader**
+- [x] **Task 4: Refactor Plugin Citation Generation Pipeline to use `TemplateEngine`**
+- [x] **Task 5: Implement `PresetImportExportService` (JSON File Export & Import)**
+- [x] **Task 6: Build Rich Settings UI (Dropdown, Action Toolbar, Textarea, Variable Badges, Live Preview)**
+- [x] **Task 7: Comprehensive Unit Testing & Benchmarking Suite (`test-templates.ts`)**
+- [x] **Task 8: Update Documentation Suite (`README.md`, `RELEASE_NOTES.md`, `CHANGELOG.md`)**
 
 ---
 
 ## Detailed Task Specifications
 
 ### Task 1: Implement `TemplateEngine` with Context Generator and `{var}` Replacement
-- **Status**: Ready for Execution
+- **Status**: Completed
 - **Implements**:
   - Requirement 1.0 (Template Variable Replacement Engine)
   - Section 1.1 (Supported Variable Identifiers)
@@ -42,7 +42,7 @@ This document provides a detailed implementation checklist for the **Link Source
 ---
 
 ### Task 2: Define Built-In Presets (OneNote & Markdown Quote) and `PresetManager`
-- **Status**: Ready for Execution
+- **Status**: Completed
 - **Implements**:
   - Requirement 3.0 (Bolted-On Preset Management)
   - Requirement 4.0 (Built-in Preset Preservations)
@@ -61,7 +61,7 @@ This document provides a detailed implementation checklist for the **Link Source
 ---
 
 ### Task 3: Migrate Plugin Settings Schema & Backward Compatibility Loader
-- **Status**: Ready for Execution
+- **Status**: Completed
 - **Implements**:
   - Requirement 2.0 (Authoritative Active Template Text Box)
   - Requirement 6.0 (Backward Compatibility & Migration)
@@ -81,7 +81,7 @@ This document provides a detailed implementation checklist for the **Link Source
 ---
 
 ### Task 4: Refactor Plugin Citation Generation Pipeline to use `TemplateEngine`
-- **Status**: Ready for Execution
+- **Status**: Completed
 - **Implements**:
   - Requirement 1.0 (Template Variable Replacement Engine)
   - Requirement 2.0 (Authoritative Active Template Text Box)
@@ -97,7 +97,7 @@ This document provides a detailed implementation checklist for the **Link Source
 ---
 
 ### Task 5: Implement `PresetImportExportService` (JSON File Export & Import)
-- **Status**: Ready for Execution
+- **Status**: Completed
 - **Implements**:
   - Requirement 5.0 (Preset Import and Export)
   - Section 5.1 (JSON Export Specification)
@@ -116,7 +116,7 @@ This document provides a detailed implementation checklist for the **Link Source
 ---
 
 ### Task 6: Build Rich Settings UI (Dropdown, Action Toolbar, Textarea, Variable Badges, Live Preview)
-- **Status**: Ready for Execution
+- **Status**: Completed
 - **Implements**:
   - Requirement 2.0 (Authoritative Active Template Text Box)
   - Requirement 3.0 (Bolted-On Preset Management)
@@ -147,7 +147,7 @@ This document provides a detailed implementation checklist for the **Link Source
 ---
 
 ### Task 7: Comprehensive Unit Testing & Benchmarking Suite (`test-templates.ts`)
-- **Status**: Ready for Execution
+- **Status**: Completed
 - **Implements**:
   - Requirement 1.0 (Template Variable Replacement Engine)
   - Requirement 5.0 (Preset Import and Export)
@@ -165,7 +165,7 @@ This document provides a detailed implementation checklist for the **Link Source
 ---
 
 ### Task 8: Update Documentation Suite (`README.md`, `RELEASE_NOTES.md`, `CHANGELOG.md`)
-- **Status**: Ready for Execution
+- **Status**: Completed
 - **Implements**:
   - General Documentation & Feature Discoverability
 - **Concrete Steps**:

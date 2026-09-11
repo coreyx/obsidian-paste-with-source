@@ -1,6 +1,38 @@
 # Release Notes: Paste with Source for Obsidian
 
-Welcome to **Paste with Source** (v1.2.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+Welcome to **Paste with Source** (v1.3.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+
+---
+
+## 🌟 What's New in Version 1.3.0: Link Source Templates & Preset System
+
+### 📝 Customizable Citation Templates
+Take full control over how citations are formatted in your notes!
+- **`{var}` Variable Substitution**: Compose custom citation formats using intuitive placeholders:
+  - `{url}`: Full source URL
+  - `{domain}`: Clean hostname (e.g. `en.wikipedia.org`)
+  - `{title}`: Page title or domain fallback
+  - `{date}`: Current local date (`YYYY-MM-DD`)
+  - `{time}`: Current 24-hour time (`HH:mm`)
+  - `{time_12}`: Current 12-hour time (`hh:mm A`)
+  - `{datetime}`: Combined date and time (`YYYY-MM-DD HH:mm`)
+  - `{iso}`: ISO-8601 UTC timestamp
+  - `{link}`: Formatted markdown link (`[url](url)` or `[Source](url)`)
+  - `{source}`: Literal `"Source"` label
+  - `\n`: Multi-line formatting and line breaks
+- **Authoritative Text Box**: The editable text area in Settings is always the single source of truth for your active citation template. Edits take effect immediately.
+- **Interactive Insertion Pills**: Click handy variable badges below the template box to insert tags at your cursor position instantly.
+- **Dynamic Live Preview**: See exactly how your citation will look in real-time as you type, rendered with a sample URL.
+
+### 📦 Bolted-On Presets & JSON Import/Export
+- **Built-In Presets**:
+  - `OneNote Style` (`\n\nFrom <{link}>`): Replicates classic Microsoft OneNote web paste behavior.
+  - `Markdown Quote` (`\n\n> — [Source]({url})`): Blockquoted markdown attribution.
+  - `Academic Citation` (`\n\n> Source: [{domain}]({url}) (Accessed: {date})`): Full domain attribution with access date.
+- **Preset Management**: Save the current text area as a new named preset, update custom presets, or delete presets you no longer need (built-in presets are protected).
+- **JSON File Import & Export**:
+  - Export any preset as a standalone `.json` file to backup or share with your team.
+  - Import `.json` preset files with automatic schema validation.
 
 ---
 

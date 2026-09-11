@@ -7,11 +7,11 @@ This Obsidian plugin enhances your clipboard pasting workflow by automatically a
 - 📎 **Source-Aware Pasting**: Appends the origin webpage URL when pasting content copied from browsers
 - 🍎 **macOS Support**: In-process Electron clipboard extraction supporting Chromium browsers (Google Chrome, Arc, Microsoft Edge, Brave, Opera) and Apple Safari (via built-in `bplist00` WebArchive decoding)
 - 🪟 **Windows Support**: In-process Electron clipboard extraction with native `CF_HTML` parsing and zero external binary dependencies
+- 📝 **Link Source Templates**: Fully customizable citation template engine with `{var}` placeholders (`{url}`, `{domain}`, `{title}`, `{date}`, `{time}`, `{datetime}`, `{iso}`, `{link}`, `{source}`)
+- 📦 **Presets & JSON Import/Export**: Built-in presets (OneNote, Markdown Quote, Academic), custom preset saving, and one-click JSON import/export
+- 👁️ **Authoritative Text Box & Live Preview**: The editable text area is always the single source of truth, backed by interactive variable pills and real-time live preview
 - ⌨️ **Keyboard Interception**: Optionally intercepts `Cmd+V` (macOS) or `Ctrl+V` / `Shift+Insert` (Windows) to auto-append source
 - 🖱 **Context Menu Actions**: Adds right-click editor menu options for source-aware pasting
-- 🧾 **Multiple Citation Styles**:
-  - OneNote-style: `From <[url](url)>`
-  - Markdown quote: `> — [Source](url)`
 - 🔗 **Configurable Link Labels**: Format citations as `[url](url)` or generic `[Source](url)`
 
 ---
@@ -67,8 +67,30 @@ Then enable the plugin in Obsidian under **Settings → Community Plugins**.
 | **Intercept Paste** | Automatically replaces standard paste with a source-aware paste |
 | **Intercept Shortcut** | Choose which shortcut to intercept (`Cmd+V` on macOS; `Both`, `Ctrl+V only`, or `Shift+Insert only` on Windows) |
 | **Paste Mode** | Choose between default handler + source link or plain clipboard text + source link |
-| **Citation Style** | Choose between OneNote-style (`From <...>`) or Markdown blockquote (`> — ...`) |
-| **Use URL as Link Label** | Format links as `[url](url)` instead of `[Source](url)` |
+| **Use URL as Link Label** | Format `{link}` as `[url](url)` instead of `[Source](url)` |
+| **Template Preset** | Select from built-in presets (OneNote, Markdown Quote, Academic) or your custom presets |
+| **Preset Actions** | Save As New, Update, Delete, Export JSON, and Import JSON |
+| **Citation Template** | **Authoritative template box** evaluated on paste; accepts `{var}` tags and multi-line markdown |
+| **Click to Insert Variable** | Quick-insertion buttons for `{url}`, `{domain}`, `{date}`, `{time}`, etc. |
+| **Live Preview** | Real-time preview of the rendered citation using a sample URL |
+
+---
+
+## 📋 Template Variables Reference
+
+| Variable | Description | Example Output |
+| :--- | :--- | :--- |
+| `{url}` | Full origin URL | `https://en.wikipedia.org/wiki/Obsidian_(software)` |
+| `{domain}` | Hostname without `www.` | `en.wikipedia.org` |
+| `{title}` | Page title or clean domain fallback | `en.wikipedia.org` |
+| `{date}` | Current local date (`YYYY-MM-DD`) | `2026-09-11` |
+| `{time}` | Current local time (`HH:mm`) | `14:30` |
+| `{time_12}` | Current 12-hour time (`hh:mm A`) | `02:30 PM` |
+| `{datetime}` | Combined date and time | `2026-09-11 14:30` |
+| `{iso}` | UTC ISO-8601 timestamp | `2026-09-11T21:30:00.000Z` |
+| `{link}` | Formatted markdown link | `[https://...](https://...)` or `[Source](https://...)` |
+| `{source}` | Literal label `"Source"` | `Source` |
+| `\n` | Newline character | Line break |
 
 ---
 
@@ -76,18 +98,25 @@ Then enable the plugin in Obsidian under **Settings → Community Plugins**.
 
 If you copy text from a webpage and paste it into Obsidian:
 
-**OneNote Style:**
+**OneNote Style Preset (`\n\nFrom <{link}>`):**
 ```markdown
 Pasted excerpt text...
 
 From <https://example.com/article>
 ```
 
-**Markdown Blockquote Style:**
+**Markdown Blockquote Preset (`\n\n> — [Source]({url})`):**
 ```markdown
 Pasted excerpt text...
 
 > — [Source](https://example.com/article)
+```
+
+**Academic Citation Preset (`\n\n> Source: [{domain}]({url}) (Accessed: {date})`):**
+```markdown
+Pasted excerpt text...
+
+> Source: [example.com](https://example.com/article) (Accessed: 2026-09-11)
 ```
 
 ---
@@ -128,12 +157,14 @@ paste-with-source/
 ├── spec/                     # Architecture, requirements, and tech specs
 │   ├── paste-with-source/
 │   ├── macos-support/
-│   └── windows-zero-binary/
-├── main.ts                   # Core plugin logic & cross-platform Electron providers
+│   ├── windows-zero-binary/
+│   └── link-source-templates/
+├── main.ts                   # Core plugin logic, template engine & UI
 ├── manifest.json             # Obsidian plugin manifest
 ├── build.ts                  # Pure TypeScript build script
 ├── deploy.ts                 # Vault deployment script
-└── test-bplist.ts            # Unit tests for macOS WebArchive & Windows CF_HTML parsers
+├── test-bplist.ts            # Unit tests for macOS WebArchive & Windows CF_HTML parsers
+└── test-templates.ts         # Unit tests for template engine & preset import/export
 ```
 
 ---

@@ -10,8 +10,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Custom citation template engine allowing custom prefix, suffix, and date variables.
 - Direct Chromium/Edge browser extension companion integration.
+
+---
+
+## [1.3.0] - 2026-09-11
+
+### Added
+- **Link Source Templates & Variable Interpolation**:
+  - Stateless in-memory `TemplateEngine` supporting `{url}`, `{domain}`, `{title}`, `{date}`, `{time}`, `{time_12}`, `{datetime}`, `{iso}`, `{link}`, and `{source}`.
+  - Case-insensitive token replacement with safe retention of unrecognized variables.
+  - Multi-line textarea support with literal line breaks and `\n` / `\t` escape sequences.
+  - Interactive clickable variable badges in the settings tab for quick tag insertion at the cursor.
+  - Real-time live preview box rendering the active citation format against a sample URL.
+- **Bolted-On Preset Management**:
+  - Authoritative text box architecture: `settings.templateString` is always the single source of truth for active citations.
+  - Presets subsystem serving as an assistive UI layer without rigid binding or forced synchronization.
+  - Three built-in presets: `OneNote Style`, `Markdown Quote`, and `Academic Citation`.
+  - Full CRUD operations for custom user presets: Save As New (via modal), Update Preset, and Delete Preset.
+  - Built-in presets are protected and immutable.
+- **Preset JSON Import & Export**:
+  - Export any preset or current template as a standardized `.json` file (`paste-with-source-preset/v1`) via browser Blob download.
+  - Import `.json` preset files via HTML5 file input with full schema and error validation.
+- **Automated Settings Migration**:
+  - Transparent backward-compatible migration of legacy `citationStyle` into equivalent `templateString`.
+- **Unit Testing & Benchmarks**:
+  - Created `test-templates.ts` covering variable substitutions, case-insensitivity, escapes, domain extraction, schema validation, and high-throughput benchmark (2.6 µs per render).
+
+---
 
 ## [1.2.0] - 2026-09-10
 

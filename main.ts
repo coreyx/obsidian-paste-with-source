@@ -1,9 +1,12 @@
 import {
+  App,
   Plugin,
   PluginSettingTab,
   Setting,
   Editor,
-  Menu
+  Menu,
+  Modal,
+  Notice
 } from "obsidian";
 import { exec } from "child_process";
 
@@ -13,21 +16,260 @@ type PasteMode = "default+source" | "clipboard+source";
 
 type CitationStyle = "OneNote" | "Source";
 
-interface PasteWithSourceSettings {
+export interface TemplatePreset {
+  id: string;
+  name: string;
+  template: string;
+  isBuiltIn?: boolean;
+  description?: string;
+}
+
+export interface PasteWithSourceSettings {
   interceptPaste: boolean;
   interceptShortcut: InterceptShortcut;
   pasteMode: PasteMode;
-  citationStyle: CitationStyle;
   useUrlAsLinkLabel: boolean;
+  templateString: string;
+  selectedPresetId: string;
+  userPresets: TemplatePreset[];
+  citationStyle?: CitationStyle;
 }
 
-const DEFAULT_SETTINGS: PasteWithSourceSettings = {
+export const BUILTIN_PRESETS: TemplatePreset[] = [
+  {
+    id: "builtin-onenote",
+    name: "OneNote Style",
+    template: "\n\nFrom <{link}>",
+    isBuiltIn: true,
+    description: "Classic Microsoft OneNote format (From <url>)",
+  },
+  {
+    id: "builtin-markdown-quote",
+    name: "Markdown Quote",
+    template: "\n\n> — [Source]({url})",
+    isBuiltIn: true,
+    description: "Blockquoted markdown attribution link",
+  },
+  {
+    id: "builtin-academic",
+    name: "Academic Citation",
+    template: "\n\n> Source: [{domain}]({url}) (Accessed: {date})",
+    isBuiltIn: true,
+    description: "Domain link with access date",
+  },
+];
+
+export const DEFAULT_SETTINGS: PasteWithSourceSettings = {
   interceptPaste: true,
   interceptShortcut: "both",
   pasteMode: "default+source",
-  citationStyle: "OneNote",
   useUrlAsLinkLabel: true,
+  templateString: "\n\nFrom <{link}>",
+  selectedPresetId: "builtin-onenote",
+  userPresets: [],
+  citationStyle: "OneNote",
 };
+
+export class PresetManager {
+  static getAllPresets(userPresets: TemplatePreset[] = []): TemplatePreset[] {
+    return [...BUILTIN_PRESETS, ...(userPresets || [])];
+  }
+
+  static getPresetById(id: string, userPresets: TemplatePreset[] = []): TemplatePreset | undefined {
+    return this.getAllPresets(userPresets).find((p) => p.id === id);
+  }
+}
+
+export interface TemplateContext {
+  url: string;
+  domain: string;
+  title: string;
+  date: string;
+  time: string;
+  time_12: string;
+  datetime: string;
+  iso: string;
+  year: string;
+  month: string;
+  day: string;
+  link: string;
+  source: string;
+}
+
+export class TemplateEngine {
+  static buildContext(url: string, useUrlAsLinkLabel: boolean = true): TemplateContext {
+    const now = new Date();
+    const domain = this.extractDomain(url);
+    const link = useUrlAsLinkLabel
+      ? `[${url}](${url})`
+      : `[Source](${url})`;
+
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    const year = now.getFullYear().toString();
+    const month = pad(now.getMonth() + 1);
+    const day = pad(now.getDate());
+    const date = `${year}-${month}-${day}`;
+    const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+    const hours12 = now.getHours() % 12 || 12;
+    const ampm = now.getHours() >= 12 ? "PM" : "AM";
+    const time_12 = `${pad(hours12)}:${pad(now.getMinutes())} ${ampm}`;
+
+    return {
+      url,
+      domain,
+      title: domain,
+      date,
+      time,
+      time_12,
+      datetime: `${date} ${time}`,
+      iso: now.toISOString(),
+      year,
+      month,
+      day,
+      link,
+      source: "Source",
+    };
+  }
+
+  static render(template: string, context: TemplateContext): string {
+    if (!template) return "";
+
+    // Parse literal \n and \t escape sequences if present
+    let processed = template.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
+
+    // Replace {variable} case-insensitively
+    return processed.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, key) => {
+      const lowerKey = key.toLowerCase();
+      if (lowerKey in context) {
+        return (context as any)[lowerKey];
+      }
+      return match;
+    });
+  }
+
+  static extractDomain(urlStr: string): string {
+    try {
+      const parsed = new URL(urlStr);
+      return parsed.hostname.replace(/^www\./i, "");
+    } catch {
+      return urlStr.replace(/^https?:\/\//i, "").split("/")[0].replace(/^www\./i, "");
+    }
+  }
+}
+
+export class PresetImportExportService {
+  static exportPreset(preset: { name: string; template: string; description?: string }): void {
+    const payload = {
+      $schema: "https://paste-with-source.obsidian.md/schemas/preset-v1.json",
+      format: "paste-with-source-preset",
+      version: 1,
+      name: preset.name,
+      description: preset.description || "",
+      template: preset.template,
+      createdAt: new Date().toISOString(),
+    };
+
+    const jsonStr = JSON.stringify(payload, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    const safeName = preset.name.toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+    a.href = url;
+    a.download = `${safeName || "preset"}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    new Notice(`Exported preset "${preset.name}" as JSON.`);
+  }
+
+  static async importPresetFromFile(file: File): Promise<TemplatePreset> {
+    const text = await file.text();
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error("Selected file is not valid JSON.");
+    }
+
+    if (!data || typeof data.template !== "string" || !data.template.trim()) {
+      throw new Error("Invalid preset: missing or empty 'template' property.");
+    }
+
+    const name = typeof data.name === "string" && data.name.trim()
+      ? data.name.trim()
+      : file.name.replace(/\.json$/i, "");
+
+    return {
+      id: `user-preset-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      name,
+      template: data.template,
+      description: typeof data.description === "string" ? data.description : "",
+      isBuiltIn: false,
+    };
+  }
+}
+
+export class PresetNameModal extends Modal {
+  name: string;
+  onSubmit: (name: string) => void;
+
+  constructor(app: App, defaultName: string, onSubmit: (name: string) => void) {
+    super(app);
+    this.name = defaultName;
+    this.onSubmit = onSubmit;
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.createEl("h3", { text: "Save Template Preset" });
+
+    new Setting(contentEl)
+      .setName("Preset Name")
+      .setDesc("Enter a descriptive name for your custom citation preset")
+      .addText((text) => {
+        text.setValue(this.name).onChange((value) => {
+          this.name = value;
+        });
+        text.inputEl.focus();
+        text.inputEl.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            this.submit();
+          }
+        });
+      });
+
+    new Setting(contentEl)
+      .addButton((btn) =>
+        btn
+          .setButtonText("Save Preset")
+          .setCta()
+          .onClick(() => this.submit())
+      )
+      .addButton((btn) =>
+        btn.setButtonText("Cancel").onClick(() => this.close())
+      );
+  }
+
+  submit() {
+    const trimmed = this.name.trim();
+    if (!trimmed) {
+      new Notice("Please enter a preset name.");
+      return;
+    }
+    this.close();
+    this.onSubmit(trimmed);
+  }
+
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+}
+
 
 // ---------------------------------------------------------------------------
 // Platform Clipboard Abstraction
@@ -409,11 +651,8 @@ export default class PasteWithSourcePlugin extends Plugin {
   }
 
   getSourceLinkMarkdown(url: string): string {
-    if (this.settings.citationStyle === "OneNote") {
-      return `\n\nFrom <${this.formatSourceLink(url)}>`;
-    } else {
-      return `\n\n> — ${this.formatSourceLink(url)}`;
-    }
+    const context = TemplateEngine.buildContext(url, this.settings.useUrlAsLinkLabel);
+    return TemplateEngine.render(this.settings.templateString, context);
   }
 
   formatSourceLink(url: string): string {
@@ -452,7 +691,23 @@ export default class PasteWithSourcePlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const loadedData = await this.loadData();
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
+
+    // Migration for existing installations without templateString
+    if (!loadedData || typeof loadedData.templateString === "undefined") {
+      if (this.settings.citationStyle === "Source") {
+        this.settings.templateString = "\n\n> — [Source]({url})";
+        this.settings.selectedPresetId = "builtin-markdown-quote";
+      } else {
+        this.settings.templateString = "\n\nFrom <{link}>";
+        this.settings.selectedPresetId = "builtin-onenote";
+      }
+    }
+
+    if (!Array.isArray(this.settings.userPresets)) {
+      this.settings.userPresets = [];
+    }
   }
 
   async saveSettings() {
@@ -524,29 +779,254 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Citation Style")
-      .setDesc("Choose the style of the citation")
-      .addDropdown((dropdown) =>
-        dropdown
-          .addOption("OneNote", "OneNote-style From <...> links")
-          .addOption("Source", "Simple 'Source' markdown link")
-          .setValue(this.plugin.settings.citationStyle)
-          .onChange(async (value: string) => {
-            this.plugin.settings.citationStyle = value as CitationStyle;
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(containerEl)
       .setName("Use URL as Link Label")
-      .setDesc("Format links as [url](url) instead of [Source](url)")
+      .setDesc("Controls how {link} is formatted: [url](url) vs [Source](url)")
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.useUrlAsLinkLabel)
           .onChange(async (value) => {
             this.plugin.settings.useUrlAsLinkLabel = value;
             await this.plugin.saveSettings();
+            updateLivePreview();
           })
       );
+
+    containerEl.createEl("hr");
+    containerEl.createEl("h3", { text: "Citation Template & Presets" });
+
+    const descEl = containerEl.createEl("p", {
+      text: "The text area below is the authoritative template evaluated at paste time. Presets allow you to quickly load, save, export, and import pre-configured citation formats.",
+    });
+    descEl.style.fontSize = "0.9em";
+    descEl.style.color = "var(--text-muted)";
+
+    // Live preview function reference
+    let updateLivePreview: () => void = () => {};
+
+    // Template Preset Selection Dropdown
+    const allPresets = PresetManager.getAllPresets(this.plugin.settings.userPresets);
+    let selectedPreset = PresetManager.getPresetById(this.plugin.settings.selectedPresetId, this.plugin.settings.userPresets) || allPresets[0];
+
+    new Setting(containerEl)
+      .setName("Template Preset")
+      .setDesc("Choose a preset to load into the authoritative template box below")
+      .addDropdown((dropdown) => {
+        for (const preset of allPresets) {
+          const prefix = preset.isBuiltIn ? "★ " : "✎ ";
+          dropdown.addOption(preset.id, `${prefix}${preset.name}`);
+        }
+        dropdown.setValue(selectedPreset.id);
+        dropdown.onChange(async (presetId) => {
+          const chosen = PresetManager.getPresetById(presetId, this.plugin.settings.userPresets);
+          if (chosen) {
+            this.plugin.settings.selectedPresetId = chosen.id;
+            this.plugin.settings.templateString = chosen.template;
+            await this.plugin.saveSettings();
+            this.display();
+          }
+        });
+      });
+
+    // Preset Action Toolbar
+    const toolbarSetting = new Setting(containerEl)
+      .setName("Preset Actions")
+      .setDesc("Manage your custom presets and share them as JSON files");
+
+    // Button: Save As New Preset
+    toolbarSetting.addButton((btn) =>
+      btn
+        .setButtonText("Save As New")
+        .setTooltip("Save current text box content as a new custom preset")
+        .onClick(() => {
+          new PresetNameModal(this.app, "My Custom Citation", async (name) => {
+            const newPreset: TemplatePreset = {
+              id: `user-preset-${Date.now()}`,
+              name,
+              template: this.plugin.settings.templateString,
+              isBuiltIn: false,
+            };
+            this.plugin.settings.userPresets.push(newPreset);
+            this.plugin.settings.selectedPresetId = newPreset.id;
+            await this.plugin.saveSettings();
+            new Notice(`Saved preset "${name}".`);
+            this.display();
+          }).open();
+        })
+    );
+
+    // Button: Update Preset (disabled for built-ins)
+    toolbarSetting.addButton((btn) => {
+      btn
+        .setButtonText("Update Preset")
+        .setTooltip(selectedPreset.isBuiltIn ? "Built-in presets cannot be overwritten" : "Update selected preset with current text box content")
+        .setDisabled(!!selectedPreset.isBuiltIn)
+        .onClick(async () => {
+          if (selectedPreset.isBuiltIn) return;
+          selectedPreset.template = this.plugin.settings.templateString;
+          await this.plugin.saveSettings();
+          new Notice(`Updated preset "${selectedPreset.name}".`);
+          this.display();
+        });
+    });
+
+    // Button: Delete Preset (disabled for built-ins)
+    toolbarSetting.addButton((btn) => {
+      btn
+        .setButtonText("Delete Preset")
+        .setWarning()
+        .setTooltip(selectedPreset.isBuiltIn ? "Built-in presets cannot be deleted" : "Delete selected custom preset")
+        .setDisabled(!!selectedPreset.isBuiltIn)
+        .onClick(async () => {
+          if (selectedPreset.isBuiltIn) return;
+          this.plugin.settings.userPresets = this.plugin.settings.userPresets.filter((p) => p.id !== selectedPreset.id);
+          this.plugin.settings.selectedPresetId = "builtin-onenote";
+          await this.plugin.saveSettings();
+          new Notice(`Deleted preset "${selectedPreset.name}".`);
+          this.display();
+        });
+    });
+
+    // Button: Export JSON
+    toolbarSetting.addButton((btn) =>
+      btn
+        .setButtonText("Export JSON")
+        .setTooltip("Download selected preset as a standalone JSON file")
+        .onClick(() => {
+          PresetImportExportService.exportPreset(selectedPreset);
+        })
+    );
+
+    // Button: Import JSON
+    toolbarSetting.addButton((btn) =>
+      btn
+        .setButtonText("Import JSON")
+        .setTooltip("Import a preset from a JSON file")
+        .onClick(() => {
+          const fileInput = document.createElement("input");
+          fileInput.type = "file";
+          fileInput.accept = ".json";
+          fileInput.style.display = "none";
+          document.body.appendChild(fileInput);
+
+          fileInput.onchange = async () => {
+            if (fileInput.files && fileInput.files[0]) {
+              try {
+                const imported = await PresetImportExportService.importPresetFromFile(fileInput.files[0]);
+                this.plugin.settings.userPresets.push(imported);
+                this.plugin.settings.selectedPresetId = imported.id;
+                this.plugin.settings.templateString = imported.template;
+                await this.plugin.saveSettings();
+                new Notice(`Successfully imported "${imported.name}"!`);
+                this.display();
+              } catch (err: any) {
+                new Notice(`Failed to import preset: ${err.message || err}`);
+              }
+            }
+            document.body.removeChild(fileInput);
+          };
+
+          fileInput.click();
+        })
+    );
+
+    // Authoritative Template Text Area
+    new Setting(containerEl)
+      .setName("Citation Template (Authoritative)")
+      .setDesc("Directly edit the active template string. Literal newlines and \\n are evaluated when pasting.");
+
+    const textAreaEl = containerEl.createEl("textarea", {
+      cls: "paste-with-source-template-textarea",
+    });
+    textAreaEl.value = this.plugin.settings.templateString;
+    textAreaEl.rows = 4;
+    textAreaEl.style.width = "100%";
+    textAreaEl.style.fontFamily = "var(--font-monospace)";
+    textAreaEl.style.fontSize = "0.9em";
+    textAreaEl.style.padding = "8px";
+    textAreaEl.style.borderRadius = "4px";
+    textAreaEl.style.border = "1px solid var(--background-modifier-border)";
+    textAreaEl.style.backgroundColor = "var(--background-primary)";
+    textAreaEl.style.color = "var(--text-normal)";
+    textAreaEl.style.resize = "vertical";
+
+    textAreaEl.addEventListener("input", async () => {
+      this.plugin.settings.templateString = textAreaEl.value;
+      await this.plugin.saveSettings();
+      updateLivePreview();
+    });
+
+    // Clickable Variable Badges
+    const pillsContainer = containerEl.createEl("div");
+    pillsContainer.style.marginTop = "8px";
+    pillsContainer.style.marginBottom = "15px";
+
+    const pillsLabel = pillsContainer.createEl("span", { text: "Click to insert variable: " });
+    pillsLabel.style.fontSize = "0.85em";
+    pillsLabel.style.color = "var(--text-muted)";
+    pillsLabel.style.marginRight = "6px";
+
+    const variables = [
+      { tag: "{url}", desc: "Origin URL" },
+      { tag: "{domain}", desc: "Hostname" },
+      { tag: "{title}", desc: "Title" },
+      { tag: "{date}", desc: "YYYY-MM-DD" },
+      { tag: "{time}", desc: "HH:mm" },
+      { tag: "{datetime}", desc: "Date & Time" },
+      { tag: "{link}", desc: "Markdown Link" },
+      { tag: "{source}", desc: "'Source' label" },
+      { tag: "\\n", desc: "Newline" },
+    ];
+
+    for (const v of variables) {
+      const pill = pillsContainer.createEl("button", { text: v.tag });
+      pill.style.fontSize = "0.8em";
+      pill.style.padding = "2px 6px";
+      pill.style.margin = "2px 3px";
+      pill.style.borderRadius = "3px";
+      pill.style.cursor = "pointer";
+      pill.title = v.desc;
+      pill.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const start = textAreaEl.selectionStart || 0;
+        const end = textAreaEl.selectionEnd || 0;
+        const curVal = textAreaEl.value;
+        textAreaEl.value = curVal.substring(0, start) + v.tag + curVal.substring(end);
+        textAreaEl.selectionStart = textAreaEl.selectionEnd = start + v.tag.length;
+        textAreaEl.focus();
+
+        this.plugin.settings.templateString = textAreaEl.value;
+        await this.plugin.saveSettings();
+        updateLivePreview();
+      });
+    }
+
+    // Dynamic Live Preview Box
+    const previewHeader = containerEl.createEl("div", { text: "👁️ Live Preview (Sample URL):" });
+    previewHeader.style.fontWeight = "bold";
+    previewHeader.style.fontSize = "0.9em";
+    previewHeader.style.marginBottom = "5px";
+
+    const previewBox = containerEl.createEl("pre");
+    previewBox.style.padding = "10px";
+    previewBox.style.borderRadius = "4px";
+    previewBox.style.backgroundColor = "var(--background-secondary)";
+    previewBox.style.border = "1px solid var(--background-modifier-border)";
+    previewBox.style.whiteSpace = "pre-wrap";
+    previewBox.style.wordBreak = "break-all";
+    previewBox.style.fontFamily = "var(--font-monospace)";
+    previewBox.style.fontSize = "0.85em";
+    previewBox.style.margin = "0 0 20px 0";
+
+    updateLivePreview = () => {
+      const sampleContext = TemplateEngine.buildContext(
+        "https://en.wikipedia.org/wiki/Obsidian_(software)",
+        this.plugin.settings.useUrlAsLinkLabel
+      );
+      const rendered = TemplateEngine.render(this.plugin.settings.templateString, sampleContext);
+      previewBox.textContent = rendered || "(Empty template - nothing will be appended)";
+    };
+
+    // Initial preview render
+    updateLivePreview();
   }
 }
