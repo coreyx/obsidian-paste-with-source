@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Export any preset or current template as a standardized `.json` file (`paste-with-source-preset/v1`) via browser Blob download.
   - Import `.json` preset files via HTML5 file input with full schema and error validation.
 - **Quick Preset Switcher Hotkeys (Slots A, B, C)**:
-  - Hotkeys to switch active citation preset on the fly: <kbd>Ctrl+Shift+A</kbd> (Slot A: editable template), <kbd>Ctrl+Shift+B</kbd> (Slot B: configurable preset, default Minimal Domain), and <kbd>Ctrl+Shift+C</kbd> (Slot C: configurable preset, default Academic Citation).
+  - Hotkeys to switch active citation preset on the fly: <kbd>Ctrl+Alt+A</kbd> (Slot A: editable template), <kbd>Ctrl+Alt+B</kbd> (Slot B: configurable preset, default Minimal Domain), and <kbd>Ctrl+Alt+C</kbd> (Slot C: configurable preset, default Academic Citation).
   - Preserves 100% native Obsidian paste fidelity for HTML headings, bold, tables, lists, and links through standard <kbd>Ctrl+V</kbd>.
   - Instant visual feedback via Obsidian notices on slot activation.
   - Configurable in settings with reactive slot indicators and preset dropdowns.

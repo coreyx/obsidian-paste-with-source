@@ -735,7 +735,7 @@ export default class PasteWithSourcePlugin extends Plugin {
       name: "Activate Citation Preset A (Editable Template)",
       hotkeys: [
         {
-          modifiers: ["Mod", "Shift"],
+          modifiers: ["Mod", "Alt"],
           key: "A",
         },
       ],
@@ -749,7 +749,7 @@ export default class PasteWithSourcePlugin extends Plugin {
       name: "Activate Citation Preset B",
       hotkeys: [
         {
-          modifiers: ["Mod", "Shift"],
+          modifiers: ["Mod", "Alt"],
           key: "B",
         },
       ],
@@ -763,7 +763,7 @@ export default class PasteWithSourcePlugin extends Plugin {
       name: "Activate Citation Preset C",
       hotkeys: [
         {
-          modifiers: ["Mod", "Shift"],
+          modifiers: ["Mod", "Alt"],
           key: "C",
         },
       ],
@@ -1192,7 +1192,7 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
     // Authoritative Template Text Area (Preset Slot A)
     new Setting(containerEl)
       .setName("Citation Template (Preset Slot A)")
-      .setDesc("Directly edit the primary template string. This defines Preset Slot A (Ctrl+Shift+A). Literal newlines and \\n are evaluated when pasting.");
+      .setDesc("Directly edit the primary template string. This defines Preset Slot A (Ctrl+Alt+A). Literal newlines and \\n are evaluated when pasting.");
 
     const textAreaEl = containerEl.createEl("textarea", {
       cls: "paste-with-source-template-textarea",
@@ -1355,7 +1355,7 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
 
     // Slot A information
     new Setting(containerEl)
-      .setName("Preset Slot A (Ctrl+Shift+A)")
+      .setName("Preset Slot A (Ctrl+Alt+A)")
       .setDesc("Always uses the editable Citation Template above. Edits to the template take effect immediately.");
 
     // Slot B dropdown
@@ -1365,7 +1365,7 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
       allPresets[0];
 
     const slotBSetting = new Setting(containerEl)
-      .setName("Preset Slot B (Ctrl+Shift+B)")
+      .setName("Preset Slot B (Ctrl+Alt+B)")
       .setDesc(presetB.description || presetB.template.replace(/\\n/g, " ").trim())
       .addDropdown((dropdown) => {
         for (const preset of allPresets) {
@@ -1393,7 +1393,7 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
       allPresets[0];
 
     const slotCSetting = new Setting(containerEl)
-      .setName("Preset Slot C (Ctrl+Shift+C)")
+      .setName("Preset Slot C (Ctrl+Alt+C)")
       .setDesc(presetC.description || presetC.template.replace(/\\n/g, " ").trim())
       .addDropdown((dropdown) => {
         for (const preset of allPresets) {

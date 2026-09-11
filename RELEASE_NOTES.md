@@ -49,9 +49,9 @@ Take full control over how citations are formatted in your notes!
 
 ### ⚡ Quick Preset Switcher Hotkeys (Slots A, B, C)
 Switch between citation styles on the fly with dedicated hotkeys, keeping your workflow frictionless:
-- **`Ctrl+Shift+A` (`Cmd+Shift+A`)**: Activate Preset Slot A (Always uses your editable Citation Template from settings).
-- **`Ctrl+Shift+B` (`Cmd+Shift+B`)**: Activate Preset Slot B (Configurable preset, defaults to *Minimal Domain*).
-- **`Ctrl+Shift+C` (`Cmd+Shift+C`)**: Activate Preset Slot C (Configurable preset, defaults to *Academic Citation*).
+- **`Ctrl+Alt+A` (`Cmd+Opt+A`)**: Activate Preset Slot A (Always uses your editable Citation Template from settings).
+- **`Ctrl+Alt+B` (`Cmd+Opt+B`)**: Activate Preset Slot B (Configurable preset, defaults to *Minimal Domain*).
+- **`Ctrl+Alt+C` (`Cmd+Opt+C`)**: Activate Preset Slot C (Configurable preset, defaults to *Academic Citation*).
 - **Native Paste Fidelity**: Standard paste (<kbd>Ctrl+V</kbd>) continues through Obsidian's native paste handler, preserving rich HTML conversion (headings `#`, bold `**`, tables, lists, links) with 100% fidelity while appending the currently active citation format.
 - **Instant Visual Feedback**: Switching slots triggers a brief Obsidian notification showing the activated preset name.
 - **Customizable**: Rebind or clear hotkeys at any time in Obsidian's **Settings → Hotkeys**.
