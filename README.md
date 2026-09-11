@@ -68,10 +68,10 @@ Then enable the plugin in Obsidian under **Settings → Community Plugins**.
 | **Intercept Shortcut** | Choose which shortcut to intercept (`Cmd+V` on macOS; `Both`, `Ctrl+V only`, or `Shift+Insert only` on Windows) |
 | **Paste Mode** | Choose between default handler + source link or plain clipboard text + source link |
 | **Use URL as Link Label** | Format `{link}` as `[url](url)` instead of `[Source](url)` |
-| **Template Preset** | Select from built-in presets (OneNote, Markdown Quote, Academic) or your custom presets |
+| **Template Preset** | Select from 8 built-in presets (OneNote, Italic Attribution, Minimal Domain, Parenthetical, Academic, Obsidian Callout, Markdown Quote, Raw URL) or your custom presets |
 | **Preset Actions** | Save As New, Update, Delete, Export JSON, and Import JSON |
 | **Citation Template** | **Authoritative template box** evaluated on paste; accepts `{var}` tags and multi-line markdown |
-| **Click to Insert Variable** | Quick-insertion buttons for `{url}`, `{domain}`, `{date}`, `{time}`, etc. |
+| **Click to Insert Variable** | Quick-insertion buttons for `{url}`, `{domain}`, `{page}`, `{path}`, `{date}`, etc. |
 | **Live Preview** | Real-time preview of the rendered citation using a sample URL |
 
 ---
@@ -94,29 +94,65 @@ Then enable the plugin in Obsidian under **Settings → Community Plugins**.
 
 ---
 
-## 🧪 Citation Examples
+## 🧪 Built-In Preset Examples
 
 If you copy text from a webpage and paste it into Obsidian:
 
-**OneNote Style Preset (`\n\nFrom <{link}>`):**
+**1. OneNote Style (`\n\nFrom <{link}>`):**
 ```markdown
 Pasted excerpt text...
 
 From <https://example.com/article>
 ```
 
-**Markdown Blockquote Preset (`\n\n> — [Source]({url})`):**
+**2. Italic Attribution (`\n\n— *Source: [{page}]({url})*`):**
+```markdown
+Pasted excerpt text...
+
+— *Source: [Article Name](https://example.com/article)*
+```
+
+**3. Minimal Domain (`\n\nSource: [{domain}]({url})`):**
+```markdown
+Pasted excerpt text...
+
+Source: [example.com](https://example.com/article)
+```
+
+**4. Parenthetical (`\n\n(Source: [{page}]({url}))`):**
+```markdown
+Pasted excerpt text...
+
+(Source: [Article Name](https://example.com/article))
+```
+
+**5. Academic Citation (`\n\nSource: [{page}]({url}) via {domain} (Accessed: {date})`):**
+```markdown
+Pasted excerpt text...
+
+Source: [Article Name](https://example.com/article) via example.com (Accessed: 2026-09-11)
+```
+
+**6. Obsidian Callout (`\n\n> [!info] Source: [{page}]({url})\n> Accessed on {date}`):**
+```markdown
+Pasted excerpt text...
+
+> [!info] Source: [Article Name](https://example.com/article)
+> Accessed on 2026-09-11
+```
+
+**7. Markdown Quote (`\n\n> — [Source]({url})`):**
 ```markdown
 Pasted excerpt text...
 
 > — [Source](https://example.com/article)
 ```
 
-**Academic Citation Preset (`\n\n> Source: [{domain}]({url}) (Accessed: {date})`):**
+**8. Raw URL (`\n\n{url}`):**
 ```markdown
 Pasted excerpt text...
 
-> Source: [example.com](https://example.com/article) (Accessed: 2026-09-11)
+https://example.com/article
 ```
 
 ---

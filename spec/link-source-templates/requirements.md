@@ -112,7 +112,7 @@ This document specifies the requirements for the **Link Source Templates** featu
 > **So that** I can easily revert to the classic behaviors at any time.
 
 ### EARS Requirement Statement
-- **Ubiquitous**: The system shall provide two immutable built-in presets: `OneNote Style` and `Markdown Quote`.
+- **Ubiquitous**: The system shall provide immutable built-in presets: `OneNote Style`, `Italic Attribution`, `Minimal Domain`, `Parenthetical`, `Academic Citation`, `Obsidian Callout`, `Markdown Quote`, and `Raw URL`.
 - **State-Driven**: Built-in presets shall have `isBuiltIn: true` and cannot be deleted, renamed, or overwritten.
 - **Optional Feature**: Where a user customizes a built-in preset in the text area, they may save their changes as a new user preset without affecting the built-in preset.
 

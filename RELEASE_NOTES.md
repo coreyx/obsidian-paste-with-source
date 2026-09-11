@@ -25,10 +25,15 @@ Take full control over how citations are formatted in your notes!
 - **Dynamic Live Preview**: See exactly how your citation will look in real-time as you type, rendered with a sample URL.
 
 ### 📦 Bolted-On Presets & JSON Import/Export
-- **Built-In Presets**:
+- **Built-In Presets (8 Curated Options)**:
   - `OneNote Style` (`\n\nFrom <{link}>`): Replicates classic Microsoft OneNote web paste behavior.
+  - `Italic Attribution` (`\n\n— *Source: [{page}]({url})*`): Clean editorial dash with italicized page link.
+  - `Minimal Domain` (`\n\nSource: [{domain}]({url})`): Clean source link using the domain name.
+  - `Parenthetical` (`\n\n(Source: [{page}]({url}))`): Unobtrusive parenthetical citation.
+  - `Academic Citation` (`\n\nSource: [{page}]({url}) via {domain} (Accessed: {date})`): Formal attribution with access date.
+  - `Obsidian Callout` (`\n\n> [!info] Source: [{page}]({url})\n> Accessed on {date}`): Native styled Obsidian callout.
   - `Markdown Quote` (`\n\n> — [Source]({url})`): Blockquoted markdown attribution.
-  - `Academic Citation` (`\n\n> Source: [{domain}]({url}) (Accessed: {date})`): Full domain attribution with access date.
+  - `Raw URL` (`\n\n{url}`): Plain origin URL without markdown links.
 - **Preset Management**: Save the current text area as a new named preset, update custom presets, or delete presets you no longer need (built-in presets are protected).
 - **JSON File Import & Export**:
   - Export any preset as a standalone `.json` file to backup or share with your team.

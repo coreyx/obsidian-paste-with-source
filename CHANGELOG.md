@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Bolted-On Preset Management**:
   - Authoritative text box architecture: `settings.templateString` is always the single source of truth for active citations.
   - Presets subsystem serving as an assistive UI layer without rigid binding or forced synchronization.
-  - Three built-in presets: `OneNote Style`, `Markdown Quote`, and `Academic Citation`.
+  - Eight built-in presets: `OneNote Style`, `Italic Attribution`, `Minimal Domain`, `Parenthetical`, `Academic Citation`, `Obsidian Callout`, `Markdown Quote`, and `Raw URL`.
   - Full CRUD operations for custom user presets: Save As New (via modal), Update Preset, and Delete Preset.
   - Built-in presets are protected and immutable.
 - **Preset JSON Import & Export**:

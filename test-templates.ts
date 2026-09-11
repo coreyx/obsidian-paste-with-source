@@ -149,20 +149,34 @@ console.log("Running TemplateEngine unit tests...");
 
 // Test 7: Built-in presets
 {
-  assert(BUILTIN_PRESETS.length === 3, "Contains 3 built-in presets");
-  const onenote = PresetManager.getPresetById("builtin-onenote");
-  assert(!!onenote && onenote.isBuiltIn === true, "OneNote preset exists and is built-in");
+  assert(BUILTIN_PRESETS.length === 8, "Contains 8 built-in presets");
+  const expectedIds = [
+    "builtin-onenote",
+    "builtin-italic-attribution",
+    "builtin-minimal-domain",
+    "builtin-parenthetical",
+    "builtin-academic",
+    "builtin-obsidian-callout",
+    "builtin-markdown-quote",
+    "builtin-raw-url",
+  ];
 
-  const mdQuote = PresetManager.getPresetById("builtin-markdown-quote");
-  assert(!!mdQuote && mdQuote.isBuiltIn === true, "Markdown Quote preset exists and is built-in");
-
-  const academic = PresetManager.getPresetById("builtin-academic");
-  assert(!!academic && academic.isBuiltIn === true, "Academic preset exists and is built-in");
+  for (const id of expectedIds) {
+    const p = PresetManager.getPresetById(id);
+    assert(!!p && p.isBuiltIn === true, `Built-in preset '${id}' exists and is marked built-in`);
+  }
 
   const url = "https://obsidian.md";
   const ctx = TemplateEngine.buildContext(url, true);
-  const onenoteRendered = TemplateEngine.render(onenote!.template, ctx);
-  assert(onenoteRendered === `\n\nFrom <[${url}](${url})>`, "OneNote preset renders expected citation");
+
+  const onenote = PresetManager.getPresetById("builtin-onenote")!;
+  assert(TemplateEngine.render(onenote.template, ctx) === `\n\nFrom <[${url}](${url})>`, "OneNote preset renders expected citation");
+
+  const italic = PresetManager.getPresetById("builtin-italic-attribution")!;
+  assert(TemplateEngine.render(italic.template, ctx) === `\n\n— *Source: [obsidian.md](${url})*`, "Italic preset renders expected citation");
+
+  const callout = PresetManager.getPresetById("builtin-obsidian-callout")!;
+  assert(TemplateEngine.render(callout.template, ctx).startsWith(`\n\n> [!info] Source: [obsidian.md](${url})`), "Obsidian Callout preset renders callout header");
 }
 
 // Test 8: Preset JSON Import Validation

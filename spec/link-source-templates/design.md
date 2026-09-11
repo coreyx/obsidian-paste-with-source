@@ -258,6 +258,41 @@ export class PresetManager {
       description: "Classic Microsoft OneNote format (From <url>)",
     },
     {
+      id: "builtin-italic-attribution",
+      name: "Italic Attribution",
+      template: "\n\n— *Source: [{page}]({url})*",
+      isBuiltIn: true,
+      description: "Editorial dash attribution with italicized page link",
+    },
+    {
+      id: "builtin-minimal-domain",
+      name: "Minimal Domain",
+      template: "\n\nSource: [{domain}]({url})",
+      isBuiltIn: true,
+      description: "Clean, unobtrusive source link using the domain name",
+    },
+    {
+      id: "builtin-parenthetical",
+      name: "Parenthetical",
+      template: "\n\n(Source: [{page}]({url}))",
+      isBuiltIn: true,
+      description: "Casual parenthetical citation with page link",
+    },
+    {
+      id: "builtin-academic",
+      name: "Academic Citation",
+      template: "\n\nSource: [{page}]({url}) via {domain} (Accessed: {date})",
+      isBuiltIn: true,
+      description: "Comprehensive citation with page, domain, and access date",
+    },
+    {
+      id: "builtin-obsidian-callout",
+      name: "Obsidian Callout",
+      template: "\n\n> [!info] Source: [{page}]({url})\n> Accessed on {date}",
+      isBuiltIn: true,
+      description: "Styled Obsidian info callout box with access date",
+    },
+    {
       id: "builtin-markdown-quote",
       name: "Markdown Quote",
       template: "\n\n> — [Source]({url})",
@@ -265,11 +300,11 @@ export class PresetManager {
       description: "Blockquoted source link (> — [Source](url))",
     },
     {
-      id: "builtin-academic",
-      name: "Academic Citation",
-      template: "\n\n> Source: [{domain}]({url}) (Accessed: {date})",
+      id: "builtin-raw-url",
+      name: "Raw URL",
+      template: "\n\n{url}",
       isBuiltIn: true,
-      description: "Domain link with access date",
+      description: "Plain origin URL without markdown link markup",
     },
   ];
 
