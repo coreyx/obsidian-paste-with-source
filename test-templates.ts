@@ -45,10 +45,14 @@ console.log("Running TemplateEngine unit tests...");
 
   assert(context.url === url, "Context url matches");
   assert(context.domain === "en.wikipedia.org", "Domain extracted without www");
-  assert(context.title === "en.wikipedia.org", "Title fallback matches domain");
+  assert(context.title === "Obsidian (software)", "Title extracted from path slug");
   assert(/^\d{4}-\d{2}-\d{2}$/.test(context.date), "Date matches YYYY-MM-DD");
   assert(/^\d{2}:\d{2}$/.test(context.time), "Time matches HH:mm");
   assert(context.link === `[${url}](${url})`, "Link matches [url](url) when useUrlAsLinkLabel is true");
+
+  const rootUrl = "https://news.ycombinator.com/";
+  const rootContext = TemplateEngine.buildContext(rootUrl, true);
+  assert(rootContext.title === "news.ycombinator.com", "Title fallback matches domain for root URL");
 
   const template = "Source: {domain} at {url} on {date}";
   const rendered = TemplateEngine.render(template, context);
@@ -116,6 +120,17 @@ console.log("Running TemplateEngine unit tests...");
   assert(TemplateEngine.extractDomain("http://sub.domain.co.uk/path") === "sub.domain.co.uk", "Subdomains preserved");
   assert(TemplateEngine.extractDomain("https://localhost:8080/app") === "localhost", "Localhost handled");
   assert(TemplateEngine.extractDomain("not-a-valid-url/path") === "not-a-valid-url", "Non-URL string handled gracefully");
+}
+
+// Test 6b: Title extraction edge cases
+{
+  assert(TemplateEngine.extractTitle("https://en.wikipedia.org/wiki/Obsidian_(software)") === "Obsidian (software)", "Extracts title from Wikipedia path with underscores");
+  assert(TemplateEngine.extractTitle("https://github.com/coreyx/paste-with-source") === "Paste with source", "Extracts title from GitHub slug with hyphens");
+  assert(TemplateEngine.extractTitle("https://example.com/blog/2026/my-first-post.html") === "My first post", "Strips .html and converts slug to title");
+  assert(TemplateEngine.extractTitle("https://example.com/search/hello%20world") === "Hello world", "Decodes URI components");
+  assert(TemplateEngine.extractTitle("https://example.com/") === "example.com", "Falls back to domain for root URL with slash");
+  assert(TemplateEngine.extractTitle("https://www.example.com") === "example.com", "Falls back to domain for root URL without www");
+  assert(TemplateEngine.extractTitle("not-a-valid-url/path") === "not-a-valid-url", "Handles invalid URL gracefully");
 }
 
 // Test 7: Built-in presets

@@ -99,6 +99,7 @@ export class TemplateEngine {
   static buildContext(url: string, useUrlAsLinkLabel: boolean = true): TemplateContext {
     const now = new Date();
     const domain = this.extractDomain(url);
+    const title = this.extractTitle(url);
     const link = useUrlAsLinkLabel
       ? `[${url}](${url})`
       : `[Source](${url})`;
@@ -117,7 +118,7 @@ export class TemplateEngine {
     return {
       url,
       domain,
-      title: domain,
+      title,
       date,
       time,
       time_12,
@@ -152,6 +153,39 @@ export class TemplateEngine {
       return parsed.hostname.replace(/^www\./i, "");
     } catch {
       return urlStr.replace(/^https?:\/\//i, "").split("/")[0].replace(/^www\./i, "");
+    }
+  }
+
+  /**
+   * Intelligently derives a human-readable page/article title from the URL path,
+   * decoding URI components and converting slugs (underscores and hyphens) into clean titles.
+   */
+  static extractTitle(urlStr: string): string {
+    try {
+      const parsed = new URL(urlStr);
+      const pathname = parsed.pathname.replace(/\/+$/, "");
+      if (pathname && pathname !== "/") {
+        const segments = pathname.split("/").filter((s) => s.length > 0);
+        if (segments.length > 0) {
+          let lastSegment = segments[segments.length - 1];
+          // Strip web extensions (.html, .htm, .php, etc.)
+          lastSegment = lastSegment.replace(/\.(html?|php|asp[x]?|jsp|xhtml|md)$/i, "");
+          let decoded = lastSegment;
+          try {
+            decoded = decodeURIComponent(lastSegment);
+          } catch {
+            // Retain raw segment if URI encoding is malformed
+          }
+          // Convert underscores and hyphens into clean word breaks
+          const cleaned = decoded.replace(/[_-]+/g, " ").trim();
+          if (cleaned.length > 0) {
+            return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+          }
+        }
+      }
+      return parsed.hostname.replace(/^www\./i, "");
+    } catch {
+      return this.extractDomain(urlStr);
     }
   }
 }
