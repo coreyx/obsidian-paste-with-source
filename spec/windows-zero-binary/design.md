@@ -58,13 +58,14 @@ export class WindowsClipboardProvider implements IClipboardSourceProvider {
         : require("electron");
 
       if (electron && electron.clipboard) {
-        // Try standard registered Windows format
-        let buf: Buffer = electron.clipboard.readBuffer("HTML Format");
-
-        // Try extended OS clipboard format identifier if standard returns empty
-        if (!buf || buf.length === 0) {
-          buf = electron.clipboard.readBuffer('electron application/osclipboard;format="HTML Format"');
-        }
+        // Read buffer with deprecation warning suppression
+        let buf: Buffer = safelyReadClipboard(() => {
+          let b = electron.clipboard.readBuffer("HTML Format");
+          if (!b || b.length === 0) {
+            b = electron.clipboard.readBuffer('electron application/osclipboard;format="HTML Format"');
+          }
+          return b;
+        });
 
         if (buf && buf.length > 0) {
           const url = this.parseSourceUrlFromBuffer(buf);

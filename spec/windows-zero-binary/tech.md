@@ -110,3 +110,26 @@ if (match) {
 - **Compiler**: `tsc` compiles `main.ts` directly to `main.js`.
 - **Build Script (`build.ts`)**: Eliminates `buildCSharp()`, removes `dotnet build` execution, and packages only `main.js` and `manifest.json`.
 - **Packaging (`dist/`)**: Distribution footprint drops from ~170 KB down to ~20 KB.
+
+---
+
+## 6. Electron Renderer Clipboard Deprecation & Scoped Suppression
+
+For detailed investigation notes, architectural constraints, and root cause analysis, see [electron-renderer-clipboard-findings.md](../../spec/windows-zero-binary/electron-renderer-clipboard-findings.md).
+
+### 6.1 Summary of Deprecation
+In modern Electron versions, accessing `clipboard` methods from renderer processes triggers an advisory notice:
+```text
+(electron) Accessing 'clipboard.readBuffer' from the renderer process is deprecated and will be removed.
+Please use the 'contextBridge' API to access the clipboard API from the renderer.
+```
+
+### 6.2 Obsidian Host Constraints & Solution
+Because community plugins run strictly in Obsidian's renderer window and cannot modify Obsidian's preload scripts or register `contextBridge` handlers, direct access via `window.require("electron").clipboard` is required to read raw Win32 `CF_HTML` and macOS WebArchive buffers.
+
+To prevent DevTools console clutter without side effects, calls are wrapped with `safelyReadClipboard<T>()`:
+- Temporarily scopes `process.noDeprecation = true` during the synchronous read.
+- Intercepts `console.warn` for clipboard deprecations.
+- Immediately restores process and logger state in a `finally` block.
+- Backed by an asynchronous zero-binary PowerShell CLI fallback if future Electron versions ever restrict renderer access entirely.
+
