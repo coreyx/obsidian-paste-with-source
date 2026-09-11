@@ -877,8 +877,30 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
       .setName("Preset Actions")
       .setDesc("Manage your custom presets and share them as JSON files");
 
+    // Responsive layout: Stack info above controls and wrap buttons so text is never squished
+    toolbarSetting.settingEl.style.display = "flex";
+    toolbarSetting.settingEl.style.flexDirection = "column";
+    toolbarSetting.settingEl.style.alignItems = "stretch";
+    toolbarSetting.settingEl.style.gap = "8px";
+
+    toolbarSetting.infoEl.style.width = "100%";
+    toolbarSetting.infoEl.style.marginRight = "0";
+
+    toolbarSetting.controlEl.style.display = "flex";
+    toolbarSetting.controlEl.style.flexWrap = "wrap";
+    toolbarSetting.controlEl.style.justifyContent = "flex-start";
+    toolbarSetting.controlEl.style.gap = "8px";
+    toolbarSetting.controlEl.style.width = "100%";
+
+    const styleActionButton = (btn: any) => {
+      if (btn && btn.buttonEl) {
+        btn.buttonEl.style.whiteSpace = "nowrap";
+        btn.buttonEl.style.flexShrink = "0";
+      }
+    };
+
     // Button: Save As New Preset
-    toolbarSetting.addButton((btn) =>
+    toolbarSetting.addButton((btn) => {
       btn
         .setButtonText("Save As New")
         .setTooltip("Save current text box content as a new custom preset")
@@ -896,8 +918,9 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
             new Notice(`Saved preset "${name}".`);
             this.display();
           }).open();
-        })
-    );
+        });
+      styleActionButton(btn);
+    });
 
     // Button: Update Preset (disabled for built-ins)
     toolbarSetting.addButton((btn) => {
@@ -912,6 +935,7 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
           new Notice(`Updated preset "${selectedPreset.name}".`);
           this.display();
         });
+      styleActionButton(btn);
     });
 
     // Button: Delete Preset (disabled for built-ins)
@@ -929,20 +953,22 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
           new Notice(`Deleted preset "${selectedPreset.name}".`);
           this.display();
         });
+      styleActionButton(btn);
     });
 
     // Button: Export JSON
-    toolbarSetting.addButton((btn) =>
+    toolbarSetting.addButton((btn) => {
       btn
         .setButtonText("Export JSON")
         .setTooltip("Download selected preset as a standalone JSON file")
         .onClick(() => {
           PresetImportExportService.exportPreset(selectedPreset);
-        })
-    );
+        });
+      styleActionButton(btn);
+    });
 
     // Button: Import JSON
-    toolbarSetting.addButton((btn) =>
+    toolbarSetting.addButton((btn) => {
       btn
         .setButtonText("Import JSON")
         .setTooltip("Import a preset from a JSON file")
@@ -971,8 +997,9 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
           };
 
           fileInput.click();
-        })
-    );
+        });
+      styleActionButton(btn);
+    });
 
     // Authoritative Template Text Area
     new Setting(containerEl)
@@ -1002,13 +1029,18 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
 
     // Clickable Variable Badges
     const pillsContainer = containerEl.createEl("div");
+    pillsContainer.style.display = "flex";
+    pillsContainer.style.flexWrap = "wrap";
+    pillsContainer.style.alignItems = "center";
+    pillsContainer.style.gap = "4px";
     pillsContainer.style.marginTop = "8px";
     pillsContainer.style.marginBottom = "15px";
 
     const pillsLabel = pillsContainer.createEl("span", { text: "Click to insert variable: " });
     pillsLabel.style.fontSize = "0.85em";
     pillsLabel.style.color = "var(--text-muted)";
-    pillsLabel.style.marginRight = "6px";
+    pillsLabel.style.marginRight = "4px";
+    pillsLabel.style.flexShrink = "0";
 
     const variables = [
       { tag: "{url}", desc: "Origin URL" },
@@ -1026,7 +1058,9 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
       const pill = pillsContainer.createEl("button", { text: v.tag });
       pill.style.fontSize = "0.8em";
       pill.style.padding = "2px 6px";
-      pill.style.margin = "2px 3px";
+      pill.style.margin = "0";
+      pill.style.whiteSpace = "nowrap";
+      pill.style.flexShrink = "0";
       pill.style.borderRadius = "3px";
       pill.style.cursor = "pointer";
       pill.title = v.desc;

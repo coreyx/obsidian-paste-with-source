@@ -7,11 +7,14 @@ Module.prototype.require = function (id: string, ...rest: any[]) {
       Plugin: class {},
       PluginSettingTab: class {},
       Setting: class {
+        settingEl = { style: {} };
+        infoEl = { style: {} };
+        controlEl = { style: {} };
         setName() { return this; }
         setDesc() { return this; }
         addToggle() { return this; }
         addDropdown() { return this; }
-        addButton() { return this; }
+        addButton(cb?: any) { if (cb) cb({ setButtonText: () => this, setTooltip: () => this, setDisabled: () => this, setWarning: () => this, onClick: () => this, buttonEl: { style: {} } }); return this; }
       },
       Modal: class {},
       Notice: class {},
