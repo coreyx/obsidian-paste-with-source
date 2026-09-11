@@ -139,7 +139,7 @@ This document provides a detailed implementation checklist for the **Link Source
      - Multi-line textarea bound directly to `this.plugin.settings.templateString`.
      - Updates live preview on every keystroke (`input` event).
   3. Add Clickable Variable Badges:
-     - Buttons for `{url}`, `{domain}`, `{title}`, `{date}`, `{time}`, `{datetime}`, `{link}`.
+     - Buttons for `{url}`, `{domain}`, `{page}`, `{path}`, `{date}`, `{time}`, `{datetime}`, `{link}`.
      - Clicking inserts variable tag at current cursor position in textarea.
   4. Add Dynamic Live Preview:
      - Real-time rendered citation box demonstrating output with sample URL data.

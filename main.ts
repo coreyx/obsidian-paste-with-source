@@ -83,7 +83,8 @@ export class PresetManager {
 export interface TemplateContext {
   url: string;
   domain: string;
-  title: string;
+  page: string;
+  path: string;
   date: string;
   time: string;
   time_12: string;
@@ -99,7 +100,8 @@ export class TemplateEngine {
   static buildContext(url: string, useUrlAsLinkLabel: boolean = true): TemplateContext {
     const now = new Date();
     const domain = this.extractDomain(url);
-    const title = this.extractTitle(url);
+    const path = this.extractPath(url);
+    const page = this.extractPage(url);
     const link = useUrlAsLinkLabel
       ? `[${url}](${url})`
       : `[Source](${url})`;
@@ -118,7 +120,8 @@ export class TemplateEngine {
     return {
       url,
       domain,
-      title,
+      page,
+      path,
       date,
       time,
       time_12,
@@ -156,11 +159,21 @@ export class TemplateEngine {
     }
   }
 
+  static extractPath(urlStr: string): string {
+    try {
+      const parsed = new URL(urlStr);
+      return parsed.pathname || "/";
+    } catch {
+      const match = urlStr.replace(/^https?:\/\/[^\/]+/i, "");
+      return match.startsWith("/") ? match.split(/[?#]/)[0] : "/";
+    }
+  }
+
   /**
-   * Intelligently derives a human-readable page/article title from the URL path,
+   * Intelligently derives a human-readable page/article name from the URL path slug,
    * decoding URI components and converting slugs (underscores and hyphens) into clean titles.
    */
-  static extractTitle(urlStr: string): string {
+  static extractPage(urlStr: string): string {
     try {
       const parsed = new URL(urlStr);
       const pathname = parsed.pathname.replace(/\/+$/, "");
@@ -1000,7 +1013,8 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
     const variables = [
       { tag: "{url}", desc: "Origin URL" },
       { tag: "{domain}", desc: "Hostname" },
-      { tag: "{title}", desc: "Title" },
+      { tag: "{page}", desc: "Page/Article Name" },
+      { tag: "{path}", desc: "URL Path" },
       { tag: "{date}", desc: "YYYY-MM-DD" },
       { tag: "{time}", desc: "HH:mm" },
       { tag: "{datetime}", desc: "Date & Time" },

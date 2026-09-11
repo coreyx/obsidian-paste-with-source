@@ -32,13 +32,13 @@ This document specifies the requirements for the **Link Source Templates** featu
 #### 1.1 Supported Variable Identifiers
 - **AC 1.1.1**: The engine shall substitute `{url}` with the complete origin URL.
 - **AC 1.1.2**: The engine shall substitute `{domain}` with the extracted hostname (e.g., `wikipedia.org`, omitting leading `www.`).
-- **AC 1.1.3**: The engine shall substitute `{title}` with an extracted webpage title if present, or fallback to the clean domain/path segment.
-- **AC 1.1.4**: The engine shall substitute `{date}` with the current local date in `YYYY-MM-DD` format.
-- **AC 1.1.5**: The engine shall substitute `{time}` with the current local 24-hour time in `HH:mm` format.
-- **AC 1.1.6**: The engine shall substitute `{datetime}` with `YYYY-MM-DD HH:mm`.
-- **AC 1.1.7**: The engine shall substitute `{iso}` with an ISO-8601 UTC timestamp string.
-- **AC 1.1.8**: The engine shall substitute `{link}` with a markdown link formatted as `[{domain}]({url})` or `[{url}]({url})` based on user settings.
-- **AC 1.1.9**: The engine shall substitute `{source}` with the literal string `"Source"`.
+- **AC 1.1.3**: The engine shall substitute `{page}` with a human-readable page/article name derived from the URL path slug (e.g., `Obsidian (software)`), falling back to domain for root URLs.
+- **AC 1.1.4**: The engine shall substitute `{path}` with the raw URL pathname (e.g., `/wiki/Obsidian_(software)`).
+- **AC 1.1.5**: The engine shall substitute `{date}` with the current local date in `YYYY-MM-DD` format.
+- **AC 1.1.6**: The engine shall substitute `{time}` with the current local 24-hour time in `HH:mm` format.
+- **AC 1.1.7**: The engine shall substitute `{datetime}` with `YYYY-MM-DD HH:mm`.
+- **AC 1.1.8**: The engine shall substitute `{iso}` with an ISO-8601 UTC timestamp string.
+- **AC 1.1.9**: The engine shall substitute `{link}` with a markdown link formatted as `[{domain}]({url})` or `[{url}]({url})` based on user settings.
 
 #### 1.2 Multi-Line and Escape Handling
 - **AC 1.2.1**: Literal newline characters entered in the settings textarea shall be preserved in the rendered output.

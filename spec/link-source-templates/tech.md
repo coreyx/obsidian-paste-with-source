@@ -70,9 +70,9 @@ The template engine scans the template string for `{variable_name}` placeholders
 | :--- | :--- | :--- | :--- |
 | `{url}` | `string` | The complete, unescaped origin URL captured from clipboard | `https://en.wikipedia.org/wiki/Obsidian_(software)` |
 | `{domain}` | `string` | Hostname / domain parsed from the URL (without `www.`) | `en.wikipedia.org` |
-| `{title}` | `string` | Human-readable title (defaults to domain or path segment if unavailable) | `Obsidian (software)` |
+| `{page}` | `string` | Human-readable page/article name derived from URL path slug | `Obsidian (software)` |
+| `{path}` | `string` | Raw URL pathname | `/wiki/Obsidian_(software)` |
 | `{link}` | `string` | Markdown link formatting based on configured label preferences | `[en.wikipedia.org](https://en.wikipedia.org/...)` |
-| `{source}` | `string` | Standardized label string (`"Source"`) | `Source` |
 | `{date}` | `string` | Current local date in ISO standard format (`YYYY-MM-DD`) | `2026-09-11` |
 | `{time}` | `string` | Current local time in 24-hour format (`HH:mm`) | `14:35` |
 | `{time_12}` | `string` | Current local time in 12-hour format (`hh:mm a`) | `02:35 PM` |

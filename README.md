@@ -7,7 +7,7 @@ This Obsidian plugin enhances your clipboard pasting workflow by automatically a
 - 📎 **Source-Aware Pasting**: Appends the origin webpage URL when pasting content copied from browsers
 - 🍎 **macOS Support**: In-process Electron clipboard extraction supporting Chromium browsers (Google Chrome, Arc, Microsoft Edge, Brave, Opera) and Apple Safari (via built-in `bplist00` WebArchive decoding)
 - 🪟 **Windows Support**: In-process Electron clipboard extraction with native `CF_HTML` parsing and zero external binary dependencies
-- 📝 **Link Source Templates**: Fully customizable citation template engine with `{var}` placeholders (`{url}`, `{domain}`, `{title}`, `{date}`, `{time}`, `{datetime}`, `{iso}`, `{link}`)
+- 📝 **Link Source Templates**: Fully customizable citation template engine with `{var}` placeholders (`{url}`, `{domain}`, `{page}`, `{path}`, `{date}`, `{time}`, `{datetime}`, `{iso}`, `{link}`)
 - 📦 **Presets & JSON Import/Export**: Built-in presets (OneNote, Markdown Quote, Academic), custom preset saving, and one-click JSON import/export
 - 👁️ **Authoritative Text Box & Live Preview**: The editable text area is always the single source of truth, backed by interactive variable pills and real-time live preview
 - ⌨️ **Keyboard Interception**: Optionally intercepts `Cmd+V` (macOS) or `Ctrl+V` / `Shift+Insert` (Windows) to auto-append source
@@ -82,7 +82,8 @@ Then enable the plugin in Obsidian under **Settings → Community Plugins**.
 | :--- | :--- | :--- |
 | `{url}` | Full origin URL | `https://en.wikipedia.org/wiki/Obsidian_(software)` |
 | `{domain}` | Hostname without `www.` | `en.wikipedia.org` |
-| `{title}` | Page title or clean domain fallback | `en.wikipedia.org` |
+| `{page}` | Cleaned page/article name from URL path slug | `Obsidian (software)` |
+| `{path}` | Raw URL pathname | `/wiki/Obsidian_(software)` |
 | `{date}` | Current local date (`YYYY-MM-DD`) | `2026-09-11` |
 | `{time}` | Current local time (`HH:mm`) | `14:30` |
 | `{time_12}` | Current 12-hour time (`hh:mm A`) | `02:30 PM` |

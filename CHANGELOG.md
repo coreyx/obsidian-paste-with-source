@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Link Source Templates & Variable Interpolation**:
-  - Stateless in-memory `TemplateEngine` supporting `{url}`, `{domain}`, `{title}`, `{date}`, `{time}`, `{time_12}`, `{datetime}`, `{iso}`, `{link}`, and `{source}`.
+  - Stateless in-memory `TemplateEngine` supporting `{url}`, `{domain}`, `{page}`, `{path}`, `{date}`, `{time}`, `{time_12}`, `{datetime}`, `{iso}`, and `{link}`.
   - Case-insensitive token replacement with safe retention of unrecognized variables.
   - Multi-line textarea support with literal line breaks and `\n` / `\t` escape sequences.
   - Interactive clickable variable badges in the settings tab for quick tag insertion at the cursor.

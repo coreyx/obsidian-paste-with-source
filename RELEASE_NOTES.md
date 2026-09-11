@@ -11,14 +11,14 @@ Take full control over how citations are formatted in your notes!
 - **`{var}` Variable Substitution**: Compose custom citation formats using intuitive placeholders:
   - `{url}`: Full source URL
   - `{domain}`: Clean hostname (e.g. `en.wikipedia.org`)
-  - `{title}`: Page title or domain fallback
+  - `{page}`: Cleaned page/article name derived from URL path slug (e.g. `Obsidian (software)`)
+  - `{path}`: Raw URL pathname (e.g. `/wiki/Obsidian_(software)`)
   - `{date}`: Current local date (`YYYY-MM-DD`)
   - `{time}`: Current 24-hour time (`HH:mm`)
   - `{time_12}`: Current 12-hour time (`hh:mm A`)
   - `{datetime}`: Combined date and time (`YYYY-MM-DD HH:mm`)
   - `{iso}`: ISO-8601 UTC timestamp
   - `{link}`: Formatted markdown link (`[url](url)` or `[Source](url)`)
-  - `{source}`: Literal `"Source"` label
   - `\n`: Multi-line formatting and line breaks
 - **Authoritative Text Box**: The editable text area in Settings is always the single source of truth for your active citation template. Edits take effect immediately.
 - **Interactive Insertion Pills**: Click handy variable badges below the template box to insert tags at your cursor position instantly.

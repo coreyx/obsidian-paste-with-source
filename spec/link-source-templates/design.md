@@ -98,8 +98,10 @@ export interface TemplateContext {
   url: string;
   /** Hostname without www (e.g. "en.wikipedia.org") */
   domain: string;
-  /** Title or domain fallback */
-  title: string;
+  /** Page/article name derived from URL path slug */
+  page: string;
+  /** Raw URL path (e.g. "/wiki/Obsidian") */
+  path: string;
   /** Current date: YYYY-MM-DD */
   date: string;
   /** Current 24h time: HH:mm */
@@ -194,7 +196,8 @@ export class TemplateEngine {
     return {
       url,
       domain,
-      title: domain, // clean fallback
+      page: this.extractPage(url),
+      path: this.extractPath(url),
       date,
       time,
       time_12,
@@ -469,7 +472,7 @@ The settings interface organizes the template workflow logically from top to bot
 | |                                                                     | |
 | +---------------------------------------------------------------------+ |
 | Click to insert variable:                                               |
-| [{url}] [{domain}] [{title}] [{date}] [{time}] [{datetime}] [{link}]    |
+| [{url}] [{domain}] [{page}] [{path}] [{date}] [{time}] [{datetime}] [{link}] |
 |                                                                         |
 | 👁️ Live Preview:                                                       |
 | +---------------------------------------------------------------------+ |
