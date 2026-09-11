@@ -104,12 +104,22 @@ export interface TemplateContext {
   path: string;
   /** Current date: YYYY-MM-DD */
   date: string;
-  /** Current 24h time: HH:mm */
+  /** Current 24h time with timezone (e.g. "14:35 PDT") */
   time: string;
-  /** Current 12h time: hh:mm A */
+  /** Current 24h UTC/Zulu time in ISO 8601 (e.g. "21:35Z") */
+  timez: string;
+  /** Current 12h time (e.g. "02:35 PM") */
+  time12h: string;
+  /** Current 12h time alias for backwards compatibility */
   time_12: string;
-  /** Combined local datetime: YYYY-MM-DD HH:mm */
+  /** Local ISO 8601 24h datetime with timezone offset (e.g. "2026-09-11T14:35-07:00") */
   datetime: string;
+  /** UTC/Zulu ISO 8601 24h datetime (e.g. "2026-09-11T21:35Z") */
+  datetimez: string;
+  /** Local 12h datetime (e.g. "2026-09-11 02:35 PM") */
+  datetime12h: string;
+  /** Timezone code (e.g. "PDT") */
+  timezone: string;
   /** UTC ISO timestamp: YYYY-MM-DDTHH:mm:ss.sssZ */
   iso: string;
   /** 4-digit year: YYYY */
@@ -120,8 +130,6 @@ export interface TemplateContext {
   day: string;
   /** Pre-rendered markdown link according to link label settings */
   link: string;
-  /** Literal label string "Source" */
-  source: string;
 }
 ```
 

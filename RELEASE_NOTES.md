@@ -14,10 +14,15 @@ Take full control over how citations are formatted in your notes!
   - `{page}`: Cleaned page/article name derived from URL path slug (e.g. `Obsidian (software)`)
   - `{path}`: Raw URL pathname (e.g. `/wiki/Obsidian_(software)`)
   - `{date}`: Current local date (`YYYY-MM-DD`)
-  - `{time}`: Current 24-hour time (`HH:mm`)
-  - `{time_12}`: Current 12-hour time (`hh:mm A`)
-  - `{datetime}`: Combined date and time (`YYYY-MM-DD HH:mm`)
-  - `{iso}`: ISO-8601 UTC timestamp
+  - `{time}`: Current local 24-hour time with timezone (e.g. `14:30 PDT`)
+  - `{timez}`: Current UTC/Zulu 24-hour time in ISO 8601 (`HH:mmZ`, e.g. `21:30Z`)
+  - `{time12h}`: Current 12-hour time (`hh:mm AM/PM`, e.g. `02:30 PM`)
+  - `{time_12}`: Alias for `{time12h}` (backwards compatibility)
+  - `{timezone}`: Current timezone code / abbreviation (e.g. `PDT`, `EST`, `UTC`)
+  - `{datetime}`: Local ISO 8601 24h date/time with timezone offset (e.g. `2026-09-11T14:30-07:00`)
+  - `{datetimez}`: UTC/Zulu ISO 8601 24h date/time (`YYYY-MM-DDTHH:mmZ`, e.g. `2026-09-11T21:30Z`)
+  - `{datetime12h}`: Local 12-hour date and time (`YYYY-MM-DD hh:mm AM/PM`)
+  - `{iso}`: Full UTC ISO-8601 timestamp with milliseconds
   - `{link}`: Formatted markdown link (`[url](url)` or `[Source](url)`)
   - `\n`: Multi-line formatting and line breaks
 - **Authoritative Text Box**: The editable text area in Settings is always the single source of truth for your active citation template. Edits take effect immediately.
@@ -25,13 +30,16 @@ Take full control over how citations are formatted in your notes!
 - **Dynamic Live Preview**: See exactly how your citation will look in real-time as you type, rendered with a sample URL.
 
 ### 📦 Bolted-On Presets & JSON Import/Export
-- **Built-In Presets (8 Curated Options)**:
+- **Built-In Presets (11 Curated Options)**:
   - `OneNote Style` (`\n\nFrom <{link}>`): Replicates classic Microsoft OneNote web paste behavior.
   - `Italic Attribution` (`\n\n— *Source: [{page}]({url})*`): Clean editorial dash with italicized page link.
   - `Minimal Domain` (`\n\nSource: [{domain}]({url})`): Clean source link using the domain name.
   - `Parenthetical` (`\n\n(Source: [{page}]({url}))`): Unobtrusive parenthetical citation.
   - `Academic Citation` (`\n\nSource: [{page}]({url}) via {domain} (Accessed: {date})`): Formal attribution with access date.
   - `Obsidian Callout` (`\n\n> [!info] Source: [{page}]({url})\n> Accessed on {date}`): Native styled Obsidian callout.
+  - `Timestamped (ISO 8601)` (`\n\n— *Source: [{page}]({url})* [{datetime}]`): Editorial citation with ISO 8601 local timestamp and timezone offset.
+  - `Zulu / UTC Research Log` (`\n\nSource: [{page}]({url}) (Retrieved: {datetimez})`): Research citation formatted in 24h UTC/Zulu ISO 8601.
+  - `12-Hour Casual` (`\n\nSource: [{page}]({url}) ({date} at {time12h})`): Human-friendly citation with 12-hour AM/PM access timestamp.
   - `Markdown Quote` (`\n\n> — [Source]({url})`): Blockquoted markdown attribution.
   - `Raw URL` (`\n\n{url}`): Plain origin URL without markdown links.
 - **Preset Management**: Save the current text area as a new named preset, update custom presets, or delete presets you no longer need (built-in presets are protected).

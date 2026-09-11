@@ -68,7 +68,7 @@ Then enable the plugin in Obsidian under **Settings → Community Plugins**.
 | **Intercept Shortcut** | Choose which shortcut to intercept (`Cmd+V` on macOS; `Both`, `Ctrl+V only`, or `Shift+Insert only` on Windows) |
 | **Paste Mode** | Choose between default handler + source link or plain clipboard text + source link |
 | **Use URL as Link Label** | Format `{link}` as `[url](url)` instead of `[Source](url)` |
-| **Template Preset** | Select from 8 built-in presets (OneNote, Italic Attribution, Minimal Domain, Parenthetical, Academic, Obsidian Callout, Markdown Quote, Raw URL) or your custom presets |
+| **Template Preset** | Select from 11 built-in presets (OneNote, Italic Attribution, Minimal Domain, Parenthetical, Academic, Obsidian Callout, Timestamped ISO 8601, Zulu Log, 12h Casual, Markdown Quote, Raw URL) or your custom presets |
 | **Preset Actions** | Save As New, Update, Delete, Export JSON, and Import JSON |
 | **Citation Template** | **Authoritative template box** evaluated on paste; accepts `{var}` tags and multi-line markdown |
 | **Click to Insert Variable** | Quick-insertion buttons for `{url}`, `{domain}`, `{page}`, `{path}`, `{date}`, etc. |
@@ -85,10 +85,15 @@ Then enable the plugin in Obsidian under **Settings → Community Plugins**.
 | `{page}` | Cleaned page/article name from URL path slug | `Obsidian (software)` |
 | `{path}` | Raw URL pathname | `/wiki/Obsidian_(software)` |
 | `{date}` | Current local date (`YYYY-MM-DD`) | `2026-09-11` |
-| `{time}` | Current local time (`HH:mm`) | `14:30` |
-| `{time_12}` | Current 12-hour time (`hh:mm A`) | `02:30 PM` |
-| `{datetime}` | Combined date and time | `2026-09-11 14:30` |
-| `{iso}` | UTC ISO-8601 timestamp | `2026-09-11T21:30:00.000Z` |
+| `{time}` | Current local 24h time with timezone | `14:30 PDT` |
+| `{timez}` | Current UTC/Zulu 24h time (`HH:mmZ`) | `21:30Z` |
+| `{time12h}` | Current 12-hour time (`hh:mm AM/PM`) | `02:30 PM` |
+| `{time_12}` | Alias for `{time12h}` (backwards compatibility) | `02:30 PM` |
+| `{timezone}` | Current timezone code / abbreviation | `PDT` |
+| `{datetime}` | Local ISO 8601 24h date/time with timezone offset | `2026-09-11T14:30-07:00` |
+| `{datetimez}` | UTC/Zulu ISO 8601 24h date/time (`YYYY-MM-DDTHH:mmZ`) | `2026-09-11T21:30Z` |
+| `{datetime12h}` | Local 12-hour date and time (`YYYY-MM-DD hh:mm AM/PM`) | `2026-09-11 02:30 PM` |
+| `{iso}` | Full UTC ISO 8601 timestamp with milliseconds | `2026-09-11T21:30:00.000Z` |
 | `{link}` | Formatted markdown link | `[https://...](https://...)` or `[Source](https://...)` |
 | `\n` | Newline character | Line break |
 
@@ -153,6 +158,27 @@ Pasted excerpt text...
 Pasted excerpt text...
 
 https://example.com/article
+```
+
+**9. Timestamped (ISO 8601) (`\n\n— *Source: [{page}]({url})* [{datetime}]`):**
+```markdown
+Pasted excerpt text...
+
+— *Source: [Article Name](https://example.com/article)* [2026-09-11T14:30-07:00]
+```
+
+**10. Zulu / UTC Research Log (`\n\nSource: [{page}]({url}) (Retrieved: {datetimez})`):**
+```markdown
+Pasted excerpt text...
+
+Source: [Article Name](https://example.com/article) (Retrieved: 2026-09-11T21:30Z)
+```
+
+**11. 12-Hour Casual (`\n\nSource: [{page}]({url}) ({date} at {time12h})`):**
+```markdown
+Pasted excerpt text...
+
+Source: [Article Name](https://example.com/article) (2026-09-11 at 02:30 PM)
 ```
 
 ---

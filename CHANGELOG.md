@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Link Source Templates & Variable Interpolation**:
-  - Stateless in-memory `TemplateEngine` supporting `{url}`, `{domain}`, `{page}`, `{path}`, `{date}`, `{time}`, `{time_12}`, `{datetime}`, `{iso}`, and `{link}`.
+  - Stateless in-memory `TemplateEngine` supporting `{url}`, `{domain}`, `{page}`, `{path}`, `{date}`, `{time}`, `{timez}`, `{time12h}`, `{time_12}`, `{timezone}`, `{datetime}`, `{datetimez}`, `{datetime12h}`, `{iso}`, and `{link}`.
   - Case-insensitive token replacement with safe retention of unrecognized variables.
   - Multi-line textarea support with literal line breaks and `\n` / `\t` escape sequences.
   - Interactive clickable variable badges in the settings tab for quick tag insertion at the cursor.
@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Bolted-On Preset Management**:
   - Authoritative text box architecture: `settings.templateString` is always the single source of truth for active citations.
   - Presets subsystem serving as an assistive UI layer without rigid binding or forced synchronization.
-  - Eight built-in presets: `OneNote Style`, `Italic Attribution`, `Minimal Domain`, `Parenthetical`, `Academic Citation`, `Obsidian Callout`, `Markdown Quote`, and `Raw URL`.
+  - Eleven built-in presets: `OneNote Style`, `Italic Attribution`, `Minimal Domain`, `Parenthetical`, `Academic Citation`, `Obsidian Callout`, `Timestamped (ISO 8601)`, `Zulu / UTC Research Log`, `12-Hour Casual`, `Markdown Quote`, and `Raw URL`.
   - Full CRUD operations for custom user presets: Save As New (via modal), Update Preset, and Delete Preset.
   - Built-in presets are protected and immutable.
 - **Preset JSON Import & Export**:

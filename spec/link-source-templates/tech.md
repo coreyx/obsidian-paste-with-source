@@ -74,13 +74,18 @@ The template engine scans the template string for `{variable_name}` placeholders
 | `{path}` | `string` | Raw URL pathname | `/wiki/Obsidian_(software)` |
 | `{link}` | `string` | Markdown link formatting based on configured label preferences | `[en.wikipedia.org](https://en.wikipedia.org/...)` |
 | `{date}` | `string` | Current local date in ISO standard format (`YYYY-MM-DD`) | `2026-09-11` |
-| `{time}` | `string` | Current local time in 24-hour format (`HH:mm`) | `14:35` |
-| `{time_12}` | `string` | Current local time in 12-hour format (`hh:mm a`) | `02:35 PM` |
+| `{time}` | `string` | Current local 24-hour time with timezone | `14:35 PDT` |
+| `{timez}` | `string` | Current UTC/Zulu 24-hour time in ISO 8601 (`HH:mmZ`) | `21:35Z` |
+| `{time12h}` | `string` | Current local time in 12-hour format (`hh:mm AM/PM`) | `02:35 PM` |
+| `{time_12}` | `string` | Alias for `{time12h}` for backwards compatibility | `02:35 PM` |
+| `{timezone}` | `string` | Current timezone abbreviation / code | `PDT` |
 | `{year}` | `string` | Current 4-digit calendar year (`YYYY`) | `2026` |
 | `{month}` | `string` | Current 2-digit calendar month (`MM`) | `09` |
 | `{day}` | `string` | Current 2-digit calendar day (`DD`) | `11` |
-| `{datetime}` | `string` | Full local date and time (`YYYY-MM-DD HH:mm`) | `2026-09-11 14:35` |
-| `{iso}` | `string` | Standard ISO-8601 UTC timestamp | `2026-09-11T21:35:00.000Z` |
+| `{datetime}` | `string` | Local ISO 8601 24h datetime with timezone offset | `2026-09-11T14:35-07:00` |
+| `{datetimez}` | `string` | UTC/Zulu ISO 8601 24h datetime (`YYYY-MM-DDTHH:mmZ`) | `2026-09-11T21:35Z` |
+| `{datetime12h}` | `string` | Local 12-hour date and time (`YYYY-MM-DD hh:mm AM/PM`) | `2026-09-11 02:35 PM` |
+| `{iso}` | `string` | Standard ISO-8601 UTC timestamp with milliseconds | `2026-09-11T21:35:00.000Z` |
 
 ### 3.2 Whitespace & Newline Mechanics
 - **Literal Newlines**: Newlines entered in the Obsidian setting textarea are preserved verbatim.

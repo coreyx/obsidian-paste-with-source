@@ -52,7 +52,14 @@ console.log("Running TemplateEngine unit tests...");
   assert(context.path === "/wiki/Obsidian_(software)", "Path extracted from URL pathname");
   assert((context as any).title === undefined, "Title is removed and not in context");
   assert(/^\d{4}-\d{2}-\d{2}$/.test(context.date), "Date matches YYYY-MM-DD");
-  assert(/^\d{2}:\d{2}$/.test(context.time), "Time matches HH:mm");
+  assert(/^\d{2}:\d{2}(\s+[A-Za-z0-9/+-]+)?$/.test(context.time), "Time matches 24h HH:mm with timezone");
+  assert(/^\d{2}:\d{2}Z$/.test(context.timez), "Timez matches UTC/Zulu 24h HH:mmZ");
+  assert(/^\d{2}:\d{2}\s+(?:AM|PM)$/.test(context.time12h), "Time12h matches 12h hh:mm AM/PM");
+  assert(context.time_12 === context.time12h, "time_12 matches time12h for backwards compatibility");
+  assert(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}[+-]\d{2}:\d{2}$/.test(context.datetime), "Datetime matches ISO 8601 24h with timezone offset");
+  assert(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/.test(context.datetimez), "Datetimez matches ISO 8601 24h UTC/Zulu");
+  assert(/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\s+(?:AM|PM)$/.test(context.datetime12h), "Datetime12h matches YYYY-MM-DD hh:mm AM/PM");
+  assert(typeof context.timezone === "string" && context.timezone.length > 0, "Timezone is non-empty string");
   assert(context.link === `[${url}](${url})`, "Link matches [url](url) when useUrlAsLinkLabel is true");
 
   const rootUrl = "https://news.ycombinator.com/";
@@ -149,7 +156,7 @@ console.log("Running TemplateEngine unit tests...");
 
 // Test 7: Built-in presets
 {
-  assert(BUILTIN_PRESETS.length === 8, "Contains 8 built-in presets");
+  assert(BUILTIN_PRESETS.length === 11, "Contains 11 built-in presets");
   const expectedIds = [
     "builtin-onenote",
     "builtin-italic-attribution",
@@ -157,6 +164,9 @@ console.log("Running TemplateEngine unit tests...");
     "builtin-parenthetical",
     "builtin-academic",
     "builtin-obsidian-callout",
+    "builtin-iso-timestamp",
+    "builtin-zulu-log",
+    "builtin-casual-12h",
     "builtin-markdown-quote",
     "builtin-raw-url",
   ];
@@ -177,6 +187,15 @@ console.log("Running TemplateEngine unit tests...");
 
   const callout = PresetManager.getPresetById("builtin-obsidian-callout")!;
   assert(TemplateEngine.render(callout.template, ctx).startsWith(`\n\n> [!info] Source: [obsidian.md](${url})`), "Obsidian Callout preset renders callout header");
+
+  const isoPreset = PresetManager.getPresetById("builtin-iso-timestamp")!;
+  assert(TemplateEngine.render(isoPreset.template, ctx) === `\n\n— *Source: [obsidian.md](${url})* [${ctx.datetime}]`, "ISO 8601 Timestamp preset renders expected citation");
+
+  const zuluPreset = PresetManager.getPresetById("builtin-zulu-log")!;
+  assert(TemplateEngine.render(zuluPreset.template, ctx) === `\n\nSource: [obsidian.md](${url}) (Retrieved: ${ctx.datetimez})`, "Zulu Log preset renders expected citation");
+
+  const casual12h = PresetManager.getPresetById("builtin-casual-12h")!;
+  assert(TemplateEngine.render(casual12h.template, ctx) === `\n\nSource: [obsidian.md](${url}) (${ctx.date} at ${ctx.time12h})`, "12-Hour Casual preset renders expected citation");
 }
 
 // Test 8: Preset JSON Import Validation

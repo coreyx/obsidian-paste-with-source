@@ -67,16 +67,37 @@ export const BUILTIN_PRESETS: TemplatePreset[] = [
   {
     id: "builtin-academic",
     name: "Academic Citation",
-    template: "\n\nSource: [{page}]({url}) via {domain} (Accessed: {date})",
+    template: "\n\nSource: [{page}]({url}) via {domain} (Accessed: {date} at {time12h})",
     isBuiltIn: true,
-    description: "Comprehensive citation with page, domain, and access date",
+    description: "Comprehensive citation with page, domain, and 12-hour access timestamp",
   },
   {
     id: "builtin-obsidian-callout",
     name: "Obsidian Callout",
-    template: "\n\n> [!info] Source: [{page}]({url})\n> Accessed on {date}",
+    template: "\n\n> [!info] Source: [{page}]({url})\n> Accessed on {datetime12h}",
     isBuiltIn: true,
-    description: "Styled Obsidian info callout box with access date",
+    description: "Styled Obsidian info callout box with formatted access timestamp",
+  },
+  {
+    id: "builtin-iso-timestamp",
+    name: "Timestamped (ISO 8601)",
+    template: "\n\n— *Source: [{page}]({url})* [{datetime}]",
+    isBuiltIn: true,
+    description: "Editorial citation with ISO 8601 24h date, time, and timezone offset",
+  },
+  {
+    id: "builtin-zulu-log",
+    name: "Zulu / UTC Research Log",
+    template: "\n\nSource: [{page}]({url}) (Retrieved: {datetimez})",
+    isBuiltIn: true,
+    description: "Research citation formatted in UTC/Zulu 24h ISO 8601",
+  },
+  {
+    id: "builtin-casual-12h",
+    name: "12-Hour Casual",
+    template: "\n\nSource: [{page}]({url}) ({date} at {time12h})",
+    isBuiltIn: true,
+    description: "Human-friendly citation with 12-hour AM/PM access timestamp",
   },
   {
     id: "builtin-markdown-quote",
@@ -122,8 +143,13 @@ export interface TemplateContext {
   path: string;
   date: string;
   time: string;
+  timez: string;
+  time12h: string;
   time_12: string;
   datetime: string;
+  datetimez: string;
+  datetime12h: string;
+  timezone: string;
   iso: string;
   year: string;
   month: string;
@@ -146,11 +172,44 @@ export class TemplateEngine {
     const month = pad(now.getMonth() + 1);
     const day = pad(now.getDate());
     const date = `${year}-${month}-${day}`;
-    const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
+    // Timezone resolution (short timezone code, e.g. PDT, EDT, CET, or GMT offset)
+    const tz =
+      Intl.DateTimeFormat("en-US", { timeZoneName: "short" })
+        .formatToParts(now)
+        .find((p) => p.type === "timeZoneName")?.value || "";
+
+    // ISO 8601 timezone offset (e.g. "-07:00" or "+02:00")
+    const offsetMinutes = now.getTimezoneOffset();
+    const sign = offsetMinutes > 0 ? "-" : "+";
+    const absOffset = Math.abs(offsetMinutes);
+    const offsetHours = pad(Math.floor(absOffset / 60));
+    const offsetMins = pad(absOffset % 60);
+    const tzOffset = `${sign}${offsetHours}:${offsetMins}`;
+
+    // 24h local time clarified with timezone (e.g. "13:00 PDT" or "13:00")
+    const localTime24 = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const time = tz ? `${localTime24} ${tz}` : localTime24;
+
+    // 24h UTC/Zulu time in ISO 8601 (e.g. "20:00Z")
+    const timez = `${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}Z`;
+
+    // 12h AM/PM time format (e.g. "01:00 PM")
     const hours12 = now.getHours() % 12 || 12;
     const ampm = now.getHours() >= 12 ? "PM" : "AM";
-    const time_12 = `${pad(hours12)}:${pad(now.getMinutes())} ${ampm}`;
+    const time12h = `${pad(hours12)}:${pad(now.getMinutes())} ${ampm}`;
+
+    // ISO 8601 24h local datetime clarified with timezone offset (e.g. "2026-09-11T13:00-07:00")
+    const datetime = `${date}T${localTime24}${tzOffset}`;
+
+    // ISO 8601 24h UTC/Zulu datetime (e.g. "2026-09-11T20:00Z")
+    const utcYear = now.getUTCFullYear().toString();
+    const utcMonth = pad(now.getUTCMonth() + 1);
+    const utcDay = pad(now.getUTCDate());
+    const datetimez = `${utcYear}-${utcMonth}-${utcDay}T${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}Z`;
+
+    // 12h combined datetime (e.g. "2026-09-11 01:00 PM")
+    const datetime12h = `${date} ${time12h}`;
 
     return {
       url,
@@ -159,8 +218,13 @@ export class TemplateEngine {
       path,
       date,
       time,
-      time_12,
-      datetime: `${date} ${time}`,
+      timez,
+      time12h,
+      time_12: time12h,
+      datetime,
+      datetimez,
+      datetime12h,
+      timezone: tz,
       iso: now.toISOString(),
       year,
       month,
@@ -1082,9 +1146,15 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
       { tag: "{domain}", desc: "Hostname" },
       { tag: "{page}", desc: "Page/Article Name" },
       { tag: "{path}", desc: "URL Path" },
-      { tag: "{date}", desc: "YYYY-MM-DD" },
-      { tag: "{time}", desc: "HH:mm" },
-      { tag: "{datetime}", desc: "Date & Time" },
+      { tag: "{date}", desc: "Date (YYYY-MM-DD)" },
+      { tag: "{time}", desc: "Local Time 24h with Timezone (HH:mm TZ)" },
+      { tag: "{timez}", desc: "UTC/Zulu Time 24h (HH:mmZ)" },
+      { tag: "{time12h}", desc: "Local Time 12h (hh:mm AM/PM)" },
+      { tag: "{timezone}", desc: "Timezone Code (e.g. PDT, EST, UTC)" },
+      { tag: "{datetime}", desc: "Local ISO 8601 24h with Offset (YYYY-MM-DDTHH:mm±HH:mm)" },
+      { tag: "{datetimez}", desc: "UTC/Zulu ISO 8601 24h (YYYY-MM-DDTHH:mmZ)" },
+      { tag: "{datetime12h}", desc: "Local Date & 12h Time (YYYY-MM-DD hh:mm AM/PM)" },
+      { tag: "{iso}", desc: "Full UTC ISO 8601 Timestamp" },
       { tag: "{link}", desc: "Markdown Link" },
       { tag: "\\n", desc: "Newline" },
     ];
