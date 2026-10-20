@@ -308,6 +308,145 @@ export class TemplateEngine {
   }
 }
 
+/** Read access to a document by line. Obsidian's Editor satisfies it, so the guard runs on it directly. */
+export interface LineSource {
+  getLine(line: number): string;
+  lineCount(): number;
+}
+
+/** Blockquote markers, then an optional list marker (with task checkbox). */
+const CONTAINER = /^(\s*(?:>\s?)*)(\s*(?:[-*+]|\d+[.)])\s+(?:\[.\]\s+)?)?/;
+const FENCE = /^(`{3,}|~{3,})(.*)$/;
+
+/** A line's text with any blockquote and list markers removed, so fences inside them are recognized. */
+const stripContainer = (text: string): string => text.slice(CONTAINER.exec(text)?.[0].length ?? 0).trimStart();
+
+/**
+ * Whether the given line is in the frontmatter, including its `---` delimiters.
+ * Frontmatter only counts when the document's first line opens it.
+ */
+export function isInsideFrontmatter(doc: LineSource, line: number): boolean {
+  if (doc.getLine(0).trimEnd() !== "---") return false;
+  const count = doc.lineCount();
+  for (let i = 1; i < count; i++) {
+    if (/^(---|\.\.\.)\s*$/.test(doc.getLine(i))) return line <= i;
+  }
+  return false;
+}
+
+/**
+ * Whether the given line is inside a fenced code block opened on an earlier line.
+ * A fence closes only with the same character, at least as many of them, and no
+ * info string, as in CommonMark.
+ */
+export function isInsideCodeFence(doc: LineSource, line: number): boolean {
+  let open: { char: string; length: number } | null = null;
+  for (let i = 0; i < line; i++) {
+    const match = FENCE.exec(stripContainer(doc.getLine(i)));
+    if (match === null) continue;
+    const run = match[1] ?? "";
+    if (open === null) open = { char: run.charAt(0), length: run.length };
+    else if (run.charAt(0) === open.char && run.length >= open.length && (match[2] ?? "").trim() === "") open = null;
+  }
+  return open !== null;
+}
+
+/** Length of the run of backticks starting at index. */
+function backtickRun(text: string, index: number): number {
+  let end = index;
+  while (text.charAt(end) === "`") end++;
+  return end - index;
+}
+
+/** Start of the next run of exactly `length` backticks at or after `from`, or -1. */
+function findBacktickRun(text: string, from: number, length: number): number {
+  for (let i = text.indexOf("`", from); i !== -1; ) {
+    const run = backtickRun(text, i);
+    if (run === length) return i;
+    i = text.indexOf("`", i + run);
+  }
+  return -1;
+}
+
+/**
+ * The text before the cursor with finished inline code spans removed, and whether
+ * a span is still open at the cursor. Runs are paired by exact length, as in
+ * CommonMark: in ``a`b`` the single backtick is code, not the start of another
+ * span, so counting backticks would misjudge the line. Outside code a backslash
+ * escapes the next character, so \` is a literal backtick. A run with no partner
+ * before the cursor counts as code still being typed.
+ */
+function scanInlineCode(before: string): { prose: string; open: boolean } {
+  let prose = "";
+  let i = 0;
+  while (i < before.length) {
+    const char = before.charAt(i);
+    if (char === "\\") {
+      prose += before.slice(i, i + 2);
+      i += 2;
+    } else if (char === "`") {
+      const run = backtickRun(before, i);
+      const close = findBacktickRun(before, i + run, run);
+      if (close === -1) return { prose, open: true };
+      i = close + run;
+    } else {
+      prose += char;
+      i++;
+    }
+  }
+  return { prose, open: false };
+}
+
+/**
+ * Whether prose before the cursor, with code spans already removed, leaves it
+ * inside link syntax: an unclosed `[` (link text, image alt text, a wikilink, or
+ * a stray bracket in prose), or the `( )` destination of a link. A citation
+ * pasted there becomes part of the link and breaks it. Escaped characters do
+ * not count.
+ */
+function isInsideLinkSyntax(text: string): boolean {
+  let brackets = 0;
+  // Open parentheses of the link destination being read; 0 outside one.
+  let parens = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charAt(i);
+    if (char === "\\") {
+      i++;
+    } else if (parens > 0) {
+      // A destination may hold balanced parentheses of its own, as Wikipedia URLs do.
+      if (char === "(") parens++;
+      else if (char === ")") parens--;
+    } else if (char === "[") {
+      brackets++;
+    } else if (char === "]") {
+      brackets = Math.max(0, brackets - 1);
+      if (text.charAt(i + 1) === "(") {
+        parens = 1;
+        i++;
+      }
+    }
+  }
+  return brackets > 0 || parens > 0;
+}
+
+/**
+ * Whether a paste at (line, ch) is prose that can take a citation, rather than
+ * part of other syntax a citation would break: the frontmatter, a code block or
+ * its fence line, inline code, a link's text or `( )` URL, a wikilink, or an
+ * HTML tag or attribute being typed. Only the intercepted keyboard paste asks;
+ * the explicit paste commands add a citation wherever the user invokes them.
+ */
+export function canAddCitation(doc: LineSource, line: number, ch: number): boolean {
+  const text = doc.getLine(line);
+  const before = text.slice(0, ch);
+  if (isInsideFrontmatter(doc, line) || isInsideCodeFence(doc, line)) return false;
+  if (FENCE.test(stripContainer(text))) return false;
+  const code = scanInlineCode(before);
+  if (code.open || isInsideLinkSyntax(code.prose)) return false;
+  if (/(<|=["'])$/.test(before)) return false;
+  return true;
+}
+
 export class PresetImportExportService {
   static exportPreset(preset: { name: string; template: string; description?: string }): void {
     const payload = {

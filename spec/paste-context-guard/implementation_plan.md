@@ -31,7 +31,7 @@ None at this time.
 The build is plain `tsc` with no bundler, and Obsidian loads only `main.js`. A separate module would compile to its own `.js` file that the plugin can't load, so the guard goes into `main.ts` as exported functions, next to `TemplateEngine`, where the tests can import it.
 
 #### [MODIFY] `main.ts` · [NEW] `test-paste-guard.ts`
-- [ ] **TASK-1:** Add the position checks to `main.ts` as an exported `canAddCitation(doc: LineSource, line: number, ch: number): boolean`, with `test-paste-guard.ts` covering it.
+- [x] **TASK-1:** Add the position checks to `main.ts` as an exported `canAddCitation(doc: LineSource, line: number, ch: number): boolean`, with `test-paste-guard.ts` covering it.
   - `LineSource` is an exported interface `{ getLine(line): string; lineCount(): number }`. Obsidian's `Editor` satisfies it.
   - Add `stripContainer`, `isInsideFrontmatter`, `isInsideCodeFence` (``` ``` ``` and `~~~`, closer at least as long as the opener, inside blockquotes and lists), the fence-line check, `scanInlineCode` with `backtickRun`/`findBacktickRun`, `isInsideLinkSyntax`, and the HTML check `/(<|=["'])$/`. Document each with TSDoc, following this file's conventions.
   - `canAddCitation` returns `false` in any of these positions:
