@@ -1287,8 +1287,30 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
           .onChange(async (value: string) => {
             this.plugin.settings.pasteMode = value as PasteMode;
             await this.plugin.saveSettings();
+            // Re-render so the guarded paste setting below appears or disappears with the mode.
+            this.display();
           })
       );
+
+    // In "Default handler + source" mode Obsidian's own paste always runs, so there is nothing to choose.
+    if (this.plugin.settings.pasteMode === "clipboard+source") {
+      new Setting(containerEl)
+        .setName("When a citation can't be added")
+        .setDesc(
+          "Pastes inside code, math, comments, frontmatter, links, and wikilinks get no citation. " +
+          "Choose what such a paste does: Obsidian's native paste, as if this plugin were off, or the clipboard's plain text."
+        )
+        .addDropdown((dropdown) =>
+          dropdown
+            .addOption("native", "Obsidian's native paste (Default)")
+            .addOption("plain", "Plain clipboard text")
+            .setValue(this.plugin.settings.guardedPasteFallback)
+            .onChange(async (value: string) => {
+              this.plugin.settings.guardedPasteFallback = value as GuardedPasteFallback;
+              await this.plugin.saveSettings();
+            })
+        );
+    }
 
     new Setting(containerEl)
       .setName("Use URL as Link Label")
