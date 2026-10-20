@@ -334,22 +334,22 @@ export function isInsideFrontmatter(doc: LineSource, line: number): boolean {
   return false;
 }
 
-/**
- * Whether the given line is inside a fenced code block opened on an earlier line.
- * A fence closes only with the same character, at least as many of them, and no
- * info string, as in CommonMark.
- */
-export function isInsideCodeFence(doc: LineSource, line: number): boolean {
-  let open: { char: string; length: number } | null = null;
-  for (let i = 0; i < line; i++) {
-    const match = FENCE.exec(stripContainer(doc.getLine(i)));
-    if (match === null) continue;
-    const run = match[1] ?? "";
-    if (open === null) open = { char: run.charAt(0), length: run.length };
-    else if (run.charAt(0) === open.char && run.length >= open.length && (match[2] ?? "").trim() === "") open = null;
+/** Index of the first line after the frontmatter, or 0 when the document has none. */
+function bodyStart(doc: LineSource): number {
+  if (doc.getLine(0).trimEnd() !== "---") return 0;
+  const count = doc.lineCount();
+  for (let i = 1; i < count; i++) {
+    if (/^(---|\.\.\.)\s*$/.test(doc.getLine(i))) return i + 1;
   }
-  return open !== null;
+  return 0;
 }
+
+/**
+ * A construct that can span lines and that a citation must not be pasted into:
+ * a fenced code block, an Obsidian `%%` comment, or a `$$` math block. Null in
+ * ordinary prose.
+ */
+type BlockState = { kind: "fence"; char: string; length: number } | { kind: "comment" } | { kind: "math" } | null;
 
 /** Length of the run of backticks starting at index. */
 function backtickRun(text: string, index: number): number {
@@ -369,32 +369,116 @@ function findBacktickRun(text: string, from: number, length: number): number {
 }
 
 /**
- * The text before the cursor with finished inline code spans removed, and whether
- * a span is still open at the cursor. Runs are paired by exact length, as in
- * CommonMark: in ``a`b`` the single backtick is code, not the start of another
- * span, so counting backticks would misjudge the line. Outside code a backslash
- * escapes the next character, so \` is a literal backtick. A run with no partner
- * before the cursor counts as code still being typed.
+ * Scans one line's text (outside any code fence) for inline code spans, `%%`
+ * comment markers and `$$` math markers, starting in `state` and returning the
+ * state at the end of the text, plus the prose that is in none of them.
+ *
+ * Code spans pair backtick runs by exact length, as in CommonMark: in ``a`b``
+ * the single backtick is code, not the start of another span, so counting
+ * backticks would misjudge the line. Markers inside a code span don't count,
+ * and inside a comment or math block only that construct's closing marker
+ * does. Outside them a backslash escapes the next character.
+ *
+ * On the cursor's line the text ends at the cursor, and a backtick run with no
+ * partner before it counts as code still being typed (`codeOpen`). On earlier
+ * lines such a run is literal text, since a code span never crosses lines here.
  */
-function scanInlineCode(before: string): { prose: string; open: boolean } {
+function scanSpans(text: string, state: BlockState, atCursor: boolean): { state: BlockState; prose: string; codeOpen: boolean } {
   let prose = "";
   let i = 0;
-  while (i < before.length) {
-    const char = before.charAt(i);
-    if (char === "\\") {
-      prose += before.slice(i, i + 2);
+  while (i < text.length) {
+    const char = text.charAt(i);
+    if (state?.kind === "comment") {
+      // Comments are raw text, so nothing in them is escaped.
+      if (text.startsWith("%%", i)) {
+        state = null;
+        i += 2;
+      } else i++;
+    } else if (state?.kind === "math") {
+      // In LaTeX \$ is a literal dollar sign and \\ a line break; skipping pairs handles both.
+      if (char === "\\") i += 2;
+      else if (text.startsWith("$$", i)) {
+        state = null;
+        i += 2;
+      } else i++;
+    } else if (char === "\\") {
+      prose += text.slice(i, i + 2);
       i += 2;
     } else if (char === "`") {
-      const run = backtickRun(before, i);
-      const close = findBacktickRun(before, i + run, run);
-      if (close === -1) return { prose, open: true };
-      i = close + run;
+      const run = backtickRun(text, i);
+      const close = findBacktickRun(text, i + run, run);
+      if (close !== -1) i = close + run;
+      else if (atCursor) return { state, prose, codeOpen: true };
+      else {
+        prose += text.slice(i, i + run);
+        i += run;
+      }
+    } else if (text.startsWith("%%", i)) {
+      state = { kind: "comment" };
+      i += 2;
+    } else if (text.startsWith("$$", i)) {
+      state = { kind: "math" };
+      i += 2;
     } else {
       prose += char;
       i++;
     }
   }
-  return { prose, open: false };
+  return { state, prose, codeOpen: false };
+}
+
+/**
+ * Index of the `$` that closes inline math opened at `open`, or -1 when `open`
+ * is not an opener or nothing on the line closes it. Follows Obsidian's rule:
+ * the opener is followed by a non-space, and the closer is preceded by a
+ * non-space and not followed by a digit. That keeps prices such as "$5 and
+ * $10" from reading as math.
+ */
+function findInlineMathClose(text: string, open: number): number {
+  if (!/\S/.test(text.charAt(open + 1))) return -1;
+  for (let j = open + 1; j < text.length; j++) {
+    const char = text.charAt(j);
+    if (char === "\\") {
+      j++;
+    } else if (char === "$") {
+      if (text.charAt(j + 1) === "$") return -1;
+      if (/\S/.test(text.charAt(j - 1)) && !/\d/.test(text.charAt(j + 1))) return j;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Whether the cursor at `ch` sits inside a closed inline `$…$` span on this
+ * line. Unlike code, an unclosed `$` doesn't count: a lone dollar sign is far
+ * more often a price than math being typed. Code spans and `$$` markers are
+ * skipped, since a `$` in them doesn't open inline math.
+ */
+function isInsideInlineMath(text: string, ch: number): boolean {
+  let i = 0;
+  while (i < text.length) {
+    const char = text.charAt(i);
+    if (char === "\\") {
+      i += 2;
+    } else if (char === "`") {
+      const run = backtickRun(text, i);
+      const close = findBacktickRun(text, i + run, run);
+      i = close === -1 ? i + run : close + run;
+    } else if (char !== "$") {
+      i++;
+    } else if (text.charAt(i + 1) === "$") {
+      i += 2;
+    } else {
+      const close = findInlineMathClose(text, i);
+      if (close === -1) {
+        i++;
+        continue;
+      }
+      if (ch > i && ch <= close) return true;
+      i = close + 1;
+    }
+  }
+  return false;
 }
 
 /**
@@ -432,18 +516,46 @@ function isInsideLinkSyntax(text: string): boolean {
 /**
  * Whether a paste at (line, ch) is prose that can take a citation, rather than
  * part of other syntax a citation would break: the frontmatter, a code block or
- * its fence line, inline code, a link's text or `( )` URL, a wikilink, or an
- * HTML tag or attribute being typed. Only the intercepted keyboard paste asks;
- * the explicit paste commands add a citation wherever the user invokes them.
+ * its fence line, inline code, a `$$` or `$…$` formula, a `%%` comment, a
+ * link's text or `( )` URL, a wikilink, or an HTML tag or attribute being
+ * typed. Only the intercepted keyboard paste asks; the explicit paste commands
+ * add a citation wherever the user invokes them.
+ *
+ * The document is read from the end of the frontmatter to the cursor in one
+ * pass, so each construct hides the others' markers: a `%%` in a code block,
+ * or a fence inside a comment, doesn't count. An unclosed `$$` or `%%` makes
+ * the rest of the document count as math or a comment, which errs toward
+ * leaving a paste without a citation rather than breaking the markup.
  */
 export function canAddCitation(doc: LineSource, line: number, ch: number): boolean {
-  const text = doc.getLine(line);
-  const before = text.slice(0, ch);
-  if (isInsideFrontmatter(doc, line) || isInsideCodeFence(doc, line)) return false;
-  if (FENCE.test(stripContainer(text))) return false;
-  const code = scanInlineCode(before);
-  if (code.open || isInsideLinkSyntax(code.prose)) return false;
-  if (/(<|=["'])$/.test(before)) return false;
+  if (isInsideFrontmatter(doc, line)) return false;
+  let state: BlockState = null;
+  for (let i = bodyStart(doc); i <= line; i++) {
+    const text = doc.getLine(i);
+    const fence = FENCE.exec(stripContainer(text));
+    const run = fence?.[1] ?? "";
+    if (state?.kind === "fence") {
+      // Inside the block, or on its closing line.
+      if (i === line) return false;
+      // A fence closes only with the same character, at least as many, and no info string, as in CommonMark.
+      if (fence && run.charAt(0) === state.char && run.length >= state.length && (fence[2] ?? "").trim() === "") state = null;
+      continue;
+    }
+    if (state === null && fence) {
+      if (i === line) return false;
+      state = { kind: "fence", char: run.charAt(0), length: run.length };
+      continue;
+    }
+    if (i < line) {
+      state = scanSpans(text, state, false).state;
+      continue;
+    }
+    const before = text.slice(0, ch);
+    const scan = scanSpans(before, state, true);
+    if (scan.state !== null || scan.codeOpen || isInsideLinkSyntax(scan.prose)) return false;
+    if (isInsideInlineMath(text, ch)) return false;
+    if (/(<|=["'])$/.test(before)) return false;
+  }
   return true;
 }
 
