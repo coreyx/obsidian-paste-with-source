@@ -14,6 +14,13 @@ type InterceptShortcut = "ctrl+v" | "shift+insert" | "both";
 
 type PasteMode = "default+source" | "clipboard+source";
 
+/**
+ * What an intercepted paste does in "Paste content + source" mode when the cursor
+ * is somewhere a citation would break the markup: hand the paste to Obsidian, as
+ * if this plugin were off, or insert the clipboard's plain text.
+ */
+type GuardedPasteFallback = "native" | "plain";
+
 type CitationStyle = "OneNote" | "Source";
 
 export interface TemplatePreset {
@@ -28,6 +35,7 @@ export interface PasteWithSourceSettings {
   interceptPaste: boolean;
   interceptShortcut: InterceptShortcut;
   pasteMode: PasteMode;
+  guardedPasteFallback: GuardedPasteFallback;
   useUrlAsLinkLabel: boolean;
   templateString: string;
   selectedPresetId: string;
@@ -122,6 +130,7 @@ export const DEFAULT_SETTINGS: PasteWithSourceSettings = {
   interceptPaste: true,
   interceptShortcut: "both",
   pasteMode: "default+source",
+  guardedPasteFallback: "native",
   useUrlAsLinkLabel: true,
   templateString: "\n\nFrom <{link}>",
   selectedPresetId: "builtin-onenote",
@@ -1185,6 +1194,9 @@ export default class PasteWithSourcePlugin extends Plugin {
 
     if (!this.settings.activeSlot) {
       this.settings.activeSlot = "A";
+    }
+    if (this.settings.guardedPasteFallback !== "native" && this.settings.guardedPasteFallback !== "plain") {
+      this.settings.guardedPasteFallback = DEFAULT_SETTINGS.guardedPasteFallback;
     }
     if (!this.settings.presetSlotB) {
       this.settings.presetSlotB = DEFAULT_SETTINGS.presetSlotB;
