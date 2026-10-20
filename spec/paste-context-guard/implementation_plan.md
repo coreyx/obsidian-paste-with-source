@@ -70,7 +70,7 @@ The build is plain `tsc` with no bundler, and Obsidian loads only `main.js`. A s
     - When `!citable` and `guardedPasteFallback === "native"`: return without calling `preventDefault()`, so Obsidian pastes as if the plugin were off.
     - Otherwise: call `event.preventDefault()` immediately, then `await` the clipboard text. A guarded paste inserts the text alone. A citable one also awaits the source URL and inserts text plus citation, as today.
   - TSDoc comment on the listener saying why the position check and `preventDefault()` have to run before the first `await`.
-- [ ] **TASK-5:** Add the "When a citation can't be added" setting to `PasteWithSourceSettingTab.display()`, directly after "Paste Mode".
+- [x] **TASK-5:** Add the "When a citation can't be added" setting to `PasteWithSourceSettingTab.display()`, directly after "Paste Mode".
   - Dropdown options: `"native"` → "Obsidian's native paste (Default)", `"plain"` → "Plain clipboard text".
   - Description: "Pastes inside code, math, comments, frontmatter, links, and wikilinks get no citation. Choose what such a paste does: Obsidian's native paste, as if this plugin were off, or the clipboard's plain text."
   - Shown only when `pasteMode` is `"clipboard+source"`, because in "Default handler + source" mode Obsidian's own paste always runs. The "Paste Mode" dropdown's `onChange` calls `this.display()` after saving so the setting appears or disappears.
