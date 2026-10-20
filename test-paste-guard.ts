@@ -83,6 +83,48 @@ expectAll("Code fences and frontmatter refuse a citation", false, [
   "---|\ntitle: x\n---",
 ]);
 
+expectAll("Math refuses a citation", false, [
+  "$$\nx^2 |\n$$",
+  "$$\n\\$ and |\n$$",
+  "$$x|$$",
+  "text $$x |",
+  "$x^2|$",
+  "where $|x$ holds",
+  "$a$ and $b |c$",
+  "> $$\n> x |",
+]);
+
+expectAll("Comments refuse a citation", false, [
+  "%%\nnote |\n%%",
+  "%%note |%%",
+  "text %% hidden |",
+  "%%\n```\n%%\n%% |",
+]);
+
+expectAll("Constructs hide each other's markers", true, [
+  "`%%` and |",
+  "`$$` and |",
+  "```\n%%\n$$\n```\n|",
+  "%%\n```\n%%\n|",
+  "$$\n%%\n$$\n|",
+  "%%[%% |",
+  "\\%% and |",
+  "\\$$ and |",
+]);
+
+expectAll("Math and comments that are closed or aren't math accept a citation", true, [
+  "$$\nx^2\n$$\n|",
+  "$$x$$ and |",
+  "%%\nnote\n%%\n|",
+  "%%note%% and |",
+  "$x^2$ and |",
+  "I paid $5 for |",
+  "$5 and $10 |",
+  "costs $5, or |$6",
+  "$ x |$",
+  "`$x$` and |",
+]);
+
 expectAll("Prose accepts a citation", true, [
   "see |",
   "|",

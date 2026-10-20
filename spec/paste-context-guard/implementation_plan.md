@@ -43,7 +43,7 @@ The build is plain `tsc` with no bundler, and Obsidian loads only `main.js`. A s
     - right after `<` or `="`
   - `test-paste-guard.ts` uses the same `obsidian` module mock as `test-templates.ts`, a `pasteAt("…|…")` helper for one-line cases where `|` marks the cursor, and a `docAt([...lines], line, ch)` helper for multi-line cases. It prints pass/fail per case and exits non-zero on any failure.
   - It includes these refused and allowed cases: `- [ ]` and `- [x]` checkboxes, a finished link, `\[`, `[` inside finished inline code, ``` ``a`[`` and | ``` allowed, and ``` ``a`| ``` refused.
-- [ ] **TASK-2:** Extend `canAddCitation` with Obsidian math and comment syntax, with cases in `test-paste-guard.ts`.
+- [x] **TASK-2:** Extend `canAddCitation` with Obsidian math and comment syntax, with cases in `test-paste-guard.ts`.
   - One forward scan from the end of the frontmatter to the cursor tracks the cross-line states, so markers inside one construct don't count in another:
     - In a code fence, only the closer counts.
     - In a `%%` comment, only the next `%%` counts.
