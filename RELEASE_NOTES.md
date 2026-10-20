@@ -1,6 +1,36 @@
 # Release Notes: Paste with Source for Obsidian
 
-Welcome to **Paste with Source** (v1.3.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+Welcome to **Paste with Source** (v1.4.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+
+---
+
+## 🌟 What's New in Version 1.4.0: Markup-Safe Pasting
+
+### 🛡️ No More Citations Where They Break Your Markup
+The intercepted paste shortcut (`Cmd+V`, `Ctrl+V`, `Shift+Insert`) now checks where the cursor is before adding a citation. It pastes without one inside:
+- code blocks and inline code
+- `$$` math blocks and inline `$…$` math
+- `%%` comments
+- the frontmatter
+- wikilinks, a link's text or its `(url)`
+- an HTML tag or attribute you're typing
+
+Each construct hides the others' markers, so a `%%` inside a code block doesn't start a comment. A lone `$`, as in "I paid $5 for", isn't treated as math, so ordinary prose still gets its citation.
+
+Need a citation in one of those places anyway? The **Paste with Source URL** commands and right-click menu items still add one wherever the cursor is.
+
+### ⚙️ New Setting: "When a citation can't be added"
+In **Paste content + source** mode, choose what a paste in one of those places does:
+- **Obsidian's native paste** (default): exactly what Ctrl+V does with the plugin turned off.
+- **Plain clipboard text**: the clipboard's plain text, without the citation.
+
+The setting is hidden in **Default handler + source** mode, where Obsidian's own paste always runs.
+
+### 🐞 Fixed: Double Paste in "Paste content + source" Mode
+Pasting in this mode used to insert the clipboard text twice, once from Obsidian and once with the citation. It now inserts it once.
+
+### 📦 Install and Update with BRAT
+Each release now carries the built `main.js` and `manifest.json`, so you can install Paste with Source with [BRAT](https://github.com/TfTHacker/obsidian42-brat) using the repository `coreyx/paste-with-source`, and BRAT keeps it up to date. See [Installation & Quickstart](#-installation--quickstart).
 
 ---
 
@@ -144,21 +174,27 @@ Whenever you copy text or articles from web browsers, the plugin identifies the 
 
 ## 📦 Installation & Quickstart
 
-### Option 1: Copy Distribution Files
-1. Copy `main.js` and `manifest.json` from [`dist/`](dist/) into:
-   ```bash
+### Option 1: BRAT (Recommended)
+1. Install and enable **BRAT** from **Settings → Community plugins → Browse**.
+2. Run **BRAT: Add a beta plugin for testing** from the command palette.
+3. Enter `coreyx/paste-with-source`, choose the latest version, and select **Add Plugin**.
+4. Enable **Paste with Source** under **Settings → Community plugins**.
+
+### Option 2: Download a Release
+1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/coreyx/paste-with-source/releases/latest) into:
+   ```text
    <Your-Obsidian-Vault>/.obsidian/plugins/paste-with-source/
    ```
 2. Open Obsidian, go to **Settings → Community Plugins**, click **Reload plugins**, and enable **Paste with Source**.
 
-### Option 2: Build from Source
+### Option 3: Build from Source
 ```bash
-git clone https://github.com/your-username/paste-with-source.git
+git clone https://github.com/coreyx/paste-with-source.git
 cd paste-with-source
 npm install
 npm run build
-npm run deploy
 ```
+Then copy `dist/main.js` and `dist/manifest.json` into the plugin folder above.
 
 ---
 
@@ -171,6 +207,7 @@ Open Obsidian Settings and locate **Paste with Source Settings**:
 | **Intercept Paste** | `true` (Enabled) | Automatically replaces keyboard paste keystrokes with source-aware pasting. |
 | **Intercept Shortcut** | Platform default (`Cmd+V` on macOS; `Both` on Windows) | Choose which shortcut to monitor (`Cmd+V`, `Both`, `Ctrl+V only`, or `Shift+Insert only`). |
 | **Paste Mode** | `Default handler + source` | Chooses between running Obsidian's rich paste first or inserting raw clipboard plain text. |
+| **When a citation can't be added** | `Obsidian's native paste` | *Paste content + source* mode only. What a paste inside code, math, comments, frontmatter, links or wikilinks does: Obsidian's native paste, or the clipboard's plain text. |
 | **Citation Style** | `OneNote` | Formats citations either as OneNote-style `From <...>` or markdown quote `> — ...`. |
 | **Use URL as Link Label** | `true` (Enabled) | Renders links as `[https://...](https://...)` instead of `[Source](https://...)`. |
 
