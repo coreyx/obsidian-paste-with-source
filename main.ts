@@ -1068,7 +1068,13 @@ export default class PasteWithSourcePlugin extends Plugin {
       })
     );
 
-    // Intercept paste via keyboard shortcut
+    /**
+     * Intercepts the paste shortcut to add a citation. The cursor position and
+     * preventDefault() are both decided before the first await: the browser
+     * runs its default action as soon as this listener yields, so a later
+     * preventDefault() cannot stop Obsidian's own paste, and once that paste
+     * runs it moves the cursor away from where the content lands.
+     */
     this.registerDomEvent(document, "keydown", async (event: KeyboardEvent) => {
       if (!this.settings.interceptPaste) return;
 
@@ -1087,14 +1093,24 @@ export default class PasteWithSourcePlugin extends Plugin {
       const editor = this.app.workspace.activeEditor?.editor;
       if (!editor) return;
 
-      const sourceUrl = await this.getClipboardSourceUrl();
+      const from = editor.getCursor("from");
+      const citable = canAddCitation(editor, from.line, from.ch);
 
       if (this.settings.pasteMode === "clipboard+source") {
+        if (!citable && this.settings.guardedPasteFallback === "native") return;
         event.preventDefault();
+        if (!citable) {
+          editor.replaceSelection(await navigator.clipboard.readText());
+          return;
+        }
+        const sourceUrl = await this.getClipboardSourceUrl();
         const clipboardText = await navigator.clipboard.readText();
         const sourceLink = sourceUrl ? this.getSourceLinkMarkdown(sourceUrl) : "";
         editor.replaceSelection(clipboardText + sourceLink);
       } else if (this.settings.pasteMode === "default+source") {
+        // Obsidian's own paste always runs in this mode; a guarded position just gets no citation after it.
+        if (!citable) return;
+        const sourceUrl = await this.getClipboardSourceUrl();
         setTimeout(() => {
           if (sourceUrl) {
             editor.replaceSelection(this.getSourceLinkMarkdown(sourceUrl));

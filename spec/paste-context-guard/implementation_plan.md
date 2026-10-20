@@ -63,7 +63,7 @@ The build is plain `tsc` with no bundler, and Obsidian loads only `main.js`. A s
 #### [MODIFY] `main.ts`
 - [x] **TASK-3:** Add `guardedPasteFallback: GuardedPasteFallback` to `PasteWithSourceSettings`, where `type GuardedPasteFallback = "native" | "plain"`, and add `guardedPasteFallback: "native"` to `DEFAULT_SETTINGS`.
   - `loadSettings` already fills missing keys through `Object.assign` with the defaults, so existing installs get `"native"` with no migration code. Any other stored value is reset to `"native"`, the same way `activeSlot` is checked.
-- [ ] **TASK-4:** Rework the keydown listener in `onload` so it checks the position first and calls `preventDefault()` synchronously.
+- [x] **TASK-4:** Rework the keydown listener in `onload` so it checks the position first and calls `preventDefault()` synchronously.
   - After `shouldIntercept` and the `editor` lookup, read `const from = editor.getCursor("from")` and `const citable = canAddCitation(editor, from.line, from.ch)`, all before any `await`.
   - In `default+source` mode, when `!citable`: return before reading the clipboard source. The native paste runs and nothing is added after it.
   - In `clipboard+source` mode:

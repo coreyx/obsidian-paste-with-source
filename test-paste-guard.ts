@@ -151,6 +151,56 @@ async function loadedFallback(stored: object | null): Promise<string> {
   return plugin.settings.guardedPasteFallback;
 }
 
+/**
+ * Loads the plugin with stubbed Obsidian APIs, presses Ctrl/Cmd+V with the
+ * cursor at the `|` in `text`, and reports whether preventDefault() ran before
+ * the listener first yielded (the only point at which it can still stop
+ * Obsidian's paste) and what the plugin inserted.
+ */
+async function pressPaste(
+  text: string,
+  pasteMode: "default+source" | "clipboard+source",
+  fallback: "native" | "plain"
+): Promise<{ preventedBeforeYield: boolean; inserted: string[] }> {
+  const cursor = text.indexOf("|");
+  const lines = (text.slice(0, cursor) + text.slice(cursor + 1)).split("\n");
+  const position = { line: text.slice(0, cursor).split("\n").length - 1, ch: cursor - text.lastIndexOf("\n", cursor - 1) - 1 };
+  const inserted: string[] = [];
+  const editor = {
+    getLine: (i: number) => lines[i] ?? "",
+    lineCount: () => lines.length,
+    getCursor: () => position,
+    replaceSelection: (value: string) => inserted.push(value),
+  };
+
+  let keydown: ((event: any) => Promise<void>) | undefined;
+  const plugin = new PasteWithSourcePlugin({} as any, {} as any) as any;
+  plugin.app = { workspace: { activeEditor: { editor }, on: () => ({}) } };
+  plugin.loadData = async () => ({ pasteMode, guardedPasteFallback: fallback });
+  plugin.addSettingTab = () => {};
+  plugin.addCommand = () => {};
+  plugin.registerEvent = () => {};
+  plugin.registerDomEvent = (_el: unknown, type: string, callback: any) => {
+    if (type === "keydown") keydown = callback;
+  };
+  (globalThis as any).document = {};
+  await plugin.onload();
+  plugin.getClipboardSourceUrl = async () => "https://example.com";
+  plugin.getSourceLinkMarkdown = () => " + cite";
+  Object.defineProperty(globalThis, "navigator", {
+    value: { clipboard: { readText: async () => "pasted text" } },
+    configurable: true,
+  });
+
+  let prevented = false;
+  const pending = keydown!({ ctrlKey: true, metaKey: true, shiftKey: false, key: "v", preventDefault: () => (prevented = true) });
+  const preventedBeforeYield = prevented;
+  await pending;
+  // default+source inserts its citation on a 50 ms timer, after Obsidian's paste.
+  await new Promise((resolve) => setTimeout(resolve, 80));
+  return { preventedBeforeYield, inserted };
+}
+
 (async () => {
   console.log("\nGuarded paste fallback setting");
   const cases: [string, object | null, string][] = [
@@ -163,6 +213,28 @@ async function loadedFallback(stored: object | null): Promise<string> {
     const ok = (await loadedFallback(stored)) === expected;
     if (!ok) failures++;
     console.log(`  [${ok ? "PASS" : "FAIL"}] ${name}`);
+  }
+
+  console.log("\nPaste shortcut handling");
+  const shortcutCases: {
+    name: string;
+    text: string;
+    pasteMode: "default+source" | "clipboard+source";
+    fallback: "native" | "plain";
+    prevented: boolean;
+    inserted: string[];
+  }[] = [
+    { name: "content mode, prose: prevents and adds a citation", text: "see |", pasteMode: "clipboard+source", fallback: "native", prevented: true, inserted: ["pasted text + cite"] },
+    { name: "content mode, guarded, native: leaves the paste to Obsidian", text: "`code |`", pasteMode: "clipboard+source", fallback: "native", prevented: false, inserted: [] },
+    { name: "content mode, guarded, plain: inserts the text alone", text: "`code |`", pasteMode: "clipboard+source", fallback: "plain", prevented: true, inserted: ["pasted text"] },
+    { name: "default mode, prose: adds the citation after Obsidian's paste", text: "see |", pasteMode: "default+source", fallback: "native", prevented: false, inserted: [" + cite"] },
+    { name: "default mode, guarded: adds nothing", text: "[[Note|", pasteMode: "default+source", fallback: "plain", prevented: false, inserted: [] },
+  ];
+  for (const c of shortcutCases) {
+    const result = await pressPaste(c.text, c.pasteMode, c.fallback);
+    const ok = result.preventedBeforeYield === c.prevented && JSON.stringify(result.inserted) === JSON.stringify(c.inserted);
+    if (!ok) failures++;
+    console.log(`  [${ok ? "PASS" : "FAIL"}] ${c.name}${ok ? "" : ` (got ${JSON.stringify(result)})`}`);
   }
 
   if (failures > 0) {
