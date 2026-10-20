@@ -2,7 +2,7 @@
   "id": "paste-with-source",
   "name": "Paste With Source",
   "version": "1.4.0",
-  "author": "Your Name",
+  "author": "Corey Struzan",
   "description": "Add source links when pasting content from the web.",
   "main": "main.js",
   "minAppVersion": "0.15.0",
