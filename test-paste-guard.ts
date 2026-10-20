@@ -14,7 +14,7 @@ Module.prototype.require = function (id: string, ...rest: any[]) {
   return originalRequire.apply(this, [id, ...rest]);
 };
 
-import { canAddCitation, LineSource } from "./main";
+import PasteWithSourcePlugin, { canAddCitation, LineSource } from "./main";
 
 let failures = 0;
 
@@ -143,8 +143,31 @@ expectAll("Prose accepts a citation", true, [
   "text\n---\n|",
 ]);
 
-if (failures > 0) {
-  console.error(`\n${failures} paste position guard test(s) failed.\n`);
-  process.exit(1);
+/** Loads settings from `stored` the way Obsidian would and returns the resulting fallback. */
+async function loadedFallback(stored: object | null): Promise<string> {
+  const plugin = new PasteWithSourcePlugin({} as any, {} as any);
+  plugin.loadData = async () => stored;
+  await plugin.loadSettings();
+  return plugin.settings.guardedPasteFallback;
 }
-console.log("\nAll paste position guard tests passed successfully! 🎉\n");
+
+(async () => {
+  console.log("\nGuarded paste fallback setting");
+  const cases: [string, object | null, string][] = [
+    ["fresh install defaults to native", null, "native"],
+    ["install from before the setting defaults to native", { templateString: "x" }, "native"],
+    ["stored plain is kept", { guardedPasteFallback: "plain" }, "plain"],
+    ["invalid stored value resets to native", { guardedPasteFallback: "bogus" }, "native"],
+  ];
+  for (const [name, stored, expected] of cases) {
+    const ok = (await loadedFallback(stored)) === expected;
+    if (!ok) failures++;
+    console.log(`  [${ok ? "PASS" : "FAIL"}] ${name}`);
+  }
+
+  if (failures > 0) {
+    console.error(`\n${failures} paste position guard test(s) failed.\n`);
+    process.exit(1);
+  }
+  console.log("\nAll paste position guard tests passed successfully! 🎉\n");
+})();
