@@ -82,7 +82,7 @@ The build is plain `tsc` with no bundler, and Obsidian loads only `main.js`. A s
 ### Documentation
 
 #### [MODIFY] `README.md` · [MODIFY] `CHANGELOG.md`
-- [ ] **TASK-6:** Document the guard and the new setting.
+- [x] **TASK-6:** Document the guard and the new setting.
   - `README.md`: a new "When no citation is added" section. It lists the guarded positions, says the list applies only to the intercepted keyboard paste and that the commands and context menu still add a citation anywhere, and explains the fallback setting.
   - `README.md`: a row for the new setting in the Settings table, and `test-paste-guard.ts` in the project structure tree.
   - `CHANGELOG.md`: under `[Unreleased]`, an `Added` entry for the guard and an `Added` entry for the setting. A `Fixed` entry for the double paste goes in only if Manual Verification step 1 reproduces it.

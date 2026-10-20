@@ -11,6 +11,7 @@ This Obsidian plugin enhances your clipboard pasting workflow by automatically a
 - 📦 **Presets & JSON Import/Export**: Built-in presets (OneNote, Markdown Quote, Academic), custom preset saving, and one-click JSON import/export
 - 👁️ **Authoritative Text Box & Live Preview**: The editable text area is always the single source of truth, backed by interactive variable pills and real-time live preview
 - ⌨️ **Keyboard Interception**: Optionally intercepts `Cmd+V` (macOS) or `Ctrl+V` / `Shift+Insert` (Windows) to auto-append source
+- 🛡️ **Markup-Safe Pasting**: Skips the citation when you paste inside code, math, comments, frontmatter, links, or wikilinks, where it would break the markup
 - 🖱 **Context Menu Actions**: Adds right-click editor menu options for source-aware pasting
 - 🔗 **Configurable Link Labels**: Format citations as `[url](url)` or generic `[Source](url)`
 
@@ -67,6 +68,7 @@ Then enable the plugin in Obsidian under **Settings → Community Plugins**.
 | **Intercept Paste** | Automatically replaces standard paste with a source-aware paste |
 | **Intercept Shortcut** | Choose which shortcut to intercept (`Cmd+V` on macOS; `Both`, `Ctrl+V only`, or `Shift+Insert only` on Windows) |
 | **Paste Mode** | Choose between default handler + source link or plain clipboard text + source link |
+| **When a citation can't be added** | Shown only with Paste Mode set to *Paste content + source*. Chooses what a paste does where no citation is added (see **When No Citation Is Added** below): *Obsidian's native paste* (default), exactly as if the plugin were off, or *Plain clipboard text* |
 | **Use URL as Link Label** | Format `{link}` as `[url](url)` instead of `[Source](url)` |
 | **Template Preset** | Select from 11 built-in presets (OneNote, Italic Attribution, Minimal Domain, Parenthetical, Academic, Obsidian Callout, Timestamped ISO 8601, Zulu Log, 12h Casual, Markdown Quote, Raw URL) or your custom presets |
 | **Preset Actions** | Save As New, Update, Delete, Export JSON, and Import JSON |
@@ -208,6 +210,28 @@ Source: [Article Name](https://example.com/article) (2026-09-11 at 02:30 PM)
 
 ---
 
+## 🛡️ When No Citation Is Added
+
+An intercepted paste (`Cmd+V`, `Ctrl+V`, or `Shift+Insert`) adds no citation when the cursor is somewhere a citation would break the surrounding markup:
+
+- **Code**: inside a fenced code block (```` ``` ```` or `~~~`, including in blockquotes and lists), on a fence line, or inside `` `inline code` ``
+- **Math**: inside a `$$` block, or inside inline `$…$`. A lone dollar sign, as in "paid $5 for", is treated as a price, not math.
+- **Comments**: inside an Obsidian `%% comment %%`, on one line or several
+- **Frontmatter**: anywhere in the YAML properties block at the top of the note
+- **Links**: inside `[[wikilink]]`, a link's `[text]`, an image's `![alt]`, or a link's `(url)`, or after an unclosed `[` on the same line. Task checkboxes like `- [ ]` and escaped `\[` don't count.
+- **HTML**: right after `<` or `="` while you type a tag or attribute
+
+Markers inside one construct don't count in another: a `%%` in a code block doesn't start a comment. An unclosed `$$` or `%%` makes the rest of the note count as math or a comment, so a stray marker leaves later pastes without a citation instead of breaking anything.
+
+What the paste does instead depends on **Paste Mode**:
+
+- **Default handler + source**: Obsidian's own paste always runs; only the citation is skipped.
+- **Paste content + source**: set by **When a citation can't be added**. *Obsidian's native paste* (the default) behaves exactly as if the plugin were off. *Plain clipboard text* inserts the clipboard's text, as this mode does elsewhere, but without the citation.
+
+This applies only to the intercepted keyboard paste. The **Paste with Source URL** and **Paste (Default) + Source URL** commands and context menu items add a citation wherever the cursor is, so you can still add one deliberately.
+
+---
+
 ## 🛠 Build Details
 
 - **Pure TypeScript Architecture**: 100% in-process TypeScript transpiled to `main.js` using `tsc`. Zero external compilers, .NET SDKs, or native binaries required.
@@ -227,12 +251,14 @@ paste-with-source/
 │   ├── paste-with-source/
 │   ├── macos-support/
 │   ├── windows-zero-binary/
-│   └── link-source-templates/
+│   ├── link-source-templates/
+│   └── paste-context-guard/
 ├── main.ts                   # Core plugin logic, template engine & UI
 ├── manifest.json             # Obsidian plugin manifest
 ├── build.ts                  # Pure TypeScript build script
 ├── deploy.ts                 # Vault deployment script
 ├── test-bplist.ts            # Unit tests for macOS WebArchive & Windows CF_HTML parsers
+├── test-paste-guard.ts       # Unit tests for the paste position guard & paste shortcut handling
 └── test-templates.ts         # Unit tests for template engine & preset import/export
 ```
 

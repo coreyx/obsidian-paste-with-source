@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Markup-Safe Pasting**: An intercepted paste (`Cmd+V`, `Ctrl+V`, `Shift+Insert`) no longer adds a citation where it would break the surrounding markup: inside fenced code blocks and fence lines, inline code, `$$` math blocks and inline `$…$` math, `%%` comments, the frontmatter, wikilinks, a link's text or `(url)`, after an unclosed `[`, or while typing an HTML tag or attribute. Inline code spans pair backtick runs by length, as in CommonMark, and a lone `$` (a price) doesn't count as math. The explicit paste commands and context menu items still add a citation anywhere.
+- **"When a citation can't be added" Setting**: In *Paste content + source* mode, chooses what such a paste does: *Obsidian's native paste* (default), as if the plugin were off, or *Plain clipboard text* without the citation. The setting is hidden in *Default handler + source* mode, where Obsidian's own paste always runs.
+
 ### Planned
 - Direct Chromium/Edge browser extension companion integration.
 
