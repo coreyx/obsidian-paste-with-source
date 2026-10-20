@@ -30,19 +30,36 @@ This Obsidian plugin enhances your clipboard pasting workflow by automatically a
 
 ## 📦 Installation
 
-### Option 1: Copy Pre-Built Files
-Copy `main.js` and `manifest.json` from the [`dist/`](dist/) folder into your Obsidian vault:
-```bash
-<Your-Vault>/.obsidian/plugins/paste-with-source/
-```
+Paste with Source isn't listed in Obsidian's Community Plugins browser yet. Install it with BRAT, which also keeps it updated, or from a GitHub release by hand.
 
-Then enable the plugin in Obsidian under **Settings → Community Plugins**.
+> [!NOTE]
+> Don't download `main.ts` from the repository and rename it to `main.js`. That file is the TypeScript source, and Obsidian fails to load it with `SyntaxError: Cannot use import statement outside a module`. The installable `main.js` is attached to each [release](https://github.com/coreyx/paste-with-source/releases).
 
-### Option 2: Build from Source
+### Option 1: BRAT (Recommended)
+[BRAT](https://github.com/TfTHacker/obsidian42-brat) (Beta Reviewers Auto-update Tool) installs plugins straight from their GitHub releases and checks for new versions.
 
-1. Clone or download this repository:
+1. In Obsidian, open **Settings → Community plugins**, turn off **Restricted mode** if it's on, then **Browse**, search for **BRAT**, and install and enable it.
+2. Open the command palette (`Ctrl+P` / `Cmd+P`) and run **BRAT: Add a beta plugin for testing**.
+3. Enter the repository `coreyx/paste-with-source` (or `https://github.com/coreyx/paste-with-source`), choose the latest version, and select **Add Plugin**.
+4. Enable **Paste with Source** under **Settings → Community plugins**.
+
+BRAT installs the files from the newest GitHub release and updates the plugin when a new release is published. You can also check for updates with **BRAT: Check for updates to all beta plugins**.
+
+### Option 2: Download a Release
+1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/coreyx/paste-with-source/releases/latest).
+2. Put both files in your vault's plugin folder, creating it if needed:
+   ```text
+   <Your-Vault>/.obsidian/plugins/paste-with-source/
+   ```
+3. Reload Obsidian, then enable **Paste with Source** under **Settings → Community plugins**.
+
+To update, replace the two files with the ones from a newer release.
+
+### Option 3: Build from Source
+
+1. Clone this repository:
    ```bash
-   git clone https://github.com/your-username/paste-with-source.git
+   git clone https://github.com/coreyx/paste-with-source.git
    cd paste-with-source
    ```
 
@@ -51,11 +68,9 @@ Then enable the plugin in Obsidian under **Settings → Community Plugins**.
    npm install
    npm run build
    ```
+   This stages `main.js` and `manifest.json` in `dist/`.
 
-3. Deploy to your local vault:
-   ```bash
-   npm run deploy
-   ```
+3. Copy `dist/main.js` and `dist/manifest.json` into `<Your-Vault>/.obsidian/plugins/paste-with-source/`. `npm run deploy` does this for a vault at `~/Documents/Obsidian Vault`.
 
 4. Enable the plugin in Obsidian under **Settings → Community Plugins**.
 
@@ -236,7 +251,7 @@ This applies only to the intercepted keyboard paste. The **Paste with Source URL
 
 - **Pure TypeScript Architecture**: 100% in-process TypeScript transpiled to `main.js` using `tsc`. Zero external compilers, .NET SDKs, or native binaries required.
 - **Cross-Platform**: Unified codebase running on both macOS and Windows via Electron's clipboard APIs.
-- **Distribution**: Build outputs (`main.js` and `manifest.json`) are staged automatically into [`dist/`](dist/).
+- **Distribution**: Build outputs (`main.js` and `manifest.json`) are staged automatically into `dist/`. That folder isn't committed; each GitHub release carries the same two files as assets, tagged with the version in `manifest.json`, which is the layout BRAT installs from.
 
 ---
 
@@ -244,7 +259,7 @@ This applies only to the intercepted keyboard paste. The **Paste with Source URL
 
 ```text
 paste-with-source/
-├── dist/                     # Distribution files (ready to copy to vault)
+├── dist/                     # Build output, not committed (ready to copy to vault)
 │   ├── main.js
 │   └── manifest.json
 ├── spec/                     # Architecture, requirements, and tech specs
