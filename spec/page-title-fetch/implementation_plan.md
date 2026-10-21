@@ -45,7 +45,7 @@ None at this time.
 ### Settings
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-1:** Replace the `useUrlAsLinkLabel: boolean` setting with `linkLabel: LinkLabel`, where `type LinkLabel = "url" | "source" | "page" | "title"`.
+- [x] **TASK-1:** Replace the `useUrlAsLinkLabel: boolean` setting with `linkLabel: LinkLabel`, where `type LinkLabel = "url" | "source" | "page" | "title"`.
   - `DEFAULT_SETTINGS.linkLabel` is `"title"`.
   - In `loadSettings`, a missing or invalid `linkLabel` resets to the default, as `guardedPasteFallback` already does. A stored `useUrlAsLinkLabel` is deleted from `this.settings`, so `saveSettings` stops writing it.
   - Update the TSDoc on `PasteWithSourceSettings` for the new field.
@@ -53,7 +53,7 @@ None at this time.
 ### Template engine
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-2:** Make `TemplateEngine` aware of page titles.
+- [x] **TASK-2:** Make `TemplateEngine` aware of page titles.
   - `buildContext(url, linkLabel: LinkLabel = "url", title?: string, now: Date = new Date())`.
     - Passing `now` lets the swap re-render the citation with the same date and time it was first inserted with.
   - `TemplateContext` gains `title`: the escaped fetched title, or the URL when there is none. The URL is shown as it is, unescaped, the same text `{url}` gives.

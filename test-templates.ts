@@ -45,13 +45,13 @@ console.log("Running TemplateEngine unit tests...");
 // Test 1: Context building and standard variable replacements
 {
   const url = "https://en.wikipedia.org/wiki/Obsidian_(software)";
-  const context = TemplateEngine.buildContext(url, true);
+  const context = TemplateEngine.buildContext(url, "url");
 
   assert(context.url === url, "Context url matches");
   assert(context.domain === "en.wikipedia.org", "Domain extracted without www");
   assert(context.page === "Obsidian (software)", "Page extracted from path slug");
   assert(context.path === "/wiki/Obsidian_(software)", "Path extracted from URL pathname");
-  assert((context as any).title === undefined, "Title is removed and not in context");
+  assert(context.title === url, "{title} falls back to the URL when no title was fetched");
   assert(/^\d{4}-\d{2}-\d{2}$/.test(context.date), "Date matches YYYY-MM-DD");
   assert(/^\d{2}:\d{2}(\s+[A-Za-z0-9/+-]+)?$/.test(context.time), "Time matches 24h HH:mm with timezone");
   assert(/^\d{2}:\d{2}Z$/.test(context.timez), "Timez matches UTC/Zulu 24h HH:mmZ");
@@ -61,10 +61,10 @@ console.log("Running TemplateEngine unit tests...");
   assert(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/.test(context.datetimez), "Datetimez matches ISO 8601 24h UTC/Zulu");
   assert(/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\s+(?:AM|PM)$/.test(context.datetime12h), "Datetime12h matches YYYY-MM-DD hh:mm AM/PM");
   assert(typeof context.timezone === "string" && context.timezone.length > 0, "Timezone is non-empty string");
-  assert(context.link === `[${url}](${url})`, "Link matches [url](url) when useUrlAsLinkLabel is true");
+  assert(context.link === `[${url}](${url})`, "Link matches [url](url) with the URL label");
 
   const rootUrl = "https://news.ycombinator.com/";
-  const rootContext = TemplateEngine.buildContext(rootUrl, true);
+  const rootContext = TemplateEngine.buildContext(rootUrl, "url");
   assert(rootContext.page === "news.ycombinator.com", "Page fallback matches domain for root URL");
   assert(rootContext.path === "/", "Path matches / for root URL");
 
@@ -76,17 +76,17 @@ console.log("Running TemplateEngine unit tests...");
   );
 }
 
-// Test 2: Link formatting toggle (useUrlAsLinkLabel = false)
+// Test 2: Link formatting with the "Source" label
 {
   const url = "https://example.com/article";
-  const context = TemplateEngine.buildContext(url, false);
-  assert(context.link === `[Source](${url})`, "Link matches [Source](url) when useUrlAsLinkLabel is false");
+  const context = TemplateEngine.buildContext(url, "source");
+  assert(context.link === `[Source](${url})`, "Link matches [Source](url) with the \"Source\" label");
 }
 
 // Test 3: Case-insensitive token replacement
 {
   const url = "https://github.com/obsidianmd";
-  const context = TemplateEngine.buildContext(url, true);
+  const context = TemplateEngine.buildContext(url, "url");
   const template = "{URL} | {DOMAIN} | {Date} | {Link}";
   const rendered = TemplateEngine.render(template, context);
 
@@ -99,7 +99,7 @@ console.log("Running TemplateEngine unit tests...");
 // Test 4: Unmatched tokens preserved safely
 {
   const url = "https://example.com";
-  const context = TemplateEngine.buildContext(url, true);
+  const context = TemplateEngine.buildContext(url, "url");
   const template = "Found at {url} by {author} with {tag_123}";
   const rendered = TemplateEngine.render(template, context);
 
@@ -112,7 +112,7 @@ console.log("Running TemplateEngine unit tests...");
 // Test 5: Literal and escaped newlines
 {
   const url = "https://example.com";
-  const context = TemplateEngine.buildContext(url, true);
+  const context = TemplateEngine.buildContext(url, "url");
   const templateWithEscape = "\\n\\nFrom <{url}>";
   const renderedEscape = TemplateEngine.render(templateWithEscape, context);
   assert(
@@ -178,7 +178,7 @@ console.log("Running TemplateEngine unit tests...");
   }
 
   const url = "https://obsidian.md";
-  const ctx = TemplateEngine.buildContext(url, true);
+  const ctx = TemplateEngine.buildContext(url, "url");
 
   const onenote = PresetManager.getPresetById("builtin-onenote")!;
   assert(TemplateEngine.render(onenote.template, ctx) === `\n\nFrom <[${url}](${url})>`, "OneNote preset renders expected citation");
@@ -250,7 +250,7 @@ console.log("Running TemplateEngine unit tests...");
 // Test 9: Performance benchmark (10,000 renders)
 {
   const url = "https://en.wikipedia.org/wiki/Obsidian_(software)";
-  const context = TemplateEngine.buildContext(url, true);
+  const context = TemplateEngine.buildContext(url, "url");
   const template = "\n\n> Source: [{domain}]({url}) (Accessed: {date} at {time})";
 
   // Warmup
