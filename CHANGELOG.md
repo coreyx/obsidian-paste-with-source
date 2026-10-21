@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Deploy Script Needs a Vault Path**: `npm run deploy` no longer copies the build into `~/Documents/Obsidian Vault`, which created a stray folder on machines whose vaults live elsewhere. Pass the vault with `npm run deploy -- --vault "<path>"` or set `OBSIDIAN_VAULT`. The script refuses a folder that isn't a vault, says when `npm run build` hasn't been run, and with no vault given lists the vaults Obsidian knows about. Covered by the new `test-deploy.ts`.
 
 ### Fixed
-- **Pasting Outside the Editor**: The paste shortcut followed the active note rather than keyboard focus. Pasting into the search box, the find bar or a settings field, such as the Citation Template box, added a citation to the open note (*Default handler + source* mode) or sent the paste into the note instead of the field (*Paste content + source* mode). The shortcut is now intercepted only while the note's editor has focus, so other fields get a normal paste and the note is left unchanged.
+- **Pasting Outside the Editor**: The paste shortcut followed the active note rather than keyboard focus. Pasting into a field in the note's own pane, such as the note title or the find bar, added a citation to the open note (*Default handler + source* mode) or sent the paste into the note instead of the field (*Paste content + source* mode). The shortcut is now intercepted only while the note's editor has focus, so other fields get a normal paste and the note is left unchanged.
 
 ### Planned
 - Direct Chromium/Edge browser extension companion integration.
