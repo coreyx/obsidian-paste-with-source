@@ -29,7 +29,7 @@ None at this time.
 ### Paste handling
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-1:** In the keydown listener in `onload`, return right after the `editor` lookup when `!editor.hasFocus()`.
+- [x] **TASK-1:** In the keydown listener in `onload`, return right after the `editor` lookup when `!editor.hasFocus()`.
   - This runs before `canAddCitation` and before any `preventDefault()`, so a paste outside the editor is left entirely to Obsidian.
   - Extend the listener's TSDoc with one sentence on why: `activeEditor` follows the active view, not keyboard focus.
 

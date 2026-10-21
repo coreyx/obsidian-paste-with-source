@@ -1073,7 +1073,10 @@ export default class PasteWithSourcePlugin extends Plugin {
      * preventDefault() are both decided before the first await: the browser
      * runs its default action as soon as this listener yields, so a later
      * preventDefault() cannot stop Obsidian's own paste, and once that paste
-     * runs it moves the cursor away from where the content lands.
+     * runs it moves the cursor away from where the content lands. The editor
+     * must also have keyboard focus, because activeEditor follows the active
+     * view rather than focus: without the check, a paste into the search box or
+     * a settings field would be redirected into, or cited onto, the note.
      */
     this.registerDomEvent(document, "keydown", async (event: KeyboardEvent) => {
       if (!this.settings.interceptPaste) return;
@@ -1091,7 +1094,7 @@ export default class PasteWithSourcePlugin extends Plugin {
       if (!shouldIntercept) return;
 
       const editor = this.app.workspace.activeEditor?.editor;
-      if (!editor) return;
+      if (!editor || !editor.hasFocus()) return;
 
       const from = editor.getCursor("from");
       const citable = canAddCitation(editor, from.line, from.ch);
