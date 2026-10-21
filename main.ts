@@ -21,6 +21,15 @@ type PasteMode = "default+source" | "clipboard+source";
  */
 type GuardedPasteFallback = "native" | "plain";
 
+/**
+ * How `{link}` labels its link: the URL itself, the word "Source", the page name
+ * guessed from the URL's path (what `{page}` gives), or the title fetched from the
+ * page. Only "title" makes a network request.
+ */
+export type LinkLabel = "url" | "source" | "page" | "title";
+
+const LINK_LABELS: readonly LinkLabel[] = ["url", "source", "page", "title"];
+
 type CitationStyle = "OneNote" | "Source";
 
 export interface TemplatePreset {
@@ -36,7 +45,8 @@ export interface PasteWithSourceSettings {
   interceptShortcut: InterceptShortcut;
   pasteMode: PasteMode;
   guardedPasteFallback: GuardedPasteFallback;
-  useUrlAsLinkLabel: boolean;
+  /** How `{link}` is labeled in every template; see {@link LinkLabel}. */
+  linkLabel: LinkLabel;
   templateString: string;
   selectedPresetId: string;
   userPresets: TemplatePreset[];
@@ -131,7 +141,7 @@ export const DEFAULT_SETTINGS: PasteWithSourceSettings = {
   interceptShortcut: "both",
   pasteMode: "default+source",
   guardedPasteFallback: "native",
-  useUrlAsLinkLabel: true,
+  linkLabel: "title",
   templateString: "\n\nFrom <{link}>",
   selectedPresetId: "builtin-onenote",
   userPresets: [],
@@ -170,17 +180,35 @@ export interface TemplateContext {
   month: string;
   day: string;
   link: string;
+  /** The page's fetched title, escaped for link text, or the URL until a title is known. */
+  title: string;
 }
 
 export class TemplateEngine {
-  static buildContext(url: string, useUrlAsLinkLabel: boolean = true): TemplateContext {
-    const now = new Date();
+  /**
+   * Builds the values every `{var}` in a template renders to.
+   *
+   * @param linkLabel How `{link}` is labeled; see {@link LinkLabel}.
+   * @param title The page's fetched title, if one has arrived. Without it, `{title}`
+   *   and a "title" `{link}` fall back to the URL.
+   * @param now The moment the citation is for. A citation re-rendered once its title
+   *   arrives passes the time it was first inserted, so its date and time don't change.
+   */
+  static buildContext(
+    url: string,
+    linkLabel: LinkLabel = "url",
+    title?: string,
+    now: Date = new Date()
+  ): TemplateContext {
     const domain = this.extractDomain(url);
     const path = this.extractPath(url);
     const page = this.extractPage(url);
-    const link = useUrlAsLinkLabel
-      ? `[${url}](${url})`
-      : `[Source](${url})`;
+    const linkText =
+      linkLabel === "source" ? "Source" :
+      linkLabel === "page" ? this.escapeLinkText(page) :
+      linkLabel === "title" && title ? this.escapeLinkText(title) :
+      url;
+    const link = `[${linkText}](${url})`;
 
     const pad = (n: number) => n.toString().padStart(2, "0");
     const year = now.getFullYear().toString();
@@ -245,7 +273,27 @@ export class TemplateEngine {
       month,
       day,
       link,
+      title: title ? this.escapeLinkText(title) : url,
     };
+  }
+
+  /**
+   * Makes text safe to put between a link's brackets: whitespace runs collapse to one
+   * space, and `\`, `[` and `]` are backslash-escaped so a title like "Arrays [MDN]"
+   * can't end the link text early. Obsidian renders `\[` as `[` in prose too, so the
+   * escaped text reads the same outside a link.
+   */
+  static escapeLinkText(text: string): string {
+    return text.replace(/\s+/g, " ").trim().replace(/[\\[\]]/g, (char) => `\\${char}`);
+  }
+
+  /**
+   * Whether rendering `template` needs the page's title, and so a network request:
+   * it uses `{title}`, or uses `{link}` while links are labeled with the title.
+   * Matched case-insensitively, the way {@link render} matches variables.
+   */
+  static templateNeedsTitle(template: string, linkLabel: LinkLabel): boolean {
+    return /\{title\}/i.test(template) || (linkLabel === "title" && /\{link\}/i.test(template));
   }
 
   static render(template: string, context: TemplateContext): string {
@@ -1152,15 +1200,14 @@ export default class PasteWithSourcePlugin extends Plugin {
   }
 
   getSourceLinkMarkdown(url: string): string {
-    const context = TemplateEngine.buildContext(url, this.settings.useUrlAsLinkLabel);
+    const context = TemplateEngine.buildContext(url, this.settings.linkLabel);
     const active = this.getActiveTemplate();
     return TemplateEngine.render(active.template, context);
   }
 
+  /** The bare `{link}` markdown for `url`. A "title" label falls back to the URL, since this inserts at once. */
   formatSourceLink(url: string): string {
-    return this.settings.useUrlAsLinkLabel
-      ? `[${url}](${url})`
-      : `[Source](${url})`;
+    return TemplateEngine.buildContext(url, this.settings.linkLabel).link;
   }
 
   async pasteWithSource(editor: Editor) {
@@ -1217,6 +1264,11 @@ export default class PasteWithSourcePlugin extends Plugin {
     if (this.settings.guardedPasteFallback !== "native" && this.settings.guardedPasteFallback !== "plain") {
       this.settings.guardedPasteFallback = DEFAULT_SETTINGS.guardedPasteFallback;
     }
+    if (!LINK_LABELS.includes(this.settings.linkLabel)) {
+      this.settings.linkLabel = DEFAULT_SETTINGS.linkLabel;
+    }
+    // Replaced by linkLabel. The plugin had no users yet, so the old toggle isn't carried over.
+    delete (this.settings as { useUrlAsLinkLabel?: boolean }).useUrlAsLinkLabel;
     if (!this.settings.presetSlotB) {
       this.settings.presetSlotB = DEFAULT_SETTINGS.presetSlotB;
     }
@@ -1320,9 +1372,9 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
       .setDesc("Controls how {link} is formatted: [url](url) vs [Source](url)")
       .addToggle((toggle) =>
         toggle
-          .setValue(this.plugin.settings.useUrlAsLinkLabel)
+          .setValue(this.plugin.settings.linkLabel === "url")
           .onChange(async (value) => {
-            this.plugin.settings.useUrlAsLinkLabel = value;
+            this.plugin.settings.linkLabel = value ? "url" : "source";
             await this.plugin.saveSettings();
             updateLivePreview();
           })
@@ -1597,7 +1649,7 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
     updateLivePreview = () => {
       const sampleContext = TemplateEngine.buildContext(
         "https://en.wikipedia.org/wiki/Obsidian_(software)",
-        this.plugin.settings.useUrlAsLinkLabel
+        this.plugin.settings.linkLabel
       );
       const rendered = TemplateEngine.render(this.plugin.settings.templateString, sampleContext);
       previewBox.textContent = rendered || "(Empty template - nothing will be appended)";
