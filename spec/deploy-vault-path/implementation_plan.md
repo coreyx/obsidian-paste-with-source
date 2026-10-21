@@ -39,7 +39,7 @@ None at this time.
   - On a `DeployError`, it prints the message and exits with code 1. Other errors are left to fail as they do today.
 
 #### [NEW] `test-deploy.ts`
-- [ ] **TASK-4:** Test `resolveVaultPath` against a temporary folder with and without `.obsidian`. The script prints pass/fail per case and exits non-zero on any failure. Cases:
+- [x] **TASK-4:** Test `resolveVaultPath` against a temporary folder with and without `.obsidian`. The script prints pass/fail per case and exits non-zero on any failure. Cases:
   - `--vault <path>` resolves.
   - `--vault=<path>` resolves.
   - The argument wins over `OBSIDIAN_VAULT`.
