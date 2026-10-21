@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 ---
 
 # Let `npm run deploy` target any vault
