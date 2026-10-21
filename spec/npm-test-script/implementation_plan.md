@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 ---
 
 # Add an `npm test` that builds first and runs every test file
