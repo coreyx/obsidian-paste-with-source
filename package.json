@@ -1,6 +1,6 @@
 {
   "name": "source-link",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Add source links when pasting content from the web.",
   "main": "main.js",
   "scripts": {
