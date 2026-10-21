@@ -34,7 +34,7 @@ None at this time.
   - Each test file runs in a separate process because `test-paste-guard.ts` replaces globals such as `navigator` and `document`, and calls `process.exit`.
 
 #### [MODIFY] `package.json`
-- [ ] **TASK-2:** Add `"test": "ts-node run-tests.ts"` to `scripts`.
+- [x] **TASK-2:** Add `"test": "ts-node run-tests.ts"` to `scripts`.
 
 ### Documentation
 
