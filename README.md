@@ -215,7 +215,7 @@ Source: [Article Name](https://example.com/article) (2026-09-11 at 02:30 PM)
 - `Paste Clipboard with Source URL`
 
 ### Keyboard Shortcuts
-- **Standard Paste**: If "Intercept Paste" is enabled, intercepts `Cmd+V` (macOS), `Ctrl+V` (Windows), or `Shift+Insert` (Windows) to append the currently active citation preset.
+- **Standard Paste**: If "Intercept Paste" is enabled, intercepts `Cmd+V` (macOS), `Ctrl+V` (Windows), or `Shift+Insert` (Windows) to append the currently active citation preset. The shortcut is intercepted only while a note's editor has keyboard focus. A paste into any other field, such as the search box, the find bar or a settings field, is left to Obsidian, and nothing is added to the open note.
 - **Preset Switcher Hotkeys**:
   - `Ctrl+Alt+A` (`Cmd+Opt+A`): Activate Preset Slot A (Always uses the editable Citation Template from settings)
   - `Ctrl+Alt+B` (`Cmd+Opt+B`): Activate Preset Slot B (Configurable preset, default: *Minimal Domain*)

@@ -43,7 +43,7 @@ None at this time.
 ### Documentation
 
 #### [MODIFY] `README.md` · [MODIFY] `CHANGELOG.md`
-- [ ] **TASK-3:** Document the focus rule.
+- [x] **TASK-3:** Document the focus rule.
   - `README.md`, Keyboard Shortcuts: the Standard Paste bullet says the shortcut is intercepted only while a note's editor has focus, and that pastes into other fields are left alone.
   - `CHANGELOG.md`, under `[Unreleased]`: a `Fixed` entry saying that pasting into a search box, the find bar or a settings field no longer adds a citation to the open note or pastes into it.
 

@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Pasting Outside the Editor**: The paste shortcut followed the active note rather than keyboard focus. Pasting into the search box, the find bar or a settings field, such as the Citation Template box, added a citation to the open note (*Default handler + source* mode) or sent the paste into the note instead of the field (*Paste content + source* mode). The shortcut is now intercepted only while the note's editor has focus, so other fields get a normal paste and the note is left unchanged.
+
 ### Planned
 - Direct Chromium/Edge browser extension companion integration.
 
