@@ -5,6 +5,6 @@
   "author": "Corey Struzan",
   "description": "Add source links when pasting content from the web.",
   "main": "main.js",
-  "minAppVersion": "0.15.0",
+  "minAppVersion": "1.1.1",
   "isDesktopOnly": true
 }

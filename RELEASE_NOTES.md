@@ -176,7 +176,7 @@ Whenever you copy text or articles from web browsers, the plugin identifies the 
 
 | Requirement | macOS | Windows |
 | :--- | :--- | :--- |
-| **Obsidian Version** | Desktop App `v0.15.0`+ | Desktop App `v0.15.0`+ |
+| **Obsidian Version** | Desktop App `v1.1.1`+ | Desktop App `v1.1.1`+ |
 | **Operating System** | macOS 10.15 (Catalina) through macOS 15+ (Sequoia) | Windows 10 or Windows 11 |
 | **Architecture** | Apple Silicon (`arm64`) & Intel (`x86_64`) | x64 & ARM64 |
 | **Runtime Dependency** | *None* (runs in-process via Electron) | *None* (runs in-process via Electron) |
