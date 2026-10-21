@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+- Direct Chromium/Edge browser extension companion integration.
+
+---
+
+## [1.5.0] - 2026-10-20
+
 ### Added
 - **Page Title Links**: Citations can label their link with the page's real title. The plugin requests the copied page through Obsidian and reads its `og:title`, `twitter:title` or `<title>`, decoding the page in the character set it declares. The paste goes in at once with the URL where the title will go, and the title replaces it when the page answers. A citation edited, deleted or moved to a different note in the meantime is left alone. A page that doesn't answer within 10 seconds, isn't HTML or has no title keeps the URL. The README's new **Network Use** section explains exactly when a request is made.
 - **`{title}` Variable**: The fetched page title, usable anywhere in a template. It shows the URL until the title arrives.
@@ -18,9 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Link Label Dropdown**: The **Use URL as Link Label** toggle is now a **Link Label** dropdown: *Page title* (the default), *Page name*, *URL* or *"Source"*. The old setting isn't carried over.
 - **Presets Use `{link}`**: Italic Attribution, Parenthetical, Academic Citation, Obsidian Callout, Timestamped (ISO 8601), Zulu / UTC Research Log and 12-Hour Casual now write `{link}` where they had `[{page}]({url})`, so **Link Label** decides their link text too. With *Page name* they read exactly as before.
 - **Repository Renamed**: The GitHub repository is now `coreyx/obsidian-paste-with-source`. GitHub redirects the old `coreyx/paste-with-source` URLs. The plugin id is still `paste-with-source`, so installed copies and their settings are unaffected.
-
-### Planned
-- Direct Chromium/Edge browser extension companion integration.
 
 ---
 
