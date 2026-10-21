@@ -1,6 +1,43 @@
 # Release Notes: Paste with Source for Obsidian
 
-Welcome to **Paste with Source** (v1.4.2), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+Welcome to **Paste with Source** (v1.5.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+
+---
+
+## 🌟 What's New in Version 1.5.0: Real Page Titles in Your Citations
+
+### 🏷️ Links Labeled With the Page's Title
+Citations can now show the page's actual title instead of its URL:
+
+```markdown
+From <[Obsidian (software) - Wikipedia](https://en.wikipedia.org/wiki/Obsidian_(software))>
+```
+
+The paste itself never waits. It goes in at once with the URL where the title will go, and the title replaces it as soon as the page answers, usually within a second. If the page can't be reached, isn't a web page or has no title, the URL simply stays. If you edit the citation or switch notes before the title arrives, your note is left exactly as you made it.
+
+### 🔽 New "Link Label" Setting
+The **Use URL as Link Label** toggle is now a **Link Label** dropdown. It decides how links are labeled in every template:
+- **Page title** (default): the title fetched from the page.
+- **Page name**: a name taken from the URL, such as "Obsidian (software)".
+- **URL**: the address itself.
+- **"Source"**: the word Source.
+
+Seven built-in presets now follow this setting too:
+- Italic Attribution
+- Parenthetical
+- Academic Citation
+- Obsidian Callout
+- Timestamped (ISO 8601)
+- Zulu / UTC Research Log
+- 12-Hour Casual
+
+Choose **Page name** to keep their previous look.
+
+### 🧩 New `{title}` Variable
+Put the page's title anywhere in your own templates, for example `Source: [{title}]({url})`. Until the title arrives, it shows the URL.
+
+### 🌐 About Network Requests
+To read a title, the plugin requests the copied page from its website, once per paste. It does this only with **Page title** selected and a template using `{link}`, or when a template uses `{title}`. Choose another Link Label, and avoid `{title}`, and the plugin makes no network requests at all. See **Network Use** in the README for the details.
 
 ---
 
