@@ -1,6 +1,16 @@
 # Release Notes: Paste with Source for Obsidian
 
-Welcome to **Paste with Source** (v1.4.1), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+Welcome to **Paste with Source** (v1.4.2), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+
+---
+
+## 🌟 What's New in Version 1.4.2: Correct Minimum Version and an Open-Source License
+
+### 🐞 Fixed: Requires Obsidian 1.1.1 or Later
+The plugin said it worked with Obsidian 0.15.0 and up. On versions before 1.1.1, the paste shortcut and both **Paste … Source URL** commands quietly did nothing, because they rely on an Obsidian feature added in 1.1.1. The plugin now declares 1.1.1 as its minimum, so Obsidian won't install it on a version it can't run on. Nothing changes for anyone already on 1.1.1 or later.
+
+### 📄 MIT License
+Paste with Source is now released under the [MIT License](LICENSE).
 
 ---
 

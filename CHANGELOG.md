@@ -9,14 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+- Direct Chromium/Edge browser extension companion integration.
+
+---
+
+## [1.4.2] - 2026-10-20
+
 ### Added
 - **License**: The project is released under the MIT License (`LICENSE`), also declared in `package.json`.
 
+### Changed
+- **npm Package Name**: The npm package is now `paste-with-source`, matching the plugin id, instead of `source-link`. It isn't published to npm, so nothing depends on the old name.
+
 ### Fixed
 - **Minimum Obsidian Version**: `minAppVersion` said `0.15.0`, but the paste shortcut and both paste commands read `workspace.activeEditor`, which Obsidian added in 1.1.1. On older versions they silently did nothing. The manifest now requires 1.1.1, so Obsidian won't install the plugin on a version it can't run on.
-
-### Planned
-- Direct Chromium/Edge browser extension companion integration.
 
 ---
 
