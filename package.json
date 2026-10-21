@@ -3,6 +3,8 @@
   "version": "1.4.1",
   "description": "Add source links when pasting content from the web.",
   "main": "main.js",
+  "author": "Corey Struzan",
+  "license": "MIT",
   "scripts": {
     "build": "ts-node build.ts",
     "deploy": "ts-node deploy.ts",

@@ -223,8 +223,10 @@ Open Obsidian Settings and locate **Paste with Source Settings**:
 | **Intercept Shortcut** | Platform default (`Cmd+V` on macOS; `Both` on Windows) | Choose which shortcut to monitor (`Cmd+V`, `Both`, `Ctrl+V only`, or `Shift+Insert only`). |
 | **Paste Mode** | `Default handler + source` | Chooses between running Obsidian's rich paste first or inserting raw clipboard plain text. |
 | **When a citation can't be added** | `Obsidian's native paste` | *Paste content + source* mode only. What a paste inside code, math, comments, frontmatter, links or wikilinks does: Obsidian's native paste, or the clipboard's plain text. |
-| **Citation Style** | `OneNote` | Formats citations either as OneNote-style `From <...>` or markdown quote `> — ...`. |
-| **Use URL as Link Label** | `true` (Enabled) | Renders links as `[https://...](https://...)` instead of `[Source](https://...)`. |
+| **Use URL as Link Label** | `true` (Enabled) | Renders `{link}` as `[https://...](https://...)` instead of `[Source](https://...)`. |
+| **Template Preset** | `OneNote Style` | Loads one of the 11 built-in presets, or one of your own, into the Citation Template. |
+| **Citation Template** | `\n\nFrom <{link}>` | The citation added after a paste, with `{var}` placeholders such as `{url}`, `{domain}`, `{page}` and `{date}`. This replaced the old **Citation Style** setting in 1.3.0. |
+| **Active Preset Slot** | `A` | Which slot pastes use: A is the Citation Template, B and C hold presets you choose (defaults *Minimal Domain* and *Academic Citation*). Switch with `Ctrl+Alt+A`, `B`, `C`. |
 
 ---
 
@@ -233,5 +235,6 @@ Open Obsidian Settings and locate **Paste with Source Settings**:
 - **Source URL not appearing**:
   - **macOS**: Ensure you are copying from a supported browser (Google Chrome, Apple Safari, Arc, Microsoft Edge, Brave, Opera). Browsers that do not populate `org.chromium.source-url` or `com.apple.webarchive` (such as Mozilla Firefox for regular text selections) cannot provide source URLs.
   - **Windows**: Content must be copied from an application that populates the `CF_HTML` format with a `SourceURL:` header (Google Chrome, Microsoft Edge, Mozilla Firefox, Brave, Arc, Opera).
+- **Pasting outside the note's text**: The paste shortcut is intercepted only while the note's editor has keyboard focus. Pasting into the note title, the find bar, the search box or a settings field is a normal paste with no citation.
 - **50ms Delay in Default Mode**: In `Default handler + source` mode, the citation is appended after a 50ms delay to allow Obsidian's internal markdown parser to finish. If cursor positioning feels inconsistent during heavy load, switch to `Paste content + source` (`clipboard+source`) mode for atomic paste replacement.
 

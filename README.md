@@ -90,7 +90,7 @@ To update, replace the two files with the ones from a newer release.
 | **Citation Template** | **Authoritative template box** (Preset Slot A) evaluated on paste; accepts `{var}` tags and multi-line markdown |
 | **Click to Insert Variable** | Quick-insertion buttons for `{url}`, `{domain}`, `{page}`, `{path}`, `{date}`, etc. |
 | **Live Preview** | Real-time preview of the rendered citation using a sample URL |
-| **Quick Preset Hotkeys** | Switch active citation preset on the fly via hotkeys (`Ctrl+Alt+A`, `B`, `C`) |
+| **Quick Preset Hotkeys** | **Active Preset Slot** picks which slot pastes use; **Preset Slot B** and **Preset Slot C** choose the preset each slot holds (Slot A is always the Citation Template). Switch slots on the fly with `Ctrl+Alt+A`, `B`, `C` |
 
 ---
 
@@ -125,8 +125,9 @@ If you copy text from a webpage and paste it into Obsidian:
 ```markdown
 Pasted excerpt text...
 
-From <https://example.com/article>
+From <[https://example.com/article](https://example.com/article)>
 ```
+With **Use URL as Link Label** turned off, `{link}` becomes `[Source](https://example.com/article)` instead.
 
 **2. Italic Attribution (`\n\n— *Source: [{page}]({url})*`):**
 ```markdown
@@ -263,14 +264,22 @@ paste-with-source/
 ├── dist/                     # Build output, not committed (ready to copy to vault)
 │   ├── main.js
 │   └── manifest.json
-├── spec/                     # Architecture, requirements, and tech specs
+├── spec/                     # Architecture, requirements, plans, and walkthroughs, one folder per change
 │   ├── paste-with-source/
 │   ├── macos-support/
 │   ├── windows-zero-binary/
 │   ├── link-source-templates/
-│   └── paste-context-guard/
+│   ├── paste-context-guard/
+│   ├── paste-outside-editor/
+│   ├── deploy-vault-path/
+│   └── npm-test-script/
 ├── main.ts                   # Core plugin logic, template engine & UI
 ├── manifest.json             # Obsidian plugin manifest
+├── package.json              # npm scripts: build, deploy, test
+├── tsconfig.json             # TypeScript compiler settings
+├── CHANGELOG.md              # Change history by version
+├── RELEASE_NOTES.md          # What's new in each release
+├── LICENSE                   # MIT license
 ├── build.ts                  # Pure TypeScript build script
 ├── deploy.ts                 # Vault deployment script
 ├── run-tests.ts              # Test runner behind `npm test`
@@ -285,6 +294,12 @@ paste-with-source/
 ## 📣 Feedback & Contributions
 
 Feel free to open issues or submit pull requests on the GitHub repository to suggest improvements or report bugs.
+
+---
+
+## 📄 License
+
+Released under the [MIT License](LICENSE). Copyright (c) 2025-2026 Corey Struzan.
 
 ---
 
