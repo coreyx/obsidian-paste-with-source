@@ -11,7 +11,9 @@
     "test": "ts-node run-tests.ts"
   },
   "devDependencies": {
+    "@types/jsdom": "30.0.0",
     "@types/node": "^18.19.115",
+    "jsdom": "30.1.2",
     "obsidian": "latest",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"

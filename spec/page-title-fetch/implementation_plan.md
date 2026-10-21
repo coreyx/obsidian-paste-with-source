@@ -137,7 +137,7 @@ None at this time.
 ### Build and tests
 
 #### [MODIFY] `package.json` · `package-lock.json`
-- [ ] **TASK-7:** Add the exact dev dependencies `jsdom@30.1.2` and `@types/jsdom@30.0.0`.
+- [x] **TASK-7:** Add the exact dev dependencies `jsdom@30.1.2` and `@types/jsdom@30.0.0`.
   - Pinned rather than `^`, and older than two weeks, so the test setup doesn't drift to a just-published release.
   - jsdom 30 requires Node `^22.22.2`, `^24.15.0` or `>=26`, which this machine's Node 22.23.2 meets.
 
