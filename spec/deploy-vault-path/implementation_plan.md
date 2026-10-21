@@ -26,7 +26,7 @@ None at this time.
 ### Deploy script
 
 #### [MODIFY] `deploy.ts`
-- [ ] **TASK-1:** Replace the hard-coded `vaultPath` with an exported `resolveVaultPath(argv: string[], env: NodeJS.ProcessEnv): string`.
+- [x] **TASK-1:** Replace the hard-coded `vaultPath` with an exported `resolveVaultPath(argv: string[], env: NodeJS.ProcessEnv): string`.
   - It takes `--vault <path>` or `--vault=<path>` from `argv` first, then `env.OBSIDIAN_VAULT`, and throws a `DeployError` when neither is set.
   - It also throws a `DeployError` when the path doesn't exist or has no `.obsidian` folder.
   - Each error says what was tried and how to fix it: `npm run deploy -- --vault "<path>"` or `OBSIDIAN_VAULT`.
