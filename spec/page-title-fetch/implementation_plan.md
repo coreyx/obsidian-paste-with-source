@@ -142,7 +142,7 @@ None at this time.
   - jsdom 30 requires Node `^22.22.2`, `^24.15.0` or `>=26`, which this machine's Node 22.23.2 meets.
 
 #### [NEW] `test-page-title.ts`
-- [ ] **TASK-8:** Tests for the fetcher and the swap, run by `npm test` like the other `test-*.ts` files.
+- [x] **TASK-8:** Tests for the fetcher and the swap, run by `npm test` like the other `test-*.ts` files.
   - Before importing `./main`, it installs jsdom's `DOMParser` globally and mocks the `obsidian` module the way `test-paste-guard.ts` does.
   - It builds pages as bytes, so the charset decoding is exercised.
   - It uses a small in-memory editor stub (`getValue`, `posToOffset`, `offsetToPos`, `replaceRange`) for the swap.
