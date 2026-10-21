@@ -39,7 +39,7 @@ None at this time.
 ### Documentation
 
 #### [MODIFY] `README.md` · [MODIFY] `CHANGELOG.md`
-- [ ] **TASK-3:** Document `npm test`.
+- [x] **TASK-3:** Document `npm test`.
   - `README.md`, Build Details: a "Tests" bullet saying `npm test` compiles and runs every `test-*.ts`. It notes that the test files load the compiled `main.js`, so running one directly needs `tsc` first.
   - `README.md` project tree: add `run-tests.ts`.
   - `CHANGELOG.md`, under `[Unreleased]`: an `Added` entry for `npm test`.

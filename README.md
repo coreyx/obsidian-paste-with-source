@@ -252,6 +252,7 @@ This applies only to the intercepted keyboard paste. The **Paste with Source URL
 - **Pure TypeScript Architecture**: 100% in-process TypeScript transpiled to `main.js` using `tsc`. Zero external compilers, .NET SDKs, or native binaries required.
 - **Cross-Platform**: Unified codebase running on both macOS and Windows via Electron's clipboard APIs.
 - **Distribution**: Build outputs (`main.js` and `manifest.json`) are staged automatically into `dist/`. That folder isn't committed; each GitHub release carries the same two files as assets, tagged with the version in `manifest.json`, which is the layout BRAT installs from.
+- **Tests**: `npm test` compiles the project with `tsc`, runs every `test-*.ts` file in the project root, and prints a `PASS`/`FAIL` summary, exiting non-zero if anything failed. The test files load the compiled `main.js`, not `main.ts`, so to run one directly, run `tsc` first and then `node test-<name>.js`.
 
 ---
 
@@ -272,6 +273,7 @@ paste-with-source/
 ├── manifest.json             # Obsidian plugin manifest
 ├── build.ts                  # Pure TypeScript build script
 ├── deploy.ts                 # Vault deployment script
+├── run-tests.ts              # Test runner behind `npm test`
 ├── test-bplist.ts            # Unit tests for macOS WebArchive & Windows CF_HTML parsers
 ├── test-deploy.ts            # Unit tests for the deploy script's vault path resolution
 ├── test-paste-guard.ts       # Unit tests for the paste position guard & paste shortcut handling
