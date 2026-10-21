@@ -39,6 +39,30 @@ export function resolveVaultPath(argv: string[], env: NodeJS.ProcessEnv): string
   return resolved;
 }
 
+/**
+ * Lists the vaults Obsidian has opened on this machine, read from its
+ * obsidian.json, so a failed deploy can show paths to copy. Returns [] when
+ * the file is missing or unreadable: the list is a convenience, never a reason
+ * for the deploy itself to fail differently.
+ */
+export function knownVaults(): string[] {
+  const home = process.env.HOME || process.env.USERPROFILE || "";
+  const configDir =
+    process.platform === "win32"
+      ? path.join(process.env.APPDATA || path.join(home, "AppData", "Roaming"), "obsidian")
+      : process.platform === "darwin"
+        ? path.join(home, "Library", "Application Support", "obsidian")
+        : path.join(process.env.XDG_CONFIG_HOME || path.join(home, ".config"), "obsidian");
+  try {
+    const config = JSON.parse(fs.readFileSync(path.join(configDir, "obsidian.json"), "utf8"));
+    return Object.values(config.vaults ?? {})
+      .map((vault: any) => vault?.path)
+      .filter((vaultPath): vaultPath is string => typeof vaultPath === "string");
+  } catch {
+    return [];
+  }
+}
+
 function ensureDir(dir: string) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
@@ -57,7 +81,16 @@ function copyRecursive(src: string, dest: string) {
   }
 }
 
-const vaultPath = resolveVaultPath(process.argv.slice(2), process.env);
+let vaultPath: string;
+try {
+  vaultPath = resolveVaultPath(process.argv.slice(2), process.env);
+} catch (error) {
+  if (error instanceof DeployError) {
+    const vaults = knownVaults();
+    if (vaults.length > 0) error.message += `\n\nVaults Obsidian knows about:\n${vaults.map((v) => `  ${v}`).join("\n")}`;
+  }
+  throw error;
+}
 const pluginDest = path.join(vaultPath, ".obsidian", "plugins", pluginId);
 copyRecursive(distDir, pluginDest);
 console.log(`✅ Plugin deployed to: ${pluginDest}`);
