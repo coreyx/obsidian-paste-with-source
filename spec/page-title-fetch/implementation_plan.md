@@ -101,7 +101,7 @@ None at this time.
 ### Paste flows
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-5:** Insert the citation with the URL as a placeholder, then swap in the fetched title.
+- [x] **TASK-5:** Insert the citation with the URL as a placeholder, then swap in the fetched title.
   - New `prepareCitation(url)`, which returns `{ template, url, now }`.
     - The active template is captured at paste time, so switching slots while the page loads doesn't change the result.
     - `getSourceLinkMarkdown(url)` keeps its signature and renders a fresh `prepareCitation` with no title. The existing tests and the paste guard's stub keep working.
