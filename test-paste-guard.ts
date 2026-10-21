@@ -155,12 +155,14 @@ async function loadedFallback(stored: object | null): Promise<string> {
  * Loads the plugin with stubbed Obsidian APIs, presses Ctrl/Cmd+V with the
  * cursor at the `|` in `text`, and reports whether preventDefault() ran before
  * the listener first yielded (the only point at which it can still stop
- * Obsidian's paste) and what the plugin inserted.
+ * Obsidian's paste) and what the plugin inserted. `focused: false` simulates
+ * the key being pressed in another field while the note is the active view.
  */
 async function pressPaste(
   text: string,
   pasteMode: "default+source" | "clipboard+source",
-  fallback: "native" | "plain"
+  fallback: "native" | "plain",
+  focused = true
 ): Promise<{ preventedBeforeYield: boolean; inserted: string[] }> {
   const cursor = text.indexOf("|");
   const lines = (text.slice(0, cursor) + text.slice(cursor + 1)).split("\n");
@@ -171,7 +173,7 @@ async function pressPaste(
     lineCount: () => lines.length,
     getCursor: () => position,
     replaceSelection: (value: string) => inserted.push(value),
-    hasFocus: () => true,
+    hasFocus: () => focused,
   };
 
   let keydown: ((event: any) => Promise<void>) | undefined;
@@ -222,6 +224,7 @@ async function pressPaste(
     text: string;
     pasteMode: "default+source" | "clipboard+source";
     fallback: "native" | "plain";
+    focused?: boolean;
     prevented: boolean;
     inserted: string[];
   }[] = [
@@ -230,9 +233,12 @@ async function pressPaste(
     { name: "content mode, guarded, plain: inserts the text alone", text: "`code |`", pasteMode: "clipboard+source", fallback: "plain", prevented: true, inserted: ["pasted text"] },
     { name: "default mode, prose: adds the citation after Obsidian's paste", text: "see |", pasteMode: "default+source", fallback: "native", prevented: false, inserted: [" + cite"] },
     { name: "default mode, guarded: adds nothing", text: "[[Note|", pasteMode: "default+source", fallback: "plain", prevented: false, inserted: [] },
+    { name: "content mode, prose, unfocused: leaves the paste to the focused field", text: "see |", pasteMode: "clipboard+source", fallback: "native", focused: false, prevented: false, inserted: [] },
+    { name: "content mode, guarded, plain, unfocused: leaves the paste to the focused field", text: "`code |`", pasteMode: "clipboard+source", fallback: "plain", focused: false, prevented: false, inserted: [] },
+    { name: "default mode, prose, unfocused: adds no citation to the note", text: "see |", pasteMode: "default+source", fallback: "native", focused: false, prevented: false, inserted: [] },
   ];
   for (const c of shortcutCases) {
-    const result = await pressPaste(c.text, c.pasteMode, c.fallback);
+    const result = await pressPaste(c.text, c.pasteMode, c.fallback, c.focused);
     const ok = result.preventedBeforeYield === c.prevented && JSON.stringify(result.inserted) === JSON.stringify(c.inserted);
     if (!ok) failures++;
     console.log(`  [${ok ? "PASS" : "FAIL"}] ${c.name}${ok ? "" : ` (got ${JSON.stringify(result)})`}`);

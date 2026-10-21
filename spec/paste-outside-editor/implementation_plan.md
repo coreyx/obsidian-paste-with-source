@@ -34,7 +34,7 @@ None at this time.
   - Extend the listener's TSDoc with one sentence on why: `activeEditor` follows the active view, not keyboard focus.
 
 #### [MODIFY] `test-paste-guard.ts`
-- [ ] **TASK-2:** Give `pressPaste` a `focused` parameter, defaulting to `true`, that sets the editor stub's `hasFocus()`, and add three shortcut cases:
+- [x] **TASK-2:** Give `pressPaste` a `focused` parameter, defaulting to `true`, that sets the editor stub's `hasFocus()`, and add three shortcut cases:
   - Content mode, prose, unfocused: no `preventDefault()`, nothing inserted.
   - Content mode, guarded position with the plain fallback, unfocused: no `preventDefault()`, nothing inserted.
   - Default mode, prose, unfocused: nothing inserted after the 50 ms timer.
