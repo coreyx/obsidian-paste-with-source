@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Repository Renamed**: The GitHub repository is now `coreyx/obsidian-paste-with-source`. GitHub redirects the old `coreyx/paste-with-source` URLs. The plugin id is still `paste-with-source`, so installed copies and their settings are unaffected.
+
 ### Planned
 - Direct Chromium/Edge browser extension companion integration.
 
