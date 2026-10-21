@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **License**: The project is released under the MIT License (`LICENSE`), also declared in `package.json`.
+
 ### Planned
 - Direct Chromium/Edge browser extension companion integration.
 
