@@ -66,7 +66,7 @@ None at this time.
     - It collapses runs of whitespace to one space, trims, and backslash-escapes `\`, `[` and `]`, so a title can't end the link text early.
     - In prose, Obsidian renders `\[` as `[`, so the escaped `{title}` reads correctly outside links too.
   - New `templateNeedsTitle(template, linkLabel)`: true when the template contains `{title}`, or when it contains `{link}` and `linkLabel` is `"title"`. Matching is case-insensitive, like `render`.
-- [ ] **TASK-3:** Change the seven `{page}` presets in `BUILTIN_PRESETS` to use `{link}`, leaving the rest of each template as it is:
+- [x] **TASK-3:** Change the seven `{page}` presets in `BUILTIN_PRESETS` to use `{link}`, leaving the rest of each template as it is:
 
   | Preset | New `template` |
   | :--- | :--- |

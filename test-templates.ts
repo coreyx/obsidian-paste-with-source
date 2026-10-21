@@ -184,19 +184,20 @@ console.log("Running TemplateEngine unit tests...");
   assert(TemplateEngine.render(onenote.template, ctx) === `\n\nFrom <[${url}](${url})>`, "OneNote preset renders expected citation");
 
   const italic = PresetManager.getPresetById("builtin-italic-attribution")!;
-  assert(TemplateEngine.render(italic.template, ctx) === `\n\n— *Source: [obsidian.md](${url})*`, "Italic preset renders expected citation");
+  const pageCtx = TemplateEngine.buildContext(url, "page");
+  assert(TemplateEngine.render(italic.template, pageCtx) === `\n\n— *Source: [obsidian.md](${url})*`, "Italic preset renders expected citation with the page-name label");
 
   const callout = PresetManager.getPresetById("builtin-obsidian-callout")!;
-  assert(TemplateEngine.render(callout.template, ctx).startsWith(`\n\n> [!info] Source: [obsidian.md](${url})`), "Obsidian Callout preset renders callout header");
+  assert(TemplateEngine.render(callout.template, pageCtx).startsWith(`\n\n> [!info] Source: [obsidian.md](${url})`), "Obsidian Callout preset renders callout header");
 
   const isoPreset = PresetManager.getPresetById("builtin-iso-timestamp")!;
-  assert(TemplateEngine.render(isoPreset.template, ctx) === `\n\n— *Source: [obsidian.md](${url})* [${ctx.datetime}]`, "ISO 8601 Timestamp preset renders expected citation");
+  assert(TemplateEngine.render(isoPreset.template, pageCtx) === `\n\n— *Source: [obsidian.md](${url})* [${pageCtx.datetime}]`, "ISO 8601 Timestamp preset renders expected citation");
 
   const zuluPreset = PresetManager.getPresetById("builtin-zulu-log")!;
-  assert(TemplateEngine.render(zuluPreset.template, ctx) === `\n\nSource: [obsidian.md](${url}) (Retrieved: ${ctx.datetimez})`, "Zulu Log preset renders expected citation");
+  assert(TemplateEngine.render(zuluPreset.template, pageCtx) === `\n\nSource: [obsidian.md](${url}) (Retrieved: ${pageCtx.datetimez})`, "Zulu Log preset renders expected citation");
 
   const casual12h = PresetManager.getPresetById("builtin-casual-12h")!;
-  assert(TemplateEngine.render(casual12h.template, ctx) === `\n\nSource: [obsidian.md](${url}) (${ctx.date} at ${ctx.time12h})`, "12-Hour Casual preset renders expected citation");
+  assert(TemplateEngine.render(casual12h.template, pageCtx) === `\n\nSource: [obsidian.md](${url}) (${pageCtx.date} at ${pageCtx.time12h})`, "12-Hour Casual preset renders expected citation");
 }
 
 // Test 8: Preset JSON Import Validation
