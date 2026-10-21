@@ -9,6 +9,7 @@ import {
   Notice,
   requestUrl
 } from "obsidian";
+import type { MarkdownFileInfo } from "obsidian";
 import { exec } from "child_process";
 
 type InterceptShortcut = "ctrl+v" | "shift+insert" | "both";
@@ -1170,6 +1171,31 @@ export async function fetchPageTitle(
   }
 }
 
+/**
+ * Where `needle` occurs in `text` closest to `offset`, or -1 if it doesn't occur.
+ * Used to find a citation again after the note may have changed around it: edits
+ * before it shift its position, and the same citation can appear more than once.
+ */
+export function findNearestOccurrence(text: string, needle: string, offset: number): number {
+  let best = -1;
+  for (let at = text.indexOf(needle); at !== -1; at = text.indexOf(needle, at + 1)) {
+    if (best === -1 || Math.abs(at - offset) < Math.abs(best - offset)) best = at;
+  }
+  return best;
+}
+
+/**
+ * A citation as it was at paste time: the template, link label and moment it was
+ * rendered with. Re-rendering one once the page title arrives gives the same text
+ * apart from the title, even if the user has since switched slots or settings.
+ */
+export interface PendingCitation {
+  template: string;
+  linkLabel: LinkLabel;
+  url: string;
+  now: Date;
+}
+
 // ---------------------------------------------------------------------------
 // Main Plugin Class
 // ---------------------------------------------------------------------------
@@ -1178,6 +1204,8 @@ export default class PasteWithSourcePlugin extends Plugin {
   settings!: PasteWithSourceSettings;
   clipboardProvider!: IClipboardSourceProvider;
   settingTab!: PasteWithSourceSettingTab;
+  /** Looks up a page title for a pasted citation. Tests replace it so nothing goes over the network. */
+  titleFetcher: (url: string) => Promise<string | undefined> = (url) => fetchPageTitle(url);
 
   async onload() {
     await this.loadSettings();
@@ -1231,8 +1259,8 @@ export default class PasteWithSourcePlugin extends Plugin {
       id: "paste-default-plus-source",
       name: "Paste (Default) + Source URL",
       callback: async () => {
-        const editor = this.app.workspace.activeEditor?.editor;
-        if (editor) await this.pasteDefaultPlusSource(editor);
+        const info = this.app.workspace.activeEditor;
+        if (info?.editor) await this.pasteDefaultPlusSource(info.editor, info);
       },
     });
 
@@ -1240,25 +1268,25 @@ export default class PasteWithSourcePlugin extends Plugin {
       id: "paste-with-source-url",
       name: "Paste with Source URL",
       callback: async () => {
-        const editor = this.app.workspace.activeEditor?.editor;
-        if (editor) await this.pasteWithSource(editor);
+        const info = this.app.workspace.activeEditor;
+        if (info?.editor) await this.pasteWithSource(info.editor, info);
       },
     });
 
     // Add context menu items
     this.registerEvent(
-      this.app.workspace.on("editor-menu", (menu: Menu, editor: Editor) => {
+      this.app.workspace.on("editor-menu", (menu: Menu, editor: Editor, info: MarkdownFileInfo) => {
         menu.addItem((item) =>
           item
             .setTitle("Paste (Default Handler) + Source URL")
             .setIcon("clipboard")
-            .onClick(() => this.pasteDefaultPlusSource(editor))
+            .onClick(() => this.pasteDefaultPlusSource(editor, info))
         );
         menu.addItem((item) =>
           item
             .setTitle("Paste Clipboard with Source URL")
             .setIcon("paste")
-            .onClick(() => this.pasteWithSource(editor))
+            .onClick(() => this.pasteWithSource(editor, info))
         );
       })
     );
@@ -1288,8 +1316,9 @@ export default class PasteWithSourcePlugin extends Plugin {
 
       if (!shouldIntercept) return;
 
-      const editor = this.app.workspace.activeEditor?.editor;
-      if (!editor || !editor.hasFocus()) return;
+      const info = this.app.workspace.activeEditor;
+      const editor = info?.editor;
+      if (!info || !editor || !editor.hasFocus()) return;
 
       const from = editor.getCursor("from");
       const citable = canAddCitation(editor, from.line, from.ch);
@@ -1303,16 +1332,13 @@ export default class PasteWithSourcePlugin extends Plugin {
         }
         const sourceUrl = await this.getClipboardSourceUrl();
         const clipboardText = await navigator.clipboard.readText();
-        const sourceLink = sourceUrl ? this.getSourceLinkMarkdown(sourceUrl) : "";
-        editor.replaceSelection(clipboardText + sourceLink);
+        this.insertWithCitation(editor, info, clipboardText, sourceUrl);
       } else if (this.settings.pasteMode === "default+source") {
         // Obsidian's own paste always runs in this mode; a guarded position just gets no citation after it.
         if (!citable) return;
         const sourceUrl = await this.getClipboardSourceUrl();
         setTimeout(() => {
-          if (sourceUrl) {
-            editor.replaceSelection(this.getSourceLinkMarkdown(sourceUrl));
-          }
+          if (sourceUrl) this.insertWithCitation(editor, info, "", sourceUrl);
         }, 50);
       }
     });
@@ -1346,10 +1372,59 @@ export default class PasteWithSourcePlugin extends Plugin {
     }
   }
 
+  /** The citation for `url` with the active template, as it reads before any page title has been fetched. */
   getSourceLinkMarkdown(url: string): string {
-    const context = TemplateEngine.buildContext(url, this.settings.linkLabel);
-    const active = this.getActiveTemplate();
-    return TemplateEngine.render(active.template, context);
+    return this.renderCitation(this.prepareCitation(url));
+  }
+
+  /** Captures what a citation for `url` is rendered with right now, so it can be rendered again once its title arrives. */
+  prepareCitation(url: string): PendingCitation {
+    return { template: this.getActiveTemplate().template, linkLabel: this.settings.linkLabel, url, now: new Date() };
+  }
+
+  /** Renders `citation`, with `title` in place of the URL wherever the template uses the page title. */
+  renderCitation(citation: PendingCitation, title?: string): string {
+    const context = TemplateEngine.buildContext(citation.url, citation.linkLabel, title, citation.now);
+    return TemplateEngine.render(citation.template, context);
+  }
+
+  /**
+   * Replaces the selection with `text` followed by the citation for `sourceUrl`, or
+   * just `text` when there is no source URL. If the citation needs the page title,
+   * it goes in with the URL in its place and {@link swapInTitle} updates it once the
+   * title arrives, so the paste itself never waits on the network.
+   */
+  insertWithCitation(editor: Editor, info: MarkdownFileInfo, text: string, sourceUrl: string): void {
+    const citation = sourceUrl ? this.prepareCitation(sourceUrl) : undefined;
+    const rendered = citation ? this.renderCitation(citation) : "";
+    editor.replaceSelection(text + rendered);
+    if (!citation || !rendered) return;
+    // The cursor ends up just after what was inserted, so the citation starts its length before it.
+    const offset = editor.posToOffset(editor.getCursor()) - rendered.length;
+    void this.swapInTitle(info, citation, rendered, offset);
+  }
+
+  /**
+   * Once the page title arrives, replaces the citation inserted as `inserted` at
+   * `offset` with the same citation showing the title. It leaves the note alone when
+   * the template doesn't use the title, no title could be fetched, the pane now shows
+   * a different note, or the citation no longer appears as it was inserted (the user
+   * edited or deleted it). Of several identical citations, the one nearest `offset`
+   * is the one replaced.
+   */
+  async swapInTitle(info: MarkdownFileInfo, citation: PendingCitation, inserted: string, offset: number): Promise<void> {
+    if (!TemplateEngine.templateNeedsTitle(citation.template, citation.linkLabel)) return;
+    const path = info.file?.path;
+    const title = await this.titleFetcher(citation.url);
+    if (!title) return;
+
+    const titled = this.renderCitation(citation, title);
+    const editor = info.editor;
+    if (titled === inserted || !editor || info.file?.path !== path) return;
+
+    const at = findNearestOccurrence(editor.getValue(), inserted, offset);
+    if (at === -1) return;
+    editor.replaceRange(titled, editor.offsetToPos(at), editor.offsetToPos(at + inserted.length));
   }
 
   /** The bare `{link}` markdown for `url`. A "title" label falls back to the URL, since this inserts at once. */
@@ -1357,11 +1432,10 @@ export default class PasteWithSourcePlugin extends Plugin {
     return TemplateEngine.buildContext(url, this.settings.linkLabel).link;
   }
 
-  async pasteWithSource(editor: Editor) {
+  async pasteWithSource(editor: Editor, info: MarkdownFileInfo) {
     const clipboardText = await navigator.clipboard.readText();
     const sourceUrl = await this.getClipboardSourceUrl();
-    const sourceLink = sourceUrl ? this.getSourceLinkMarkdown(sourceUrl) : "";
-    editor.replaceSelection(clipboardText + sourceLink);
+    this.insertWithCitation(editor, info, clipboardText, sourceUrl);
   }
 
   async pasteSourceOnly(editor: Editor) {
@@ -1373,12 +1447,12 @@ export default class PasteWithSourcePlugin extends Plugin {
     }
   }
 
-  async pasteDefaultPlusSource(editor: Editor) {
+  async pasteDefaultPlusSource(editor: Editor, info: MarkdownFileInfo) {
     const sourceUrl = await this.getClipboardSourceUrl();
     if (!sourceUrl) return;
 
     setTimeout(() => {
-      editor.replaceSelection(this.getSourceLinkMarkdown(sourceUrl));
+      this.insertWithCitation(editor, info, "", sourceUrl);
     }, 50);
   }
 

@@ -174,6 +174,7 @@ async function pressPaste(
     getCursor: () => position,
     replaceSelection: (value: string) => inserted.push(value),
     hasFocus: () => focused,
+    posToOffset: () => 0,
   };
 
   let keydown: ((event: any) => Promise<void>) | undefined;
@@ -189,7 +190,9 @@ async function pressPaste(
   (globalThis as any).document = {};
   await plugin.onload();
   plugin.getClipboardSourceUrl = async () => "https://example.com";
-  plugin.getSourceLinkMarkdown = () => " + cite";
+  plugin.renderCitation = () => " + cite";
+  // The default template asks for the page title; answer at once instead of going over the network.
+  plugin.titleFetcher = async () => undefined;
   Object.defineProperty(globalThis, "navigator", {
     value: { clipboard: { readText: async () => "pasted text" } },
     configurable: true,
