@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 ---
 
 # Label citations with the page's fetched title
