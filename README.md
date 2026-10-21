@@ -70,7 +70,7 @@ To update, replace the two files with the ones from a newer release.
    ```
    This stages `main.js` and `manifest.json` in `dist/`.
 
-3. Copy `dist/main.js` and `dist/manifest.json` into `<Your-Vault>/.obsidian/plugins/paste-with-source/`. `npm run deploy` does this for a vault at `~/Documents/Obsidian Vault`.
+3. Copy `dist/main.js` and `dist/manifest.json` into `<Your-Vault>/.obsidian/plugins/paste-with-source/`. `npm run deploy -- --vault "<path to vault>"` does this for you, or set the `OBSIDIAN_VAULT` environment variable to the vault once and run `npm run deploy`. The script refuses a folder without a `.obsidian` folder, and with no vault given it lists the vaults Obsidian knows about.
 
 4. Enable the plugin in Obsidian under **Settings → Community Plugins**.
 
@@ -273,6 +273,7 @@ paste-with-source/
 ├── build.ts                  # Pure TypeScript build script
 ├── deploy.ts                 # Vault deployment script
 ├── test-bplist.ts            # Unit tests for macOS WebArchive & Windows CF_HTML parsers
+├── test-deploy.ts            # Unit tests for the deploy script's vault path resolution
 ├── test-paste-guard.ts       # Unit tests for the paste position guard & paste shortcut handling
 └── test-templates.ts         # Unit tests for template engine & preset import/export
 ```
