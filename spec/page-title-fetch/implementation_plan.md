@@ -84,7 +84,7 @@ None at this time.
 ### Title fetching
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-4:** Add a title fetcher, written from scratch, as exported functions near the clipboard providers.
+- [x] **TASK-4:** Add a title fetcher, written from scratch, as exported functions near the clipboard providers.
   - `decodeHtml(bytes: ArrayBuffer, contentType?: string): string`
     - Decodes with the `charset` from the `Content-Type` header if it names one that `TextDecoder` accepts.
     - Otherwise it uses the charset a `<meta charset>` or `<meta http-equiv="Content-Type">` names in the first 4 KB, read as `windows-1252` so every byte maps to a character.

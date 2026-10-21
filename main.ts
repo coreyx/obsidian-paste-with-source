@@ -6,7 +6,8 @@ import {
   Editor,
   Menu,
   Modal,
-  Notice
+  Notice,
+  requestUrl
 } from "obsidian";
 import { exec } from "child_process";
 
@@ -1021,6 +1022,152 @@ export function createClipboardProvider(): IClipboardSourceProvider {
     return new WindowsClipboardProvider();
   }
   return new NullClipboardProvider();
+}
+
+// ---------------------------------------------------------------------------
+// Page Title Fetching
+// ---------------------------------------------------------------------------
+
+/** The parts of an HTTP response a title lookup reads. */
+export interface PageResponse {
+  status: number;
+  headers: Record<string, string>;
+  arrayBuffer: ArrayBuffer;
+}
+
+/** Requests a page. The plugin uses {@link requestPage}; tests pass their own so nothing goes over the network. */
+export type TitleRequester = (url: string) => Promise<PageResponse>;
+
+/** How long a title lookup may take before the citation keeps the URL in place of the title. */
+export const TITLE_FETCH_TIMEOUT_MS = 10_000;
+
+/**
+ * How far into a page to look for a `<meta>` charset. The HTML standard wants it in
+ * the first 1024 bytes, but some pages put it later.
+ */
+const CHARSET_SCAN_BYTES = 4096;
+
+/**
+ * How much of a page is parsed for its title. The title and the meta tags that
+ * carry it sit in `<head>`, so parsing a huge page in full would only cost time.
+ */
+const TITLE_PARSE_BYTES = 1024 * 1024;
+
+/**
+ * Requests a page through Obsidian's `requestUrl` rather than `fetch()`. `fetch()`
+ * runs under the app's own origin, so most sites' CORS rules would refuse it.
+ * `throw: false` turns an HTTP error status into a normal response to inspect.
+ */
+const requestPage: TitleRequester = async (url) => {
+  const response = await requestUrl({
+    url,
+    method: "GET",
+    headers: { Accept: "text/html,application/xhtml+xml" },
+    throw: false,
+  });
+  return { status: response.status, headers: response.headers, arrayBuffer: response.arrayBuffer };
+};
+
+/** Reads a header by name. HTTP header names are case-insensitive, and servers vary in how they send them. */
+function getHeader(headers: Record<string, string>, name: string): string | undefined {
+  const wanted = name.toLowerCase();
+  for (const [key, value] of Object.entries(headers)) {
+    if (key.toLowerCase() === wanted) return value;
+  }
+  return undefined;
+}
+
+/** The encoding a `Content-Type` value or a `<meta>` tag names with `charset=`, if any. */
+function findCharset(text: string | undefined): string | undefined {
+  return text?.match(/charset\s*=\s*["']?\s*([\w.:-]+)/i)?.[1];
+}
+
+/** Decodes `bytes` with the named encoding, or returns undefined if `TextDecoder` doesn't know the name. */
+function tryDecode(bytes: ArrayBuffer, encoding: string | undefined): string | undefined {
+  if (!encoding) return undefined;
+  try {
+    return new TextDecoder(encoding).decode(bytes);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Turns a page's bytes into text in the encoding the page declares, so a title in,
+ * say, Shift_JIS doesn't come out garbled. The `Content-Type` header wins, then a
+ * charset named by a `<meta>` tag near the start of the page, then UTF-8.
+ */
+export function decodeHtml(bytes: ArrayBuffer, contentType?: string): string {
+  const fromHeader = tryDecode(bytes, findCharset(contentType));
+  if (fromHeader !== undefined) return fromHeader;
+
+  // windows-1252 gives every byte a character, so the ASCII <meta> markup comes
+  // out readable whatever the page's real encoding turns out to be.
+  const start = new TextDecoder("windows-1252").decode(bytes.slice(0, CHARSET_SCAN_BYTES));
+  const declared = (start.match(/<meta\b[^>]*>/gi) ?? [])
+    .filter((tag) => /\bcharset\s*=|http-equiv\s*=\s*["']?content-type/i.test(tag))
+    .map(findCharset)
+    .find((charset) => charset !== undefined);
+  return tryDecode(bytes, declared) ?? new TextDecoder("utf-8").decode(bytes);
+}
+
+/**
+ * Reads a page's title from its HTML: the Open Graph title, then the Twitter card
+ * title, then `<title>`. Sites tend to write the social titles for people, without
+ * the " | Site Name" tail their `<title>` often carries. `DOMParser` builds an
+ * inert document, so none of the page's scripts run and nothing it links to loads.
+ */
+export function extractPageTitle(html: string): string | undefined {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const candidates = [
+    doc.querySelector('meta[property="og:title" i], meta[name="og:title" i]')?.getAttribute("content"),
+    doc.querySelector('meta[name="twitter:title" i], meta[property="twitter:title" i]')?.getAttribute("content"),
+    doc.title,
+  ];
+  for (const candidate of candidates) {
+    const title = candidate?.replace(/\s+/g, " ").trim();
+    if (title) return title;
+  }
+  return undefined;
+}
+
+/**
+ * Looks up the title of the page at `url`. It resolves to undefined rather than
+ * throwing whenever there is no usable title, so a paste never waits on or fails
+ * because of it. That covers: a URL that isn't http(s), a failed request, no answer
+ * within `timeoutMs`, a non-2xx status, a response that isn't HTML, and a page
+ * without a title.
+ */
+export async function fetchPageTitle(
+  url: string,
+  request: TitleRequester = requestPage,
+  timeoutMs: number = TITLE_FETCH_TIMEOUT_MS
+): Promise<string | undefined> {
+  let protocol: string;
+  try {
+    protocol = new URL(url).protocol;
+  } catch {
+    return undefined;
+  }
+  if (protocol !== "http:" && protocol !== "https:") return undefined;
+
+  // requestUrl takes no timeout, so a server that never answers is cut off here instead.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`No response within ${timeoutMs} ms`)), timeoutMs);
+  });
+  try {
+    const response = await Promise.race([request(url), timeout]);
+    if (response.status < 200 || response.status > 299) return undefined;
+    const contentType = getHeader(response.headers, "content-type");
+    if (contentType !== undefined && !/html/i.test(contentType)) return undefined;
+    const html = decodeHtml(response.arrayBuffer.slice(0, TITLE_PARSE_BYTES), contentType);
+    return extractPageTitle(html);
+  } catch {
+    return undefined;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // ---------------------------------------------------------------------------
