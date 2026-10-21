@@ -55,7 +55,7 @@ The setting is hidden in **Default handler + source** mode, where Obsidian's own
 Pasting in this mode used to insert the clipboard text twice, once from Obsidian and once with the citation. It now inserts it once.
 
 ### 📦 Install and Update with BRAT
-Each release now carries the built `main.js` and `manifest.json`, so you can install Paste with Source with [BRAT](https://github.com/TfTHacker/obsidian42-brat) using the repository `coreyx/paste-with-source`, and BRAT keeps it up to date. See [Installation & Quickstart](#-installation--quickstart).
+Each release now carries the built `main.js` and `manifest.json`, so you can install Paste with Source with [BRAT](https://github.com/TfTHacker/obsidian42-brat) using the repository `coreyx/obsidian-paste-with-source`, and BRAT keeps it up to date. See [Installation & Quickstart](#-installation--quickstart).
 
 ---
 
@@ -202,11 +202,11 @@ Whenever you copy text or articles from web browsers, the plugin identifies the 
 ### Option 1: BRAT (Recommended)
 1. Install and enable **BRAT** from **Settings → Community plugins → Browse**.
 2. Run **BRAT: Add a beta plugin for testing** from the command palette.
-3. Enter `coreyx/paste-with-source`, choose the latest version, and select **Add Plugin**.
+3. Enter `coreyx/obsidian-paste-with-source`, choose the latest version, and select **Add Plugin**.
 4. Enable **Paste with Source** under **Settings → Community plugins**.
 
 ### Option 2: Download a Release
-1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/coreyx/paste-with-source/releases/latest) into:
+1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/coreyx/obsidian-paste-with-source/releases/latest) into:
    ```text
    <Your-Obsidian-Vault>/.obsidian/plugins/paste-with-source/
    ```
@@ -214,8 +214,8 @@ Whenever you copy text or articles from web browsers, the plugin identifies the 
 
 ### Option 3: Build from Source
 ```bash
-git clone https://github.com/coreyx/paste-with-source.git
-cd paste-with-source
+git clone https://github.com/coreyx/obsidian-paste-with-source.git
+cd obsidian-paste-with-source
 npm install
 npm run build
 ```

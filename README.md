@@ -35,20 +35,20 @@ Requires Obsidian **1.1.1** or later.
 Paste with Source isn't listed in Obsidian's Community Plugins browser yet. Install it with BRAT, which also keeps it updated, or from a GitHub release by hand.
 
 > [!NOTE]
-> Don't download `main.ts` from the repository and rename it to `main.js`. That file is the TypeScript source, and Obsidian fails to load it with `SyntaxError: Cannot use import statement outside a module`. The installable `main.js` is attached to each [release](https://github.com/coreyx/paste-with-source/releases).
+> Don't download `main.ts` from the repository and rename it to `main.js`. That file is the TypeScript source, and Obsidian fails to load it with `SyntaxError: Cannot use import statement outside a module`. The installable `main.js` is attached to each [release](https://github.com/coreyx/obsidian-paste-with-source/releases).
 
 ### Option 1: BRAT (Recommended)
 [BRAT](https://github.com/TfTHacker/obsidian42-brat) (Beta Reviewers Auto-update Tool) installs plugins straight from their GitHub releases and checks for new versions.
 
 1. In Obsidian, open **Settings → Community plugins**, turn off **Restricted mode** if it's on, then **Browse**, search for **BRAT**, and install and enable it.
 2. Open the command palette (`Ctrl+P` / `Cmd+P`) and run **BRAT: Add a beta plugin for testing**.
-3. Enter the repository `coreyx/paste-with-source` (or `https://github.com/coreyx/paste-with-source`), choose the latest version, and select **Add Plugin**.
+3. Enter the repository `coreyx/obsidian-paste-with-source` (or `https://github.com/coreyx/obsidian-paste-with-source`), choose the latest version, and select **Add Plugin**.
 4. Enable **Paste with Source** under **Settings → Community plugins**.
 
 BRAT installs the files from the newest GitHub release and updates the plugin when a new release is published. You can also check for updates with **BRAT: Check for updates to all beta plugins**.
 
 ### Option 2: Download a Release
-1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/coreyx/paste-with-source/releases/latest).
+1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/coreyx/obsidian-paste-with-source/releases/latest).
 2. Put both files in your vault's plugin folder, creating it if needed:
    ```text
    <Your-Vault>/.obsidian/plugins/paste-with-source/
@@ -61,8 +61,8 @@ To update, replace the two files with the ones from a newer release.
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/coreyx/paste-with-source.git
-   cd paste-with-source
+   git clone https://github.com/coreyx/obsidian-paste-with-source.git
+   cd obsidian-paste-with-source
    ```
 
 2. Install dependencies and compile:
@@ -262,7 +262,7 @@ This applies only to the intercepted keyboard paste. The **Paste with Source URL
 ## 📁 Project Structure
 
 ```text
-paste-with-source/
+obsidian-paste-with-source/
 ├── dist/                     # Build output, not committed (ready to copy to vault)
 │   ├── main.js
 │   └── manifest.json
