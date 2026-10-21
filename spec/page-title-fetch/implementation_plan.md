@@ -124,7 +124,7 @@ None at this time.
 ### Settings UI
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-6:** Update `PasteWithSourceSettingTab`.
+- [x] **TASK-6:** Update `PasteWithSourceSettingTab`.
   - Replace the **Use URL as Link Label** toggle with a **Link Label** dropdown. Options:
     - `title` "Page title (fetched from the page)"
     - `page` "Page name (from the URL)"
