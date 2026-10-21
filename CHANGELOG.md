@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+- Direct Chromium/Edge browser extension companion integration.
+
+---
+
+## [1.4.1] - 2026-10-20
+
 ### Added
 - **`npm test`**: Compiles the project, then runs every `test-*.ts` file in its own process and prints a `PASS`/`FAIL` summary, exiting non-zero if the compile or any test failed. The tests load the compiled `main.js`, so running them without a build used to check whatever was built last.
 
@@ -17,9 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Pasting Outside the Editor**: The paste shortcut followed the active note rather than keyboard focus. Pasting into a field in the note's own pane, such as the note title or the find bar, added a citation to the open note (*Default handler + source* mode) or sent the paste into the note instead of the field (*Paste content + source* mode). The shortcut is now intercepted only while the note's editor has focus, so other fields get a normal paste and the note is left unchanged.
-
-### Planned
-- Direct Chromium/Edge browser extension companion integration.
 
 ---
 

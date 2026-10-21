@@ -1,6 +1,21 @@
 # Release Notes: Paste with Source for Obsidian
 
-Welcome to **Paste with Source** (v1.4.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+Welcome to **Paste with Source** (v1.4.1), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+
+---
+
+## 🌟 What's New in Version 1.4.1: Pasting Into the Right Field
+
+### 🐞 Fixed: Pastes Into the Note Title or Find Bar Went to the Note
+The paste shortcut used to act on the open note even when you were typing somewhere else in its pane:
+- In **Default handler + source** mode, pasting into the note's title or the find bar (`Ctrl+F`) pasted there, but also added a citation to the note body.
+- In **Paste content + source** mode, the title or find bar got nothing, and the text and its citation landed in the note body instead.
+
+The shortcut now acts only while the note's editor has keyboard focus. Every other field gets a normal paste, and your note is left alone.
+
+### 🛠️ For Contributors
+- **`npm test`** compiles the project and runs every test file, then prints a pass/fail summary.
+- **`npm run deploy`** now needs to be told which vault to deploy to, with `-- --vault "<path to vault>"` or the `OBSIDIAN_VAULT` environment variable. It used to write into `~/Documents/Obsidian Vault`, and created that folder if it didn't exist. With no vault given, it lists the vaults Obsidian knows about.
 
 ---
 
