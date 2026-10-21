@@ -17,28 +17,10 @@ When the active template needs the page title, the paste goes in at once with th
 ## User Review Required
 
 > [!IMPORTANT]
-> **Page title is the default for new installs, so a fresh install makes a network request for every paste.** The request goes from Obsidian to the copied page's site, which can log it.
+> **Page title is the default, so out of the box the plugin makes a network request for every paste.** The request goes from Obsidian to the copied page's site, which can log it.
 > - Nothing is requested unless the active template contains `{title}`, or contains `{link}` with Link Label set to *Page title*.
 > - *Page name*, *URL* and *"Source"* never make a request.
 > - The README and the setting's description both say so. This is the plugin's first network use, and Obsidian's plugin guidelines require disclosing it.
-> - Existing installs don't switch. They keep the label their saved toggle gave them, so nobody who upgrades starts sending requests without choosing to.
-
-> [!IMPORTANT]
-> **Seven built-in presets change what their link text shows for existing users.** These presets now use `{link}` where they had `[{page}]({url})`:
-> - Italic Attribution
-> - Parenthetical
-> - Academic Citation
-> - Obsidian Callout
-> - Timestamped (ISO 8601)
-> - Zulu / UTC Research Log
-> - 12-Hour Casual
->
-> What changes for each existing user:
-> - **On *URL*:** an upgraded install is on *URL* unless the toggle was turned off. These presets then show the full address as link text instead of the page name, until **Link Label** is set to *Page name*.
-> - **On *"Source"*:** they read "Source: [Source](…)".
-> - **Who sees the change:** it shows wherever a preset is rendered live, which means presets chosen for slots B and C. Academic Citation is slot C's default.
-> - **Who doesn't:** a preset already loaded into the Citation Template is the user's own copy and keeps its old text until the preset is picked again.
-> - The release notes will say how to get the old look back.
 
 > [!IMPORTANT]
 > **The citation can change a moment after the paste.** It goes in with the URL in place of the title, both as `{link}`'s label and as `{title}`. It then becomes the title once the page responds, which is usually under a second and never later than the 10-second timeout.
@@ -46,7 +28,7 @@ When the active template needs the page title, the paste goes in at once with th
 > - If the citation was edited or deleted, or its pane switched to another note before the title arrived, it is left as it is.
 
 > [!NOTE]
-> **Saved settings carry over.** `useUrlAsLinkLabel: true` becomes *URL* and `false` becomes *"Source"*. The old key is dropped from `data.json` on the next save.
+> **There's no migration, since the plugin has no existing users.** The old `useUrlAsLinkLabel` setting is ignored and dropped from `data.json` on the next save. Any install without a valid `linkLabel`, including a test vault set up before this change, starts on *Page title*.
 
 > [!NOTE]
 > **Some sites hand an automated request a sign-in or bot-check page**, so the title can come back as something like "Just a moment…". Neither this plan nor the fork's approach can get past that. A page with no title, or a failed or timed-out request, leaves the URL in place.
@@ -65,10 +47,7 @@ None at this time.
 #### [MODIFY] `main.ts`
 - [ ] **TASK-1:** Replace the `useUrlAsLinkLabel: boolean` setting with `linkLabel: LinkLabel`, where `type LinkLabel = "url" | "source" | "page" | "title"`.
   - `DEFAULT_SETTINGS.linkLabel` is `"title"`.
-  - In `loadSettings`:
-    - A fresh install keeps `"title"`. A fresh install is one where `loadData()` returns no data.
-    - Otherwise, a missing or invalid `linkLabel` is derived from the stored `useUrlAsLinkLabel`: `false` → `"source"`, anything else → `"url"`.
-    - The legacy key is then deleted from `this.settings`, so `saveSettings` stops writing it.
+  - In `loadSettings`, a missing or invalid `linkLabel` resets to the default, as `guardedPasteFallback` already does. A stored `useUrlAsLinkLabel` is deleted from `this.settings`, so `saveSettings` stops writing it.
   - Update the TSDoc on `PasteWithSourceSettings` for the new field.
 
 ### Template engine
@@ -191,7 +170,7 @@ None at this time.
     - A new "Network Use" section says when the plugin requests a page, from where, and that nothing else is sent anywhere.
   - `CHANGELOG.md`, under `[Unreleased]`:
     - `Added`: the Page name and Page title labels, and `{title}`.
-    - `Changed`: the toggle becoming a dropdown, with its migration; the new-install default; and the seven presets now using `{link}`, with how to keep their old look.
+    - `Changed`: the toggle becoming a dropdown that defaults to *Page title*, and the seven presets now using `{link}`.
 
 ## Verification Plan
 
@@ -211,11 +190,11 @@ None at this time.
    - a requester that rejects;
    - a requester that never settles, with a 50 ms timeout;
    - a `file:` URL, for which no request is made at all.
-4. **Settings migration:**
+4. **Settings loading:**
    - No stored data → `"title"`.
-   - Stored data with `useUrlAsLinkLabel: false` → `"source"`; with `true` or without the key → `"url"`.
-   - An invalid `linkLabel` → `"url"`.
-   - The legacy key is gone after loading.
+   - A stored valid `linkLabel` is kept.
+   - An invalid or missing `linkLabel` → `"title"`.
+   - A stored `useUrlAsLinkLabel` is gone after loading.
 5. **`buildContext` and `escapeLinkText`:**
    - `"page"` gives `[Obsidian (software)](url)` for the Wikipedia sample.
    - `"title"` with title `A [b] c` gives `[A \[b\] c](url)`.
@@ -239,12 +218,11 @@ Regression: `test-templates.ts` (with the TASK-9 changes), `test-paste-guard.ts`
 ### Manual Verification
 These run in a test vault, with text copied from a web page in Chrome or Edge.
 
-1. **Migration:**
-   - Before installing this build, turn **Use URL as Link Label** off.
-   - Install the build and reload.
-   - **Link Label** shows *"Source"*.
+1. **Default:**
+   - Install the build in the test vault and reload.
+   - **Link Label** shows *Page title*, even though the vault's `data.json` predates this change.
 2. **Page title with the default preset:**
-   - Set **Link Label** to *Page title*, with the OneNote Style preset.
+   - Keep **Link Label** on *Page title*, with the OneNote Style preset.
    - Paste text copied from a Wikipedia article, in each Paste Mode.
    - The citation appears with the URL, then changes to the article's title, such as `From <[Obsidian (software) - Wikipedia](https://…)>`.
 3. **A changed preset, in each mode:**
@@ -271,9 +249,6 @@ These run in a test vault, with text copied from a web page in Chrome or Edge.
 9. **Other paths:**
    - Use the **Paste with Source URL** command and the **Paste (Default Handler) + Source URL** context menu item.
    - Both get the title.
-10. **Fresh install:**
-    - In a vault without this plugin's `data.json`, install the build.
-    - **Link Label** starts on *Page title*.
 
 ## Visual design application
 No design system or art bible exists for this product. The change replaces one settings control with a dropdown and adds a variable pill, both using the existing settings components and styling.
