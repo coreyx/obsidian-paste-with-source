@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`npm test`**: Compiles the project, then runs every `test-*.ts` file in its own process and prints a `PASS`/`FAIL` summary, exiting non-zero if the compile or any test failed. The tests load the compiled `main.js`, so running them without a build used to check whatever was built last.
+
 ### Changed
 - **Deploy Script Needs a Vault Path**: `npm run deploy` no longer copies the build into `~/Documents/Obsidian Vault`, which created a stray folder on machines whose vaults live elsewhere. Pass the vault with `npm run deploy -- --vault "<path>"` or set `OBSIDIAN_VAULT`. The script refuses a folder that isn't a vault, says when `npm run build` hasn't been run, and with no vault given lists the vaults Obsidian knows about. Covered by the new `test-deploy.ts`.
 
