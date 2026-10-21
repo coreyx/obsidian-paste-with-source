@@ -26,7 +26,7 @@ None at this time.
 ### Test runner
 
 #### [NEW] `run-tests.ts`
-- [ ] **TASK-1:** Add a runner script.
+- [x] **TASK-1:** Add a runner script.
   - It runs the project's own TypeScript compiler, found with `require.resolve("typescript/bin/tsc")` and run with `node`, so it never picks up some other `tsc` on the `PATH`.
   - It then runs each `test-*.js` built from a `test-*.ts` in the project root, alphabetically, each in its own `node` process with inherited output.
   - It ends with one summary line per file, `PASS` or `FAIL` with the exit code, and exits with code 1 if the compile or any file failed.
