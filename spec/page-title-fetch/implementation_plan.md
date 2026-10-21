@@ -12,7 +12,7 @@ Replace the **Use URL as Link Label** toggle with a **Link Label** dropdown: *UR
 > **Page title mode and `{title}` make a network request for every paste that uses them.** The request goes from Obsidian to the copied page's site, which can log it. Nothing is requested unless the active template contains `{title}`, or contains `{link}` with Link Label set to *Page title*. The README and the setting's description both say so. This is the plugin's first network use, and Obsidian's plugin guidelines require disclosing it.
 
 > [!IMPORTANT]
-> **The citation can change a moment after the paste.** It goes in with the URL label (or `{page}` for `{title}`), then becomes the title once the page responds, which is usually under a second and never later than the 10-second timeout. The swap is a separate edit, so undo first takes the citation back to its fallback label. If the citation was edited, moved too far, or its note closed before the title arrived, it is left as it is.
+> **The citation can change a moment after the paste.** It goes in with the URL in place of the title, both as `{link}`'s label and as `{title}`, then becomes the title once the page responds, which is usually under a second and never later than the 10-second timeout. The swap is a separate edit, so undo first takes the citation back to its fallback label. If the citation was edited, moved too far, or its note closed before the title arrived, it is left as it is.
 
 > [!NOTE]
 > **Saved settings carry over.** `useUrlAsLinkLabel: true` becomes *URL* and `false` becomes *"Source"*, and the old key is dropped from `data.json` on the next save.
@@ -52,7 +52,7 @@ Replace the **Use URL as Link Label** toggle with a **Link Label** dropdown: *UR
 - [ ] **TASK-2:** Make `TemplateEngine` aware of page titles.
   - `buildContext(url, linkLabel: LinkLabel = "url", title?: string, now: Date = new Date())`.
     - Passing `now` lets the swap re-render the citation with the same date and time it was first inserted with.
-  - `TemplateContext` gains `title`: the escaped fetched title, or `{page}` when there is none.
+  - `TemplateContext` gains `title`: the escaped fetched title, or the URL when there is none. The URL is shown as it is, unescaped, the same text `{url}` gives.
   - `link`:
     - `"url"`: `[url](url)`
     - `"source"`: `[Source](url)`
@@ -106,7 +106,7 @@ Replace the **Use URL as Link Label** toggle with a **Link Label** dropdown: *UR
 - [ ] **TASK-5:** Update `PasteWithSourceSettingTab`.
   - Replace the **Use URL as Link Label** toggle with a **Link Label** dropdown. Options: `url` "URL", `source` "\"Source\"", `title` "Page title".
     - Description: "How {link} is labeled. Page title requests each pasted page from its website to read its title, and uses the URL until the title arrives or if it can't be read."
-  - Add a `{title}` variable pill ("Page title, fetched from the page; {page} until it arrives"), placed after `{page}`.
+  - Add a `{title}` variable pill ("Page title, fetched from the page; the URL until it arrives"), placed after `{page}`.
   - The live preview passes `this.plugin.settings.linkLabel` and a sample title of `Obsidian (software) - Wikipedia` for its sample URL whenever `templateNeedsTitle` is true, so no request is made from settings.
 
 ### Build and tests
@@ -125,7 +125,7 @@ Replace the **Use URL as Link Label** toggle with a **Link Label** dropdown: *UR
 
 #### [MODIFY] `test-templates.ts`
 - [ ] **TASK-8:** Move the `buildContext(url, true/false)` calls to `buildContext(url, "url")` / `buildContext(url, "source")`.
-  - Add cases for `"title"` with and without a title, for `{title}` falling back to `{page}`, and for `escapeLinkText`.
+  - Add cases for `"title"` with and without a title, for `{title}` falling back to the URL, and for `escapeLinkText`.
 
 ### Documentation
 
@@ -162,7 +162,7 @@ Replace the **Use URL as Link Label** toggle with a **Link Label** dropdown: *UR
 5. **`buildContext` and `escapeLinkText`:**
    - `"title"` with title `A [b] c` gives `[A \[b\] c](url)`.
    - `"title"` with no title gives `[url](url)`.
-   - `{title}` without a title renders as `{page}`.
+   - `{title}` without a title renders as the URL.
 6. **`templateNeedsTitle`:**
    - True for `{TITLE}` in any label mode.
    - True for `{link}` only in title mode.
