@@ -51,7 +51,7 @@ None at this time.
 ### Documentation
 
 #### [MODIFY] `README.md` · [MODIFY] `CHANGELOG.md`
-- [ ] **TASK-5:** Document the new deploy usage.
+- [x] **TASK-5:** Document the new deploy usage.
   - `README.md`, Option 3 step 3: `npm run deploy -- --vault "<path to vault>"`, or set `OBSIDIAN_VAULT` once.
   - `README.md` project tree: add `test-deploy.ts`.
   - `CHANGELOG.md`, under `[Unreleased]`: a `Changed` entry saying the deploy script needs a vault path and no longer defaults to `~/Documents/Obsidian Vault`.
