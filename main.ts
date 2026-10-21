@@ -1589,13 +1589,20 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
     }
 
     new Setting(containerEl)
-      .setName("Use URL as Link Label")
-      .setDesc("Controls how {link} is formatted: [url](url) vs [Source](url)")
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.linkLabel === "url")
-          .onChange(async (value) => {
-            this.plugin.settings.linkLabel = value ? "url" : "source";
+      .setName("Link Label")
+      .setDesc(
+        "How {link} is labeled in every template. Page title requests each pasted page from its website to read its title, " +
+        "showing the URL until the title arrives or if it can't be read. The other options make no network requests."
+      )
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("title", "Page title, fetched from the page (Default)")
+          .addOption("page", "Page name, from the URL")
+          .addOption("url", "URL")
+          .addOption("source", "\"Source\"")
+          .setValue(this.plugin.settings.linkLabel)
+          .onChange(async (value: string) => {
+            this.plugin.settings.linkLabel = value as LinkLabel;
             await this.plugin.saveSettings();
             updateLivePreview();
           })
@@ -1811,6 +1818,7 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
       { tag: "{url}", desc: "Origin URL" },
       { tag: "{domain}", desc: "Hostname" },
       { tag: "{page}", desc: "Page/Article Name" },
+      { tag: "{title}", desc: "Page title, fetched from the page; the URL until it arrives" },
       { tag: "{path}", desc: "URL Path" },
       { tag: "{date}", desc: "Date (YYYY-MM-DD)" },
       { tag: "{time}", desc: "Local Time 24h with Timezone (HH:mm TZ)" },
@@ -1868,11 +1876,17 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
     previewBox.style.margin = "0 0 20px 0";
 
     updateLivePreview = () => {
+      const { templateString, linkLabel } = this.plugin.settings;
+      // A fixed sample title stands in for a fetch, so the preview never makes a network request.
+      const sampleTitle = TemplateEngine.templateNeedsTitle(templateString, linkLabel)
+        ? "Obsidian (software) - Wikipedia"
+        : undefined;
       const sampleContext = TemplateEngine.buildContext(
         "https://en.wikipedia.org/wiki/Obsidian_(software)",
-        this.plugin.settings.linkLabel
+        linkLabel,
+        sampleTitle
       );
-      const rendered = TemplateEngine.render(this.plugin.settings.templateString, sampleContext);
+      const rendered = TemplateEngine.render(templateString, sampleContext);
       previewBox.textContent = rendered || "(Empty template - nothing will be appended)";
     };
 
