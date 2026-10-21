@@ -30,7 +30,7 @@ None at this time.
   - It takes `--vault <path>` or `--vault=<path>` from `argv` first, then `env.OBSIDIAN_VAULT`, and throws a `DeployError` when neither is set.
   - It also throws a `DeployError` when the path doesn't exist or has no `.obsidian` folder.
   - Each error says what was tried and how to fix it: `npm run deploy -- --vault "<path>"` or `OBSIDIAN_VAULT`.
-- [ ] **TASK-2:** Add an exported `knownVaults(): string[]` that reads Obsidian's `obsidian.json` and returns the `path` of each vault.
+- [x] **TASK-2:** Add an exported `knownVaults(): string[]` that reads Obsidian's `obsidian.json` and returns the `path` of each vault.
   - The file is at `%APPDATA%\obsidian\` on Windows, `~/Library/Application Support/obsidian/` on macOS, and `~/.config/obsidian/` elsewhere.
   - It returns `[]` if the file is missing or unreadable.
   - When the script fails to resolve a vault, it prints this list under the error.
