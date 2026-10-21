@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "build": "ts-node build.ts",
-    "deploy": "ts-node deploy.ts"
+    "deploy": "ts-node deploy.ts",
+    "test": "ts-node run-tests.ts"
   },
   "devDependencies": {
     "@types/node": "^18.19.115",
