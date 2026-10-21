@@ -171,6 +171,7 @@ async function pressPaste(
     lineCount: () => lines.length,
     getCursor: () => position,
     replaceSelection: (value: string) => inserted.push(value),
+    hasFocus: () => true,
   };
 
   let keydown: ((event: any) => Promise<void>) | undefined;
