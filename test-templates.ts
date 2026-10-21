@@ -83,6 +83,50 @@ console.log("Running TemplateEngine unit tests...");
   assert(context.link === `[Source](${url})`, "Link matches [Source](url) with the \"Source\" label");
 }
 
+// Test 2b: Page name and page title labels, {title}, and escaping link text
+{
+  const url = "https://en.wikipedia.org/wiki/Obsidian_(software)";
+
+  assert(
+    TemplateEngine.buildContext(url, "page").link === `[Obsidian (software)](${url})`,
+    "Page name label uses the name {page} gives"
+  );
+  assert(
+    TemplateEngine.buildContext(url, "title", "A [b] c").link === `[A \\[b\\] c](${url})`,
+    "Page title label uses the fetched title, with brackets escaped"
+  );
+  assert(
+    TemplateEngine.buildContext(url, "title").link === `[${url}](${url})`,
+    "Page title label shows the URL until a title is known"
+  );
+  assert(
+    TemplateEngine.buildContext(url, "source", "Ignored").link === `[Source](${url})`,
+    "A fetched title doesn't change the \"Source\" label"
+  );
+  assert(TemplateEngine.buildContext(url, "url", "Fetched Title").title === "Fetched Title", "{title} is the fetched title in any label mode");
+  assert(TemplateEngine.buildContext(url, "page").title === url, "{title} is the URL until a title is known");
+  assert(
+    TemplateEngine.render("See {TITLE}", TemplateEngine.buildContext(url, "url", "Fetched")) === "See Fetched",
+    "{title} renders case-insensitively"
+  );
+
+  assert(TemplateEngine.escapeLinkText("Arrays [MDN]") === "Arrays \\[MDN\\]", "escapeLinkText escapes brackets");
+  assert(TemplateEngine.escapeLinkText("C:\\path") === "C:\\\\path", "escapeLinkText escapes backslashes");
+  assert(TemplateEngine.escapeLinkText("  Two\n  lines\t here ") === "Two lines here", "escapeLinkText collapses whitespace");
+
+  const now = new Date(2026, 0, 2, 3, 4);
+  assert(
+    TemplateEngine.buildContext(url, "url", undefined, now).datetime ===
+      TemplateEngine.buildContext(url, "title", "T", now).datetime,
+    "A given moment fixes the date and time, so a re-render matches the first"
+  );
+
+  assert(TemplateEngine.templateNeedsTitle("{TITLE}", "url"), "templateNeedsTitle: {title} needs it in any label mode");
+  assert(TemplateEngine.templateNeedsTitle("From <{Link}>", "title"), "templateNeedsTitle: {link} needs it with the title label");
+  assert(!TemplateEngine.templateNeedsTitle("From <{link}>", "page"), "templateNeedsTitle: {link} doesn't need it with other labels");
+  assert(!TemplateEngine.templateNeedsTitle("[{page}]({url})", "title"), "templateNeedsTitle: {page} never needs it");
+}
+
 // Test 3: Case-insensitive token replacement
 {
   const url = "https://github.com/obsidianmd";
@@ -198,6 +242,44 @@ console.log("Running TemplateEngine unit tests...");
 
   const casual12h = PresetManager.getPresetById("builtin-casual-12h")!;
   assert(TemplateEngine.render(casual12h.template, pageCtx) === `\n\nSource: [obsidian.md](${url}) (${pageCtx.date} at ${pageCtx.time12h})`, "12-Hour Casual preset renders expected citation");
+}
+
+// Test 7b: The presets that used to write [{page}]({url}) now follow Link Label through {link}
+{
+  // Their templates before they switched to {link}.
+  const before: Record<string, string> = {
+    "builtin-italic-attribution": "\n\n— *Source: [{page}]({url})*",
+    "builtin-parenthetical": "\n\n(Source: [{page}]({url}))",
+    "builtin-academic": "\n\nSource: [{page}]({url}) via {domain} (Accessed: {date} at {time12h})",
+    "builtin-obsidian-callout": "\n\n> [!info] Source: [{page}]({url})\n> Accessed on {datetime12h}",
+    "builtin-iso-timestamp": "\n\n— *Source: [{page}]({url})* [{datetime}]",
+    "builtin-zulu-log": "\n\nSource: [{page}]({url}) (Retrieved: {datetimez})",
+    "builtin-casual-12h": "\n\nSource: [{page}]({url}) ({date} at {time12h})",
+  };
+  const now = new Date();
+  const urls = [
+    "https://en.wikipedia.org/wiki/Obsidian_(software)",
+    "https://example.com/",
+    "https://blog.example.org/2026/10/my-great-post.html",
+  ];
+
+  for (const [id, oldTemplate] of Object.entries(before)) {
+    const preset = PresetManager.getPresetById(id)!;
+    assert(preset.template.includes("{link}") && !preset.template.includes("{page}"), `'${preset.name}' uses {link} instead of {page}`);
+    const samePage = urls.every((url) => {
+      const ctx = TemplateEngine.buildContext(url, "page", undefined, now);
+      return TemplateEngine.render(preset.template, ctx) === TemplateEngine.render(oldTemplate, ctx);
+    });
+    assert(samePage, `'${preset.name}' renders as it did before with the page-name label`);
+    const titled = TemplateEngine.render(preset.template, TemplateEngine.buildContext(urls[0], "title", "Obsidian - Wikipedia", now));
+    assert(titled.includes(`[Obsidian - Wikipedia](${urls[0]})`), `'${preset.name}' shows the fetched title with the title label`);
+  }
+
+  const untouched = ["builtin-onenote", "builtin-minimal-domain", "builtin-markdown-quote", "builtin-raw-url"];
+  assert(
+    untouched.every((id) => !PresetManager.getPresetById(id)!.template.includes("{page}")),
+    "The other four presets never used {page}"
+  );
 }
 
 // Test 8: Preset JSON Import Validation

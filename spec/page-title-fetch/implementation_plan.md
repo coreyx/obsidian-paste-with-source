@@ -149,7 +149,7 @@ None at this time.
   - The cases are listed under Verification Plan.
 
 #### [MODIFY] `test-templates.ts`
-- [ ] **TASK-9:** Update the template tests.
+- [x] **TASK-9:** Update the template tests.
   - Move the `buildContext(url, true/false)` calls to `buildContext(url, "url")` / `buildContext(url, "source")`.
   - Add cases for:
     - `"page"`;
