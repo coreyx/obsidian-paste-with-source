@@ -161,7 +161,7 @@ None at this time.
 ### Documentation
 
 #### [MODIFY] `README.md` · `CHANGELOG.md`
-- [ ] **TASK-10:** Document the change.
+- [x] **TASK-10:** Document the change.
   - `README.md`:
     - The Settings table's **Use URL as Link Label** row becomes **Link Label**.
     - The Template Variables table gains `{title}`, and its `{link}` row lists the four labels.

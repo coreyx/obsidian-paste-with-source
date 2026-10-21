@@ -7,13 +7,13 @@ This Obsidian plugin enhances your clipboard pasting workflow by automatically a
 - 📎 **Source-Aware Pasting**: Appends the origin webpage URL when pasting content copied from browsers
 - 🍎 **macOS Support**: In-process Electron clipboard extraction supporting Chromium browsers (Google Chrome, Arc, Microsoft Edge, Brave, Opera) and Apple Safari (via built-in `bplist00` WebArchive decoding)
 - 🪟 **Windows Support**: In-process Electron clipboard extraction with native `CF_HTML` parsing and zero external binary dependencies
-- 📝 **Link Source Templates**: Fully customizable citation template engine with `{var}` placeholders (`{url}`, `{domain}`, `{page}`, `{path}`, `{date}`, `{time}`, `{datetime}`, `{iso}`, `{link}`)
+- 📝 **Link Source Templates**: Fully customizable citation template engine with `{var}` placeholders (`{url}`, `{domain}`, `{page}`, `{title}`, `{path}`, `{date}`, `{time}`, `{datetime}`, `{iso}`, `{link}`)
 - 📦 **Presets & JSON Import/Export**: Built-in presets (OneNote, Markdown Quote, Academic), custom preset saving, and one-click JSON import/export
 - 👁️ **Authoritative Text Box & Live Preview**: The editable text area is always the single source of truth, backed by interactive variable pills and real-time live preview
 - ⌨️ **Keyboard Interception**: Optionally intercepts `Cmd+V` (macOS) or `Ctrl+V` / `Shift+Insert` (Windows) to auto-append source
 - 🛡️ **Markup-Safe Pasting**: Skips the citation when you paste inside code, math, comments, frontmatter, links, or wikilinks, where it would break the markup
 - 🖱 **Context Menu Actions**: Adds right-click editor menu options for source-aware pasting
-- 🔗 **Configurable Link Labels**: Format citations as `[url](url)` or generic `[Source](url)`
+- 🔗 **Configurable Link Labels**: Label every citation's link with the page's real title (fetched from the page), the page name from its URL, the URL itself, or a generic `[Source]`
 
 ---
 
@@ -86,7 +86,7 @@ To update, replace the two files with the ones from a newer release.
 | **Intercept Shortcut** | Choose which shortcut to intercept (`Cmd+V` on macOS; `Both`, `Ctrl+V only`, or `Shift+Insert only` on Windows) |
 | **Paste Mode** | Choose between default handler + source link or plain clipboard text + source link |
 | **When a citation can't be added** | Shown only with Paste Mode set to *Paste content + source*. Chooses what a paste does where no citation is added (see **When No Citation Is Added** below): *Obsidian's native paste* (default), exactly as if the plugin were off, or *Plain clipboard text* |
-| **Use URL as Link Label** | Format `{link}` as `[url](url)` instead of `[Source](url)` |
+| **Link Label** | How `{link}` is labeled in every template: *Page title* (default), the title fetched from the page, which shows the URL until it arrives; *Page name*, guessed from the URL; *URL*; or *"Source"*. Only *Page title* makes a network request (see **Network Use** below) |
 | **Template Preset** | Select from 11 built-in presets (OneNote, Italic Attribution, Minimal Domain, Parenthetical, Academic, Obsidian Callout, Timestamped ISO 8601, Zulu Log, 12h Casual, Markdown Quote, Raw URL) or your custom presets |
 | **Preset Actions** | Save As New, Update, Delete, Export JSON, and Import JSON |
 | **Citation Template** | **Authoritative template box** (Preset Slot A) evaluated on paste; accepts `{var}` tags and multi-line markdown |
@@ -103,6 +103,7 @@ To update, replace the two files with the ones from a newer release.
 | `{url}` | Full origin URL | `https://en.wikipedia.org/wiki/Obsidian_(software)` |
 | `{domain}` | Hostname without `www.` | `en.wikipedia.org` |
 | `{page}` | Cleaned page/article name from URL path slug | `Obsidian (software)` |
+| `{title}` | The page's title, fetched from the page (its `og:title`, `twitter:title` or `<title>`). Shows the URL until the title arrives, or if it can't be read. Using it makes a network request | `Obsidian (software) - Wikipedia` |
 | `{path}` | Raw URL pathname | `/wiki/Obsidian_(software)` |
 | `{date}` | Current local date (`YYYY-MM-DD`) | `2026-09-11` |
 | `{time}` | Current local 24h time with timezone | `14:30 PDT` |
@@ -114,93 +115,117 @@ To update, replace the two files with the ones from a newer release.
 | `{datetimez}` | UTC/Zulu ISO 8601 24h date/time (`YYYY-MM-DDTHH:mmZ`) | `2026-09-11T21:30Z` |
 | `{datetime12h}` | Local 12-hour date and time (`YYYY-MM-DD hh:mm AM/PM`) | `2026-09-11 02:30 PM` |
 | `{iso}` | Full UTC ISO 8601 timestamp with milliseconds | `2026-09-11T21:30:00.000Z` |
-| `{link}` | Formatted markdown link | `[https://...](https://...)` or `[Source](https://...)` |
+| `{link}` | Markdown link labeled as **Link Label** says | `[Obsidian (software) - Wikipedia](https://...)`, `[Obsidian (software)](https://...)`, `[https://...](https://...)` or `[Source](https://...)` |
 | `\n` | Newline character | Line break |
 
 ---
 
 ## 🧪 Built-In Preset Examples
 
-If you copy text from a webpage and paste it into Obsidian:
+If you copy text from a webpage titled "Article Title" and paste it into Obsidian, with **Link Label** on its default, *Page title*:
 
-**1. OneNote Style (`\n\nFrom <{link}>`):**
+**1. OneNote Style (`
+
+From <{link}>`):**
 ```markdown
 Pasted excerpt text...
 
-From <[https://example.com/article](https://example.com/article)>
+From <[Article Title](https://example.com/article)>
 ```
-With **Use URL as Link Label** turned off, `{link}` becomes `[Source](https://example.com/article)` instead.
 
-**2. Italic Attribution (`\n\n— *Source: [{page}]({url})*`):**
+**2. Italic Attribution (`
+
+— *Source: {link}*`):**
 ```markdown
 Pasted excerpt text...
 
-— *Source: [Article Name](https://example.com/article)*
+— *Source: [Article Title](https://example.com/article)*
 ```
 
-**3. Minimal Domain (`\n\nSource: [{domain}]({url})`):**
+**3. Minimal Domain (`
+
+Source: [{domain}]({url})`):**
 ```markdown
 Pasted excerpt text...
 
 Source: [example.com](https://example.com/article)
 ```
 
-**4. Parenthetical (`\n\n(Source: [{page}]({url}))`):**
+**4. Parenthetical (`
+
+(Source: {link})`):**
 ```markdown
 Pasted excerpt text...
 
-(Source: [Article Name](https://example.com/article))
+(Source: [Article Title](https://example.com/article))
 ```
 
-**5. Academic Citation (`\n\nSource: [{page}]({url}) via {domain} (Accessed: {date})`):**
+**5. Academic Citation (`
+
+Source: {link} via {domain} (Accessed: {date} at {time12h})`):**
 ```markdown
 Pasted excerpt text...
 
-Source: [Article Name](https://example.com/article) via example.com (Accessed: 2026-09-11)
+Source: [Article Title](https://example.com/article) via example.com (Accessed: 2026-09-11 at 02:30 PM)
 ```
 
-**6. Obsidian Callout (`\n\n> [!info] Source: [{page}]({url})\n> Accessed on {date}`):**
+**6. Obsidian Callout (`
+
+> [!info] Source: {link}
+> Accessed on {datetime12h}`):**
 ```markdown
 Pasted excerpt text...
 
-> [!info] Source: [Article Name](https://example.com/article)
-> Accessed on 2026-09-11
+> [!info] Source: [Article Title](https://example.com/article)
+> Accessed on 2026-09-11 02:30 PM
 ```
 
-**7. Markdown Quote (`\n\n> — [Source]({url})`):**
+**7. Markdown Quote (`
+
+> — [Source]({url})`):**
 ```markdown
 Pasted excerpt text...
 
 > — [Source](https://example.com/article)
 ```
 
-**8. Raw URL (`\n\n{url}`):**
+**8. Raw URL (`
+
+{url}`):**
 ```markdown
 Pasted excerpt text...
 
 https://example.com/article
 ```
 
-**9. Timestamped (ISO 8601) (`\n\n— *Source: [{page}]({url})* [{datetime}]`):**
+**9. Timestamped (ISO 8601) (`
+
+— *Source: {link}* [{datetime}]`):**
 ```markdown
 Pasted excerpt text...
 
-— *Source: [Article Name](https://example.com/article)* [2026-09-11T14:30-07:00]
+— *Source: [Article Title](https://example.com/article)* [2026-09-11T14:30-07:00]
 ```
 
-**10. Zulu / UTC Research Log (`\n\nSource: [{page}]({url}) (Retrieved: {datetimez})`):**
+**10. Zulu / UTC Research Log (`
+
+Source: {link} (Retrieved: {datetimez})`):**
 ```markdown
 Pasted excerpt text...
 
-Source: [Article Name](https://example.com/article) (Retrieved: 2026-09-11T21:30Z)
+Source: [Article Title](https://example.com/article) (Retrieved: 2026-09-11T21:30Z)
 ```
 
-**11. 12-Hour Casual (`\n\nSource: [{page}]({url}) ({date} at {time12h})`):**
+**11. 12-Hour Casual (`
+
+Source: {link} ({date} at {time12h})`):**
 ```markdown
 Pasted excerpt text...
 
-Source: [Article Name](https://example.com/article) (2026-09-11 at 02:30 PM)
+Source: [Article Title](https://example.com/article) (2026-09-11 at 02:30 PM)
 ```
+
+Every preset that uses `{link}` follows **Link Label**. With *Page name* the link reads `[Article](https://example.com/article)`, the name taken from the URL; with *URL* it reads `[https://example.com/article](https://example.com/article)`; and with *"Source"* it reads `[Source](https://example.com/article)`.
 
 ---
 
@@ -250,6 +275,19 @@ This applies only to the intercepted keyboard paste. The **Paste with Source URL
 
 ---
 
+## 🌐 Network Use
+
+To show a page's real title, the plugin requests that page from its website. It does this only when the citation needs the title: when the active template contains `{title}`, or contains `{link}` while **Link Label** is *Page title*, the default.
+
+- **What is sent:** a single `GET` request for the copied page's URL, made through Obsidian when you paste. The site sees the request the way it would see a visit, and may log it. Nothing else is sent, and nothing goes anywhere but the copied page's own site.
+- **What is read:** only the page's title, from its `og:title`, `twitter:title` or `<title>`. The page is parsed without running any of its scripts or loading anything it links to.
+- **While it loads:** the paste goes in at once, with the URL where the title will go, and the title replaces it when the page answers. If the page doesn't answer within 10 seconds, isn't HTML or has no title, the URL stays. If you edit the citation before the title arrives, it's left as you made it.
+- **To turn it off:** set **Link Label** to *Page name*, *URL* or *"Source"*, and don't use `{title}`. The plugin then makes no network requests at all.
+
+Some sites answer automated requests with a sign-in or bot-check page, so the title can come back as that page's title instead, such as "Just a moment…".
+
+---
+
 ## 🛠 Build Details
 
 - **Pure TypeScript Architecture**: 100% in-process TypeScript transpiled to `main.js` using `tsc`. Zero external compilers, .NET SDKs, or native binaries required.
@@ -274,7 +312,8 @@ obsidian-paste-with-source/
 │   ├── paste-context-guard/
 │   ├── paste-outside-editor/
 │   ├── deploy-vault-path/
-│   └── npm-test-script/
+│   ├── npm-test-script/
+│   └── page-title-fetch/
 ├── main.ts                   # Core plugin logic, template engine & UI
 ├── manifest.json             # Obsidian plugin manifest
 ├── package.json              # npm scripts: build, deploy, test
@@ -287,6 +326,7 @@ obsidian-paste-with-source/
 ├── run-tests.ts              # Test runner behind `npm test`
 ├── test-bplist.ts            # Unit tests for macOS WebArchive & Windows CF_HTML parsers
 ├── test-deploy.ts            # Unit tests for the deploy script's vault path resolution
+├── test-page-title.ts        # Unit tests for page title fetching & swapping titles into citations
 ├── test-paste-guard.ts       # Unit tests for the paste position guard & paste shortcut handling
 └── test-templates.ts         # Unit tests for template engine & preset import/export
 ```
