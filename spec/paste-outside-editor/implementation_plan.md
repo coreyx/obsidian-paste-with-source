@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 ---
 
 # Ignore the paste shortcut when the note's editor doesn't have focus
