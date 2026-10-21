@@ -26,6 +26,8 @@ This Obsidian plugin enhances your clipboard pasting workflow by automatically a
 | **Linux Desktop** | ⚠️ No | Linux clipboard targets currently unsupported. |
 | **Mobile (iOS/Android)**| ⚠️ No | Obsidian Mobile does not support native desktop clipboard APIs. |
 
+Requires Obsidian **1.1.1** or later.
+
 ---
 
 ## 📦 Installation

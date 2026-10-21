@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **License**: The project is released under the MIT License (`LICENSE`), also declared in `package.json`.
 
+### Fixed
+- **Minimum Obsidian Version**: `minAppVersion` said `0.15.0`, but the paste shortcut and both paste commands read `workspace.activeEditor`, which Obsidian added in 1.1.1. On older versions they silently did nothing. The manifest now requires 1.1.1, so Obsidian won't install the plugin on a version it can't run on.
+
 ### Planned
 - Direct Chromium/Edge browser extension companion integration.
 
