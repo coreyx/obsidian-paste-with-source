@@ -81,16 +81,33 @@ function copyRecursive(src: string, dest: string) {
   }
 }
 
-let vaultPath: string;
-try {
-  vaultPath = resolveVaultPath(process.argv.slice(2), process.env);
-} catch (error) {
-  if (error instanceof DeployError) {
-    const vaults = knownVaults();
-    if (vaults.length > 0) error.message += `\n\nVaults Obsidian knows about:\n${vaults.map((v) => `  ${v}`).join("\n")}`;
+/** Copies the staged build in dist/ into the chosen vault's plugin folder. */
+function main() {
+  if (!fs.existsSync(path.join(distDir, "main.js"))) {
+    throw new DeployError(`No build found in ${distDir}. Run \`npm run build\` first.`);
   }
-  throw error;
+  let vaultPath: string;
+  try {
+    vaultPath = resolveVaultPath(process.argv.slice(2), process.env);
+  } catch (error) {
+    if (error instanceof DeployError) {
+      const vaults = knownVaults();
+      if (vaults.length > 0) error.message += `\n\nVaults Obsidian knows about:\n${vaults.map((v) => `  ${v}`).join("\n")}`;
+    }
+    throw error;
+  }
+  const pluginDest = path.join(vaultPath, ".obsidian", "plugins", pluginId);
+  copyRecursive(distDir, pluginDest);
+  console.log(`✅ Plugin deployed to: ${pluginDest}`);
 }
-const pluginDest = path.join(vaultPath, ".obsidian", "plugins", pluginId);
-copyRecursive(distDir, pluginDest);
-console.log(`✅ Plugin deployed to: ${pluginDest}`);
+
+// Only deploy when run as a script, so tests can import resolveVaultPath without copying anything.
+if (require.main === module) {
+  try {
+    main();
+  } catch (error) {
+    if (!(error instanceof DeployError)) throw error;
+    console.error(`❌ ${error.message}`);
+    process.exit(1);
+  }
+}

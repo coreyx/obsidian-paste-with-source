@@ -34,7 +34,7 @@ None at this time.
   - The file is at `%APPDATA%\obsidian\` on Windows, `~/Library/Application Support/obsidian/` on macOS, and `~/.config/obsidian/` elsewhere.
   - It returns `[]` if the file is missing or unreadable.
   - When the script fails to resolve a vault, it prints this list under the error.
-- [ ] **TASK-3:** Move the copy into a `main()` that runs only when the file is executed directly (`require.main === module`), so tests can import it without deploying.
+- [x] **TASK-3:** Move the copy into a `main()` that runs only when the file is executed directly (`require.main === module`), so tests can import it without deploying.
   - `main()` fails with "run `npm run build` first" when `dist/main.js` is missing.
   - On a `DeployError`, it prints the message and exits with code 1. Other errors are left to fail as they do today.
 
