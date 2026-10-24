@@ -62,7 +62,7 @@ None at this time. Which name Electron expects for the format is settled during 
 ### Tests
 
 #### [NEW] `test-windows-clipboard.ts`
-- [ ] **TASK-5:** Tests for `parseInternalSourceUrl`, the provider's read order, and the PowerShell script, run by `npm test`.
+- [x] **TASK-5:** Tests for `parseInternalSourceUrl`, the provider's read order, and the PowerShell script, run by `npm test`.
   - The provider is tested against a stub `window.require("electron")` whose `clipboard.readBuffer` answers from a map of format names. Its PowerShell fallback is replaced with a recorder, so nothing is spawned.
   - The cases are listed under Verification Plan.
 
