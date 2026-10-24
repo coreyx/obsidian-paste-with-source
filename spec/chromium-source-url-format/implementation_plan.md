@@ -69,7 +69,7 @@ None at this time. Which name Electron expects for the format is settled during 
 ### Documentation
 
 #### [MODIFY] `README.md` · `CHANGELOG.md`
-- [ ] **TASK-6:** Document the change.
+- [x] **TASK-6:** Document the change.
   - `README.md`:
     - A Settings table row for the new toggle, marked Windows only.
     - The Windows row of the Compatibility table says plain-text copies from Chromium browsers are cited too.

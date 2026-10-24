@@ -22,7 +22,7 @@ This Obsidian plugin enhances your clipboard pasting workflow by automatically a
 | Platform | Supported | Details & Requirements |
 | :--- | :---: | :--- |
 | **macOS Desktop** | ✅ Yes | In-process Electron extraction. Zero external binary or runtime installation required. Works with Chrome, Safari, Arc, Edge, Brave. |
-| **Windows Desktop** | ✅ Yes | In-process Electron extraction (`CF_HTML`). Zero external binary or runtime installation required (.NET no longer needed). Works with Chrome, Edge, Firefox, Brave, Arc, Opera. |
+| **Windows Desktop** | ✅ Yes | In-process Electron extraction (`CF_HTML`). Zero external binary or runtime installation required (.NET no longer needed). Works with Chrome, Edge, Firefox, Brave, Arc, Opera. Plain-text-only copies, such as a site's Copy button, are cited from Chromium browsers (Chrome, Edge, Brave, Arc, Opera), not from Firefox. |
 | **Linux Desktop** | ⚠️ No | Linux clipboard targets currently unsupported. |
 | **Mobile (iOS/Android)**| ⚠️ No | Obsidian Mobile does not support native desktop clipboard APIs. |
 
@@ -86,6 +86,7 @@ To update, replace the two files with the ones from a newer release.
 | **Intercept Shortcut** | Choose which shortcut to intercept (`Cmd+V` on macOS; `Both`, `Ctrl+V only`, or `Shift+Insert only` on Windows) |
 | **Paste Mode** | Choose between default handler + source link or plain clipboard text + source link |
 | **When a citation can't be added** | Shown only with Paste Mode set to *Paste content + source*. Chooses what a paste does where no citation is added (see **When No Citation Is Added** below): *Obsidian's native paste* (default), exactly as if the plugin were off, or *Plain clipboard text* |
+| **Cite plain-text copies from Chromium apps** | Windows only, on by default. When a browser or app built on Chromium copies plain text only, such as from a Copy button, reads the page address Chromium leaves on the clipboard, so the paste is still cited. Turn off if plain-text copies from desktop apps such as Slack get citations you don't want |
 | **Link Label** | How `{link}` is labeled in every template: *Page title* (default), the title fetched from the page, which shows the URL until it arrives; *Page name*, guessed from the URL; *URL*; or *"Source"*. Only *Page title* makes a network request (see **Network Use** below) |
 | **Template Preset** | Select from 11 built-in presets (OneNote, Italic Attribution, Minimal Domain, Parenthetical, Academic, Obsidian Callout, Timestamped ISO 8601, Zulu Log, 12h Casual, Markdown Quote, Raw URL) or your custom presets |
 | **Preset Actions** | Save As New, Update, Delete, Export JSON, and Import JSON |
@@ -313,7 +314,8 @@ obsidian-paste-with-source/
 │   ├── paste-outside-editor/
 │   ├── deploy-vault-path/
 │   ├── npm-test-script/
-│   └── page-title-fetch/
+│   ├── page-title-fetch/
+│   └── chromium-source-url-format/
 ├── main.ts                   # Core plugin logic, template engine & UI
 ├── manifest.json             # Obsidian plugin manifest
 ├── package.json              # npm scripts: build, deploy, test
@@ -328,7 +330,8 @@ obsidian-paste-with-source/
 ├── test-deploy.ts            # Unit tests for the deploy script's vault path resolution
 ├── test-page-title.ts        # Unit tests for page title fetching & swapping titles into citations
 ├── test-paste-guard.ts       # Unit tests for the paste position guard & paste shortcut handling
-└── test-templates.ts         # Unit tests for template engine & preset import/export
+├── test-templates.ts         # Unit tests for template engine & preset import/export
+└── test-windows-clipboard.ts # Unit tests for reading the source URL from the Windows clipboard
 ```
 
 ---
