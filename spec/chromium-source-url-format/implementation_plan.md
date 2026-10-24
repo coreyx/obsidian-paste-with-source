@@ -36,7 +36,7 @@ None at this time. Which name Electron expects for the format is settled during 
 ### Clipboard reading
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-2:** Read the format in `WindowsClipboardProvider`.
+- [x] **TASK-2:** Read the format in `WindowsClipboardProvider`.
   - New exported `parseInternalSourceUrl(buf: Buffer): string`.
     - It decodes the buffer as UTF-8, removes NUL characters (Chromium writes a trailing one), and trims.
     - It returns the result only if it starts with `http://` or `https://`, case-insensitively. Otherwise it returns `""`.

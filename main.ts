@@ -949,11 +949,38 @@ export class MacOSClipboardProvider implements IClipboardSourceProvider {
 }
 
 /**
+ * The clipboard format in which Chromium-based browsers and apps on Windows record
+ * the address of the page a copy came from. Chromium writes it for every copy,
+ * including plain-text-only writes such as `navigator.clipboard.writeText`, which
+ * put no "HTML Format" (and so no `SourceURL`) on the clipboard.
+ */
+const CHROMIUM_SOURCE_URL_FORMAT = "Chromium internal source URL";
+
+/**
+ * Reads the page address from a "Chromium internal source URL" clipboard buffer.
+ * Chromium stores it as UTF-8 with a trailing NUL. Only http(s) addresses count as
+ * a source: Chromium-based desktop apps record their own internal pages too, such
+ * as Obsidian's `app://obsidian.md/index.html`, and those aren't worth citing.
+ */
+export function parseInternalSourceUrl(buf: Buffer): string {
+  const url = buf.toString("utf8").replace(/\0/g, "").trim();
+  return /^https?:\/\//i.test(url) ? url : "";
+}
+
+/**
  * Windows In-Process Clipboard Provider
- * Reads raw CF_HTML via Electron clipboard.readBuffer("HTML Format")
- * with a zero-binary PowerShell CLI fallback for maximum resilience.
+ * Reads raw CF_HTML via Electron clipboard.readBuffer("HTML Format"), then
+ * Chromium's own source-URL format for plain-text copies, with a zero-binary
+ * PowerShell CLI fallback for maximum resilience.
  */
 export class WindowsClipboardProvider implements IClipboardSourceProvider {
+  /**
+   * @param readChromiumSourceUrl Whether to read Chromium's source-URL format when
+   *   HTML Format has no `SourceURL`. A function, so a change to the setting applies
+   *   to the next paste without rebuilding the provider.
+   */
+  constructor(private readonly readChromiumSourceUrl: () => boolean = () => true) {}
+
   async getSourceUrl(): Promise<string> {
     // 1. In-process Electron raw buffer read (< 1ms)
     try {
@@ -974,6 +1001,21 @@ export class WindowsClipboardProvider implements IClipboardSourceProvider {
         if (buf && buf.length > 0) {
           const url = this.parseSourceUrlFromBuffer(buf);
           if (url) return url;
+        }
+
+        // A plain-text-only copy leaves no HTML Format, but Chromium still records the page address.
+        if (this.readChromiumSourceUrl()) {
+          const sourceBuf: Buffer = safelyReadClipboard(() => {
+            let b = electron.clipboard.readBuffer(CHROMIUM_SOURCE_URL_FORMAT);
+            if (!b || b.length === 0) {
+              b = electron.clipboard.readBuffer(`electron application/osclipboard;format="${CHROMIUM_SOURCE_URL_FORMAT}"`);
+            }
+            return b;
+          });
+          if (sourceBuf && sourceBuf.length > 0) {
+            const url = parseInternalSourceUrl(sourceBuf);
+            if (url) return url;
+          }
         }
       }
     } catch (err) {
@@ -1023,11 +1065,16 @@ export class NullClipboardProvider implements IClipboardSourceProvider {
   }
 }
 
-export function createClipboardProvider(): IClipboardSourceProvider {
+/**
+ * Picks the clipboard provider for this platform.
+ *
+ * @param readChromiumSourceUrl Read at each paste on Windows; see {@link WindowsClipboardProvider}.
+ */
+export function createClipboardProvider(readChromiumSourceUrl: () => boolean = () => true): IClipboardSourceProvider {
   if (process.platform === "darwin") {
     return new MacOSClipboardProvider();
   } else if (process.platform === "win32") {
-    return new WindowsClipboardProvider();
+    return new WindowsClipboardProvider(readChromiumSourceUrl);
   }
   return new NullClipboardProvider();
 }
@@ -1216,7 +1263,7 @@ export default class PasteWithSourcePlugin extends Plugin {
 
   async onload() {
     await this.loadSettings();
-    this.clipboardProvider = createClipboardProvider();
+    this.clipboardProvider = createClipboardProvider(() => this.settings.readChromiumSourceUrl);
     this.settingTab = new PasteWithSourceSettingTab(this);
     this.addSettingTab(this.settingTab);
 
