@@ -9,11 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- **Plain-Text Copies From Chromium on Windows**: A page that copies plain text only, such as a Copy button using `navigator.clipboard.writeText`, puts no HTML on the clipboard, so its paste used to get no citation. The plugin now also reads the page address Chromium leaves in its "Chromium internal source URL" clipboard format, in-process and in the PowerShell fallback. Only `http(s)` addresses count, so copies from inside Obsidian still get none. A new Windows-only setting, **Cite plain-text copies from Chromium apps**, turns this off; it's on by default.
-
 ### Planned
 - Direct Chromium/Edge browser extension companion integration.
+
+---
+
+## [1.6.0] - 2026-10-24
+
+### Added
+- **Plain-Text Copies From Chromium on Windows**: A page that copies plain text only, such as a Copy button using `navigator.clipboard.writeText`, puts no HTML on the clipboard, so its paste used to get no citation. The plugin now also reads the page address Chromium leaves in its "Chromium internal source URL" clipboard format, in-process and in the PowerShell fallback. Only `http(s)` addresses count, so copies from inside Obsidian still get none. A new Windows-only setting, **Cite plain-text copies from Chromium apps**, turns this off; it's on by default.
 
 ---
 

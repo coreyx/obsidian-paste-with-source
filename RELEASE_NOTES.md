@@ -1,6 +1,18 @@
 # Release Notes: Paste with Source for Obsidian
 
-Welcome to **Paste with Source** (v1.5.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+Welcome to **Paste with Source** (v1.6.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+
+---
+
+## 🌟 What's New in Version 1.6.0: Citations for Copy Buttons on Windows
+
+### 📋 Plain-Text Copies Now Get Their Source
+Many sites have a Copy button that puts only plain text on the clipboard, such as ChatGPT's reply copy icon or GitHub's code-block button. On Windows, pasting from one of these used to give no citation, because the clipboard held no web content for the plugin to read the address from.
+
+Chrome, Edge, Brave and other browsers built on Chromium still note the page's address for every copy, including plain-text ones, and Paste with Source now reads it. Pastes from those buttons are cited with the page they came from, just like an ordinary copy. Firefox doesn't record the address for these copies, so they still get no citation there.
+
+### ⚙️ New Setting: "Cite plain-text copies from Chromium apps"
+This is on by default and appears only on Windows. Desktop apps built on Chromium, such as Slack or Teams, record their own page address too, so their plain-text copies get a citation as well while the setting is on. Turn it off if you'd rather they didn't. Copies made inside Obsidian never get one.
 
 ---
 
