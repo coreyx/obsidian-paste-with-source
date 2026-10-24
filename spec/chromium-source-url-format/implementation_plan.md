@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 ---
 
 # Cite plain-text copies from Chromium apps on Windows
