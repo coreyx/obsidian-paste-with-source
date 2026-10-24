@@ -47,6 +47,12 @@ export interface PasteWithSourceSettings {
   interceptShortcut: InterceptShortcut;
   pasteMode: PasteMode;
   guardedPasteFallback: GuardedPasteFallback;
+  /**
+   * Windows only. Whether a copy with no HTML on the clipboard, such as a page's
+   * plain-text Copy button, takes its source URL from the "Chromium internal source
+   * URL" format that Chromium-based browsers and apps leave there.
+   */
+  readChromiumSourceUrl: boolean;
   /** How `{link}` is labeled in every template; see {@link LinkLabel}. */
   linkLabel: LinkLabel;
   templateString: string;
@@ -143,6 +149,7 @@ export const DEFAULT_SETTINGS: PasteWithSourceSettings = {
   interceptShortcut: "both",
   pasteMode: "default+source",
   guardedPasteFallback: "native",
+  readChromiumSourceUrl: true,
   linkLabel: "title",
   templateString: "\n\nFrom <{link}>",
   selectedPresetId: "builtin-onenote",
@@ -1484,6 +1491,9 @@ export default class PasteWithSourcePlugin extends Plugin {
     }
     if (this.settings.guardedPasteFallback !== "native" && this.settings.guardedPasteFallback !== "plain") {
       this.settings.guardedPasteFallback = DEFAULT_SETTINGS.guardedPasteFallback;
+    }
+    if (typeof this.settings.readChromiumSourceUrl !== "boolean") {
+      this.settings.readChromiumSourceUrl = DEFAULT_SETTINGS.readChromiumSourceUrl;
     }
     if (!LINK_LABELS.includes(this.settings.linkLabel)) {
       this.settings.linkLabel = DEFAULT_SETTINGS.linkLabel;

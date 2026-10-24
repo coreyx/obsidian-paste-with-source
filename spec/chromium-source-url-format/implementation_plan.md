@@ -29,7 +29,7 @@ None at this time. Which name Electron expects for the format is settled during 
 ### Settings
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-1:** Add `readChromiumSourceUrl: boolean` to `PasteWithSourceSettings`, with TSDoc.
+- [x] **TASK-1:** Add `readChromiumSourceUrl: boolean` to `PasteWithSourceSettings`, with TSDoc.
   - `DEFAULT_SETTINGS.readChromiumSourceUrl` is `true`.
   - `loadSettings` resets anything that isn't a boolean to the default, as it does for the other validated settings.
 
