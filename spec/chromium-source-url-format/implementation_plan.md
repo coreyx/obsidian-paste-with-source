@@ -55,7 +55,7 @@ None at this time. Which name Electron expects for the format is settled during 
 ### Settings UI
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-4:** Add a **Cite plain-text copies from Chromium apps** toggle to `PasteWithSourceSettingTab`, placed after **Paste Mode** and its guarded-paste option.
+- [x] **TASK-4:** Add a **Cite plain-text copies from Chromium apps** toggle to `PasteWithSourceSettingTab`, placed after **Paste Mode** and its guarded-paste option.
   - Shown only when `process.platform === "win32"`.
   - Description: "When a browser or app built on Chromium (Chrome, Edge, Brave, Slack, …) copies plain text only, such as from a Copy button, read the page address it leaves on the clipboard. Turn off if plain-text copies from desktop apps get citations you don't want."
 

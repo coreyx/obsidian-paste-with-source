@@ -1667,6 +1667,24 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
         );
     }
 
+    // macOS always reads Chromium's equivalent format, as its main source for Chrome copies, so there's nothing to choose there.
+    if (process.platform === "win32") {
+      new Setting(containerEl)
+        .setName("Cite plain-text copies from Chromium apps")
+        .setDesc(
+          "When a browser or app built on Chromium (Chrome, Edge, Brave, Slack, …) copies plain text only, such as from a Copy button, " +
+          "read the page address it leaves on the clipboard. Turn off if plain-text copies from desktop apps get citations you don't want."
+        )
+        .addToggle((toggle) =>
+          toggle
+            .setValue(this.plugin.settings.readChromiumSourceUrl)
+            .onChange(async (value) => {
+              this.plugin.settings.readChromiumSourceUrl = value;
+              await this.plugin.saveSettings();
+            })
+        );
+    }
+
     new Setting(containerEl)
       .setName("Link Label")
       .setDesc(
