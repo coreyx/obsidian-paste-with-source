@@ -1039,9 +1039,31 @@ export class WindowsClipboardProvider implements IClipboardSourceProvider {
     return "";
   }
 
+  /**
+   * The PowerShell fallback's script: print the `SourceURL` from HTML Format and,
+   * if there isn't one and `readChromiumSourceUrl` is set, the http(s) address in
+   * Chromium's source-URL format. `GetData` returns that format as a MemoryStream
+   * of UTF-8 bytes ending in a NUL. The script avoids double quotes because it's
+   * passed inside them on the command line.
+   */
+  static powerShellScript(readChromiumSourceUrl: boolean): string {
+    const html =
+      "Add-Type -AssemblyName System.Windows.Forms; " +
+      "$h = [System.Windows.Forms.Clipboard]::GetText([System.Windows.Forms.TextDataFormat]::Html); " +
+      "if ($h -match 'SourceURL:(https?://[^\\r\\n]+)') { $matches[1] }";
+    if (!readChromiumSourceUrl) return html;
+    return (
+      html +
+      ` else { $d = [System.Windows.Forms.Clipboard]::GetData('${CHROMIUM_SOURCE_URL_FORMAT}'); ` +
+      "if ($d -is [System.IO.MemoryStream]) { " +
+      "$u = ([System.Text.Encoding]::UTF8.GetString($d.ToArray()) -replace '\\x00', '').Trim(); " +
+      "if ($u -match '^https?://') { $u } } }"
+    );
+  }
+
   private async executePowerShellFallback(): Promise<string> {
     return new Promise((resolve) => {
-      const script = "Add-Type -AssemblyName System.Windows.Forms; $h = [System.Windows.Forms.Clipboard]::GetText([System.Windows.Forms.TextDataFormat]::Html); if ($h -match 'SourceURL:(https?://[^\\r\\n]+)') { $matches[1] }";
+      const script = WindowsClipboardProvider.powerShellScript(this.readChromiumSourceUrl());
       const cmd = `powershell.exe -NoProfile -NonInteractive -Command "${script}"`;
 
       exec(cmd, (error, stdout) => {

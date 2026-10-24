@@ -47,7 +47,7 @@ None at this time. Which name Electron expects for the format is settled during 
     1. "HTML Format" `SourceURL`, unchanged.
     2. If the setting is on: `readBuffer("Chromium internal source URL")`, then `readBuffer('electron application/osclipboard;format="Chromium internal source URL"')` if that's empty. Both run inside `safelyReadClipboard`, the same pair of names the HTML read already tries, and the result goes through `parseInternalSourceUrl`.
     3. The PowerShell fallback.
-- [ ] **TASK-3:** Teach the PowerShell fallback the same format.
+- [x] **TASK-3:** Teach the PowerShell fallback the same format.
   - The script moves into a new static `WindowsClipboardProvider.powerShellScript(readChromiumSourceUrl: boolean): string`.
   - When the setting is on and the HTML check finds no `SourceURL`, the script also reads `[System.Windows.Forms.Clipboard]::GetData('Chromium internal source URL')`. That's a `MemoryStream`; the script decodes its `.ToArray()` as UTF-8, removes NUL characters, and prints the result only if it starts with `http`.
   - It's still one PowerShell process, and the existing `startsWith("http")` check on its output stays.
