@@ -679,11 +679,13 @@ export function canAddCitation(doc: LineSource, line: number, ch: number): boole
       state = scanSpans(text, state, false).state;
       continue;
     }
-    const before = text.slice(0, ch);
-    const scan = scanSpans(before, state, true);
+    // The cursor's own line is judged by what has been typed up to it.
+    const typed = text.slice(0, ch);
+    const scan = scanSpans(typed, state, true);
     if (scan.state !== null || scan.codeOpen || isInsideLinkSyntax(scan.prose)) return false;
     if (isInsideInlineMath(text, ch)) return false;
-    if (/(<|=["'])$/.test(before)) return false;
+    // Right after `<` or `="`/`='`, an HTML tag or attribute value is being typed.
+    if (typed.endsWith("<") || /=["']$/.test(typed)) return false;
   }
   return true;
 }
