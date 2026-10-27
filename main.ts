@@ -24,6 +24,18 @@ type PasteMode = "default+source" | "clipboard+source";
 type GuardedPasteFallback = "native" | "plain";
 
 /**
+ * What a paste does, decided before anything is awaited: Obsidian's own paste
+ * ("native") or the clipboard's plain text ("text"), each with or without a
+ * citation after it. See {@link PasteWithSourcePlugin.planPaste}.
+ */
+export type PastePlan = "native+cite" | "native" | "text+cite" | "text";
+
+/** Whether `plan` lets Obsidian's own paste run, rather than inserting the plain text itself. */
+function isNativePaste(plan: PastePlan): boolean {
+  return plan === "native" || plan === "native+cite";
+}
+
+/**
  * How `{link}` labels its link: the URL itself, the word "Source", the page name
  * guessed from the URL's path (what `{page}` gives), or the title fetched from the
  * page. Only "title" makes a network request.
@@ -1528,28 +1540,50 @@ export default class PasteWithSourcePlugin extends Plugin {
       const editor = info?.editor;
       if (!info || !editor || !editor.hasFocus()) return;
 
-      const from = editor.getCursor("from");
-      const citable = canAddCitation(editor, from.line, from.ch);
-
-      if (this.settings.pasteMode === "clipboard+source") {
-        if (!citable && this.settings.guardedPasteFallback === "native") return;
-        event.preventDefault();
-        if (!citable) {
-          editor.replaceSelection(await navigator.clipboard.readText());
-          return;
-        }
-        const sourceUrl = await this.getClipboardSourceUrl();
-        const clipboardText = await navigator.clipboard.readText();
-        this.insertWithCitation(editor, info, clipboardText, sourceUrl);
-      } else if (this.settings.pasteMode === "default+source") {
-        // Obsidian's own paste always runs in this mode; a guarded position just gets no citation after it.
-        if (!citable) return;
-        const sourceUrl = await this.getClipboardSourceUrl();
-        setTimeout(() => {
-          if (sourceUrl) this.insertWithCitation(editor, info, "", sourceUrl);
-        }, 50);
-      }
+      const plan = this.planPaste(editor);
+      // Leaving the default action alone is what lets Obsidian's own paste run.
+      if (!isNativePaste(plan)) event.preventDefault();
+      await this.finishPaste(editor, info, plan, () => this.getClipboardSourceUrl());
     });
+  }
+
+  /**
+   * Decides what a paste at the cursor does, from the cursor position, Paste Mode
+   * and "When a citation can't be added". It awaits nothing, so the paste
+   * shortcut's listener can still call preventDefault() once it knows the answer.
+   */
+  planPaste(editor: Editor): PastePlan {
+    const from = editor.getCursor("from");
+    const citable = canAddCitation(editor, from.line, from.ch);
+    if (this.settings.pasteMode === "clipboard+source") {
+      if (citable) return "text+cite";
+      return this.settings.guardedPasteFallback === "native" ? "native" : "text";
+    }
+    // Obsidian's own paste always runs in this mode; a guarded position just gets no citation after it.
+    return citable ? "native+cite" : "native";
+  }
+
+  /**
+   * Carries out `plan`, apart from Obsidian's own paste, which whoever made the
+   * plan has already let run or requested. A text plan inserts the clipboard's
+   * plain text, and a cited plan adds a citation for the address `sourceUrl`
+   * finds. After a native paste the citation waits 50 ms, so it lands after
+   * the pasted content rather than before it.
+   */
+  async finishPaste(editor: Editor, info: MarkdownFileInfo, plan: PastePlan, sourceUrl: () => Promise<string>): Promise<void> {
+    if (plan === "native") return;
+    if (plan === "text") {
+      editor.replaceSelection(await navigator.clipboard.readText());
+      return;
+    }
+    const url = await sourceUrl();
+    if (plan === "text+cite") {
+      this.insertWithCitation(editor, info, await navigator.clipboard.readText(), url);
+      return;
+    }
+    setTimeout(() => {
+      if (url) this.insertWithCitation(editor, info, "", url);
+    }, 50);
   }
 
   getActiveTemplate(): { template: string; name: string; slot: "A" | "B" | "C" } {

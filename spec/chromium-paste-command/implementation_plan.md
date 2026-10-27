@@ -90,7 +90,7 @@ None at this time.
 ### Revision 2: paste exactly as Ctrl+V does
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-8:** Move the intercepted paste's decisions out of the keydown listener into shared methods, so Ctrl+V and the command can't drift apart:
+- [x] **TASK-8:** Move the intercepted paste's decisions out of the keydown listener into shared methods, so Ctrl+V and the command can't drift apart:
   - **`planPaste(editor): PastePlan`** decides from the cursor position, Paste Mode and **When a citation can't be added**. It doesn't wait on anything. The plan is one of:
     - `"native+cite"`: Obsidian's paste, then a citation.
     - `"native"`: Obsidian's paste alone.
