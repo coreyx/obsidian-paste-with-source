@@ -448,26 +448,31 @@ function closesFence(open: { char: string; length: number }, fence: Fence | null
 }
 
 /**
- * Whether the given line is in the frontmatter, including its `---` delimiters.
- * Frontmatter only counts when the document's first line opens it.
+ * The line that closes the note's frontmatter, or -1 when it has none. YAML
+ * frontmatter opens with `---` on the very first line and closes at the next line
+ * that is `---` or `...`; an opening with no close isn't frontmatter at all.
  */
-export function isInsideFrontmatter(doc: LineSource, line: number): boolean {
-  if (doc.getLine(0).trimEnd() !== "---") return false;
-  const count = doc.lineCount();
-  for (let i = 1; i < count; i++) {
-    if (/^(---|\.\.\.)\s*$/.test(doc.getLine(i))) return line <= i;
+function frontmatterEnd(doc: LineSource): number {
+  const isDelimiter = (text: string, closing: boolean) => {
+    const trimmed = text.trimEnd();
+    return trimmed === "---" || (closing && trimmed === "...");
+  };
+  if (doc.lineCount() === 0 || !isDelimiter(doc.getLine(0), false)) return -1;
+  for (let i = 1; i < doc.lineCount(); i++) {
+    if (isDelimiter(doc.getLine(i), true)) return i;
   }
-  return false;
+  return -1;
 }
 
-/** Index of the first line after the frontmatter, or 0 when the document has none. */
+/** Whether the given line is in the frontmatter, including its delimiter lines. */
+export function isInsideFrontmatter(doc: LineSource, line: number): boolean {
+  const end = frontmatterEnd(doc);
+  return end !== -1 && line <= end;
+}
+
+/** Index of the first line after the frontmatter, or 0 when the note has none. */
 function bodyStart(doc: LineSource): number {
-  if (doc.getLine(0).trimEnd() !== "---") return 0;
-  const count = doc.lineCount();
-  for (let i = 1; i < count; i++) {
-    if (/^(---|\.\.\.)\s*$/.test(doc.getLine(i))) return i + 1;
-  }
-  return 0;
+  return frontmatterEnd(doc) + 1;
 }
 
 /**
