@@ -120,7 +120,7 @@ None at this time.
   - **macOS:** not registered, as before.
 
 #### [MODIFY] `README.md`, `CHANGELOG.md`
-- [ ] **TASK-12:** Update the README and the `[Unreleased]` entry for the new name and behavior:
+- [x] **TASK-12:** Update the README and the `[Unreleased]` entry for the new name and behavior:
   - It pastes as Ctrl+V does, following Paste Mode and the paste guard.
   - It only adds the Chromium source address when the clipboard's HTML has none.
   - The README's line on unguarded paste commands drops it, since the command now follows the guard.
