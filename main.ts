@@ -66,6 +66,14 @@ export interface PasteWithSourceSettings {
 
 export const BUILTIN_PRESETS: TemplatePreset[] = [
   {
+    id: "builtin-paste-with-source",
+    name: "Paste with Source",
+    // An en dash, so the separator reads apart from the hyphens many page titles hold.
+    template: "\n\nFrom: {link} – {domain}",
+    isBuiltIn: true,
+    description: "The plugin's own style: the link, then the site's domain",
+  },
+  {
     id: "builtin-onenote",
     name: "OneNote Style",
     template: "\n\nFrom <{link}>",
@@ -151,8 +159,8 @@ export const DEFAULT_SETTINGS: PasteWithSourceSettings = {
   guardedPasteFallback: "native",
   readChromiumSourceUrl: true,
   linkLabel: "title",
-  templateString: "\n\nFrom <{link}>",
-  selectedPresetId: "builtin-onenote",
+  templateString: "\n\nFrom: {link} – {domain}",
+  selectedPresetId: "builtin-paste-with-source",
   userPresets: [],
   citationStyle: "OneNote",
   activeSlot: "A",
@@ -1612,8 +1620,8 @@ export default class PasteWithSourcePlugin extends Plugin {
         this.settings.templateString = "\n\n> — [Source]({url})";
         this.settings.selectedPresetId = "builtin-markdown-quote";
       } else {
-        this.settings.templateString = "\n\nFrom <{link}>";
-        this.settings.selectedPresetId = "builtin-onenote";
+        this.settings.templateString = DEFAULT_SETTINGS.templateString;
+        this.settings.selectedPresetId = DEFAULT_SETTINGS.selectedPresetId;
       }
     }
 
@@ -1883,7 +1891,7 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
         .onClick(async () => {
           if (selectedPreset.isBuiltIn) return;
           this.plugin.settings.userPresets = this.plugin.settings.userPresets.filter((p) => p.id !== selectedPreset.id);
-          this.plugin.settings.selectedPresetId = "builtin-onenote";
+          this.plugin.settings.selectedPresetId = DEFAULT_SETTINGS.selectedPresetId;
           await this.plugin.saveSettings();
           new Notice(`Deleted preset "${selectedPreset.name}".`);
           this.display();

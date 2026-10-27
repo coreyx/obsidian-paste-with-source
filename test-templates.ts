@@ -201,8 +201,9 @@ console.log("Running TemplateEngine unit tests...");
 
 // Test 7: Built-in presets
 {
-  assert(BUILTIN_PRESETS.length === 11, "Contains 11 built-in presets");
+  assert(BUILTIN_PRESETS.length === 12, "Contains 12 built-in presets");
   const expectedIds = [
+    "builtin-paste-with-source",
     "builtin-onenote",
     "builtin-italic-attribution",
     "builtin-minimal-domain",
@@ -223,6 +224,20 @@ console.log("Running TemplateEngine unit tests...");
 
   const url = "https://obsidian.md";
   const ctx = TemplateEngine.buildContext(url, "url");
+
+  const pasteWithSource = PresetManager.getPresetById("builtin-paste-with-source")!;
+  assert(BUILTIN_PRESETS[0] === pasteWithSource, "Paste with Source is the first built-in preset");
+  assert(
+    TemplateEngine.render(pasteWithSource.template, ctx) === `\n\nFrom: [${url}](${url}) – obsidian.md`,
+    "Paste with Source preset renders the link, an en dash and the domain"
+  );
+  assert(
+    TemplateEngine.render(pasteWithSource.template, TemplateEngine.buildContext(url, "title", "Obsidian - Sharpen your thinking")) ===
+      `\n\nFrom: [Obsidian - Sharpen your thinking](${url}) – obsidian.md`,
+    "Paste with Source preset shows the fetched title with the title label"
+  );
+  assert(DEFAULT_SETTINGS.selectedPresetId === pasteWithSource.id, "Paste with Source is the default preset");
+  assert(DEFAULT_SETTINGS.templateString === pasteWithSource.template, "The default template is Paste with Source's");
 
   const onenote = PresetManager.getPresetById("builtin-onenote")!;
   assert(TemplateEngine.render(onenote.template, ctx) === `\n\nFrom <[${url}](${url})>`, "OneNote preset renders expected citation");
@@ -275,10 +290,10 @@ console.log("Running TemplateEngine unit tests...");
     assert(titled.includes(`[Obsidian - Wikipedia](${urls[0]})`), `'${preset.name}' shows the fetched title with the title label`);
   }
 
-  const untouched = ["builtin-onenote", "builtin-minimal-domain", "builtin-markdown-quote", "builtin-raw-url"];
+  const untouched = ["builtin-paste-with-source", "builtin-onenote", "builtin-minimal-domain", "builtin-markdown-quote", "builtin-raw-url"];
   assert(
     untouched.every((id) => !PresetManager.getPresetById(id)!.template.includes("{page}")),
-    "The other four presets never used {page}"
+    "The other five presets never used {page}"
   );
 }
 
@@ -368,8 +383,18 @@ console.log("Running TemplateEngine unit tests...");
   assert(initialActive.slot === "A", "Active template slot is 'A'");
   assert(initialActive.template === DEFAULT_SETTINGS.templateString, "Slot A uses editable templateString");
   assert(
-    plugin.getSourceLinkMarkdown("https://example.com") === "\n\nFrom <[https://example.com](https://example.com)>",
+    plugin.getSourceLinkMarkdown("https://example.com") === "\n\nFrom: [https://example.com](https://example.com) – example.com",
     "getSourceLinkMarkdown uses Slot A template initially"
+  );
+
+  // A fresh install, with nothing stored, starts on the Paste with Source preset.
+  const fresh = new PasteWithSourcePlugin({} as any, {} as any);
+  fresh.loadData = async () => null;
+  await fresh.loadSettings();
+  assert(
+    fresh.settings.selectedPresetId === "builtin-paste-with-source" &&
+      fresh.settings.templateString === PresetManager.getPresetById("builtin-paste-with-source")!.template,
+    "A fresh install selects the Paste with Source preset and its template"
   );
 
   // Switch to Slot B (Minimal Domain)

@@ -30,13 +30,13 @@ None at this time.
 ### Presets and defaults
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-1:** Add the preset to the top of `BUILTIN_PRESETS`, so it's listed first in the preset dropdown:
+- [x] **TASK-1:** Add the preset to the top of `BUILTIN_PRESETS`, so it's listed first in the preset dropdown:
   - `id: "builtin-paste-with-source"`
   - `name: "Paste with Source"`
   - `template: "\n\nFrom: {link} – {domain}"`
   - `isBuiltIn: true`
   - `description: "The plugin's own style: the link, then the site's domain"`
-- [ ] **TASK-2:** Make it the default everywhere the OneNote preset is the default today:
+- [x] **TASK-2:** Make it the default everywhere the OneNote preset is the default today:
   - In `DEFAULT_SETTINGS`, `templateString` becomes `"\n\nFrom: {link} – {domain}"` and `selectedPresetId` becomes `"builtin-paste-with-source"`.
   - In `loadSettings`, the branch for an install with no stored `templateString` that isn't the legacy `"Source"` style now uses `DEFAULT_SETTINGS.templateString` and `DEFAULT_SETTINGS.selectedPresetId` in place of the OneNote literals. The legacy `"Source"` branch is unchanged.
   - In the settings tab's **Delete Preset** handler, deleting a custom preset selects `DEFAULT_SETTINGS.selectedPresetId` in place of the literal `"builtin-onenote"`.
@@ -44,7 +44,7 @@ None at this time.
 ### Tests
 
 #### [MODIFY] `test-templates.ts`
-- [ ] **TASK-3:** Update and extend the preset checks:
+- [x] **TASK-3:** Update and extend the preset checks:
   - The built-in count becomes 12, and `"builtin-paste-with-source"` joins the expected ids.
   - The new preset renders `\n\nFrom: [https://obsidian.md](https://obsidian.md) – obsidian.md` with the *URL* label, and shows the fetched title with the *Page title* label.
   - It's the first entry in `BUILTIN_PRESETS`.
