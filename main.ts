@@ -1461,6 +1461,25 @@ export default class PasteWithSourcePlugin extends Plugin {
       },
     });
 
+    // macOS already reads Chromium's equivalent format on every paste, so only Windows needs the command.
+    if (process.platform === "win32") {
+      this.addCommand({
+        id: "paste-with-source-url-chromium",
+        name: "Paste with Source URL (Chromium plain text)",
+        // Mod is Ctrl on Windows, so this is Ctrl+Alt+V.
+        hotkeys: [
+          {
+            modifiers: ["Mod", "Alt"],
+            key: "V",
+          },
+        ],
+        callback: async () => {
+          const info = this.app.workspace.activeEditor;
+          if (info?.editor) await this.pasteWithChromiumSource(info.editor, info);
+        },
+      });
+    }
+
     // Add context menu items
     this.registerEvent(
       this.app.workspace.on("editor-menu", (menu: Menu, editor: Editor, info: MarkdownFileInfo) => {
