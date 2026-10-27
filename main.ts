@@ -374,11 +374,11 @@ export class TemplateEngine {
   }
 }
 
-/** Read access to a document by line. Obsidian's Editor satisfies it, so the guard runs on it directly. */
-export interface LineSource {
-  getLine(line: number): string;
-  lineCount(): number;
-}
+/**
+ * The two Editor methods the paste guard reads a note through. Taking just these
+ * lets the guard run on the live editor and on a plain stub in tests alike.
+ */
+export type LineSource = Pick<Editor, "getLine" | "lineCount">;
 
 /** Blockquote markers, then an optional list marker (with task checkbox). */
 const CONTAINER = /^(\s*(?:>\s?)*)(\s*(?:[-*+]|\d+[.)])\s+(?:\[.\]\s+)?)?/;
