@@ -11,7 +11,7 @@ This Obsidian plugin enhances your clipboard pasting workflow by automatically a
 - 📦 **Presets & JSON Import/Export**: Built-in presets (Paste with Source, OneNote, Markdown Quote, Academic), custom preset saving, and one-click JSON import/export
 - 👁️ **Authoritative Text Box & Live Preview**: The editable text area is always the single source of truth, backed by interactive variable pills and real-time live preview
 - ⌨️ **Keyboard Interception**: Optionally intercepts `Cmd+V` (macOS) or `Ctrl+V` / `Shift+Insert` (Windows) to auto-append source
-- 🛡️ **Markup-Safe Pasting**: Skips the citation when you paste inside code, math, comments, frontmatter, links, or wikilinks, where it would break the markup
+- 🛡️ **Markup-Safe Pasting**: Skips the citation when you paste inside code, math, comments, frontmatter, links, wikilinks, or an open parenthesis, where it would break the markup
 - 🖱 **Context Menu Actions**: Adds right-click editor menu options for source-aware pasting
 - 🔗 **Configurable Link Labels**: Label every citation's link with the page's real title (fetched from the page), the page name from its URL, the URL itself, or a generic `[Source]`
 
@@ -272,6 +272,7 @@ An intercepted paste (`Cmd+V`, `Ctrl+V`, or `Shift+Insert`) adds no citation whe
 - **Comments**: inside an Obsidian `%% comment %%`, on one line or several
 - **Frontmatter**: anywhere in the YAML properties block at the top of the note
 - **Links**: inside `[[wikilink]]`, a link's `[text]`, an image's `![alt]`, or a link's `(url)`, or after an unclosed `[` on the same line. Task checkboxes like `- [ ]` and escaped `\[` don't count.
+- **Parentheses**: after an unclosed `(` on the same line, as in `(see this`, where the citation would land inside the aside. Pairs closed before the cursor and escaped `\(` don't count, and neither do parentheses inside code, math or comments.
 - **HTML**: right after `<` or `="` while you type a tag or attribute
 
 Markers inside one construct don't count in another: a `%%` in a code block doesn't start a comment. An unclosed `$$` or `%%` makes the rest of the note count as math or a comment, so a stray marker leaves later pastes without a citation instead of breaking anything.

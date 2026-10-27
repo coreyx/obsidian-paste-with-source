@@ -66,7 +66,7 @@ None at this time.
 ### Docs
 
 #### [MODIFY] `README.md`
-- [ ] **TASK-5:** Under **When No Citation Is Added**, add a **Parentheses** item: after an unclosed `(` on the same line. Closed pairs and escaped `\(` don't count, and neither do parentheses inside code, math or comments.
+- [x] **TASK-5:** Under **When No Citation Is Added**, add a **Parentheses** item: after an unclosed `(` on the same line. Closed pairs and escaped `\(` don't count, and neither do parentheses inside code, math or comments.
 - [ ] **TASK-6:** Add an `Added` entry under `[Unreleased]` in `CHANGELOG.md`.
 
 ## Verification Plan
