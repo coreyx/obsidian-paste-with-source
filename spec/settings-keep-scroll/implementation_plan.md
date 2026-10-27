@@ -42,7 +42,7 @@ None at this time.
 ### Docs
 
 #### [MODIFY] `CHANGELOG.md`
-- [ ] **TASK-4:** Add a `Fixed` entry under `[Unreleased]`.
+- [x] **TASK-4:** Add a `Fixed` entry under `[Unreleased]`.
 
 ## Verification Plan
 
