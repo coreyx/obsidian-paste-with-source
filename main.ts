@@ -1201,13 +1201,13 @@ const TITLE_PARSE_BYTES = 1024 * 1024;
  * `throw: false` turns an HTTP error status into a normal response to inspect.
  */
 const requestPage: TitleRequester = async (url) => {
-  const response = await requestUrl({
+  const { status, headers, arrayBuffer } = await requestUrl({
     url,
     method: "GET",
-    headers: { Accept: "text/html,application/xhtml+xml" },
+    headers: { Accept: "text/html, application/xhtml+xml;q=0.9" },
     throw: false,
   });
-  return { status: response.status, headers: response.headers, arrayBuffer: response.arrayBuffer };
+  return { status, headers, arrayBuffer };
 };
 
 /** Reads a header by name. HTTP header names are case-insensitive, and servers vary in how they send them. */
@@ -1260,11 +1260,12 @@ export function decodeHtml(bytes: ArrayBuffer, contentType?: string): string {
  * inert document, so none of the page's scripts run and nothing it links to loads.
  */
 export function extractPageTitle(html: string): string | undefined {
-  const doc = new DOMParser().parseFromString(html, "text/html");
+  const parser = new DOMParser();
+  const page = parser.parseFromString(html, "text/html");
   const candidates = [
-    doc.querySelector('meta[property="og:title" i], meta[name="og:title" i]')?.getAttribute("content"),
-    doc.querySelector('meta[name="twitter:title" i], meta[property="twitter:title" i]')?.getAttribute("content"),
-    doc.title,
+    page.querySelector('meta[property="og:title" i], meta[name="og:title" i]')?.getAttribute("content"),
+    page.querySelector('meta[name="twitter:title" i], meta[property="twitter:title" i]')?.getAttribute("content"),
+    page.title,
   ];
   for (const candidate of candidates) {
     const title = candidate?.replace(/\s+/g, " ").trim();
