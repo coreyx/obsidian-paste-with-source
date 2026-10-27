@@ -140,6 +140,83 @@ const HTML_WITH_SOURCE = "Version:0.9\r\nStartHTML:0\r\nSourceURL:https://html.e
   check("a stored false is kept", await loaded({ readChromiumSourceUrl: false }), false);
   check("a value that isn't a boolean resets to on", await loaded({ readChromiumSourceUrl: "no" }), true);
 
+  console.log("\nChromium paste command");
+  /**
+   * Loads the plugin as if on `platform`, over a fake clipboard holding `formats` and
+   * the text "pasted text", with `readChromiumSourceUrl` stored as `setting`. Returns
+   * the commands it registered, what running the Chromium command inserted, and the
+   * plugin. Both providers' PowerShell fallbacks are stubbed, so nothing is spawned.
+   */
+  async function loadOn(platform: string, formats: Record<string, string>, setting: boolean) {
+    const realPlatform = Object.getOwnPropertyDescriptor(process, "platform")!;
+    Object.defineProperty(process, "platform", { value: platform, configurable: true });
+    const inserted: string[] = [];
+    const editor = {
+      getLine: () => "",
+      lineCount: () => 1,
+      getCursor: () => ({ line: 0, ch: 0 }),
+      replaceSelection: (value: string) => inserted.push(value),
+      hasFocus: () => true,
+      posToOffset: () => 0,
+    };
+    const commands: any[] = [];
+    const plugin = new PasteWithSourcePlugin({} as any, {} as any) as any;
+    try {
+      plugin.app = { workspace: { activeEditor: { editor }, on: () => ({}) } };
+      plugin.loadData = async () => ({ readChromiumSourceUrl: setting });
+      plugin.addSettingTab = () => {};
+      plugin.addCommand = (command: any) => commands.push(command);
+      plugin.registerEvent = () => {};
+      plugin.registerDomEvent = () => {};
+      (globalThis as any).document = {};
+      await plugin.onload();
+    } finally {
+      Object.defineProperty(process, "platform", realPlatform);
+    }
+    plugin.titleFetcher = async () => undefined;
+    for (const p of [plugin.clipboardProvider, plugin.chromiumClipboardProvider]) {
+      if (p) p.executePowerShellFallback = async () => "";
+    }
+    (globalThis as any).window = {
+      require: () => ({ clipboard: { readBuffer: (format: string) => Buffer.from(formats[format] ?? "", "utf8") } }),
+    };
+    Object.defineProperty(globalThis, "navigator", {
+      value: { clipboard: { readText: async () => "pasted text" } },
+      configurable: true,
+    });
+    const command = commands.find((c) => c.id === "paste-with-source-url-chromium");
+    if (command) await command.callback();
+    return { command, inserted, plugin };
+  }
+
+  const PLAIN_TEXT_COPY = { [SOURCE_FORMAT]: "https://example.com/test-page\0" };
+  {
+    const { command } = await loadOn("win32", PLAIN_TEXT_COPY, false);
+    check("it's registered on Windows with its id and name", command && [command.id, command.name],
+      ["paste-with-source-url-chromium", "Paste with Source URL (Chromium plain text)"]);
+    check("its default hotkey is Mod+Alt+V, which is Ctrl+Alt+V on Windows", command?.hotkeys, [{ modifiers: ["Mod", "Alt"], key: "V" }]);
+  }
+  {
+    const { inserted, plugin } = await loadOn("win32", PLAIN_TEXT_COPY, false);
+    check("with the setting off, it cites a plain-text copy from Chromium's source URL", inserted,
+      [`pasted text\n\nFrom: [https://example.com/test-page](https://example.com/test-page) – example.com`]);
+    check("... while ordinary pastes still ignore Chromium's source URL", await plugin.clipboardProvider.getSourceUrl(), "");
+  }
+  {
+    const { inserted } = await loadOn("win32", { "HTML Format": HTML_WITH_SOURCE, ...PLAIN_TEXT_COPY }, false);
+    check("HTML Format's SourceURL still wins over Chromium's",
+      inserted.length === 1 && inserted[0].includes("(https://html.example.com/page)"), true);
+  }
+  {
+    const { inserted } = await loadOn("win32", {}, false);
+    check("with no source URL anywhere, it pastes the text alone", inserted, ["pasted text"]);
+  }
+  {
+    const { command, plugin } = await loadOn("darwin", PLAIN_TEXT_COPY, false);
+    check("it isn't registered on macOS", command, undefined);
+    check("... and there's no Chromium-only provider there", plugin.chromiumClipboardProvider, undefined);
+  }
+
   if (failures > 0) {
     console.error(`\n${failures} Windows clipboard test(s) failed.\n`);
     process.exit(1);

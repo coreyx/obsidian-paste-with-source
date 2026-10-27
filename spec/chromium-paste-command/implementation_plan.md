@@ -46,7 +46,7 @@ None at this time.
 ### Tests
 
 #### [MODIFY] `test-windows-clipboard.ts`
-- [ ] **TASK-5:** Add a "Chromium paste command" group. It loads the plugin with `process.platform` stubbed as `win32`, with `addCommand` and the other Obsidian APIs stubbed, and checks:
+- [x] **TASK-5:** Add a "Chromium paste command" group. It loads the plugin with `process.platform` stubbed as `win32`, with `addCommand` and the other Obsidian APIs stubbed, and checks:
   - The command is registered, with its id, name and the `Mod`+`Alt`+`V` hotkey.
   - With `readChromiumSourceUrl` off, running it over a fake clipboard that holds only Chromium's format inserts the text with a citation for that address.
   - With HTML Format's `SourceURL` also present, that address wins.
