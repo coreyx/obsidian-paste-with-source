@@ -237,6 +237,28 @@ export class PresetManager {
   static getPresetById(id: string, userPresets: TemplatePreset[] = []): TemplatePreset | undefined {
     return this.getAllPresets(userPresets).find((p) => p.id === id);
   }
+
+  /**
+   * The settings changes for deleting the custom preset `presetId`, without
+   * changing `settings` itself. Afterwards the default preset is selected and
+   * its template is in the template box, just as if it had been chosen from the
+   * dropdown. Otherwise the box, which is Slot A's template, would keep the
+   * deleted preset's text under the default preset's name. A Slot B or C that
+   * held the deleted preset goes back to that slot's default, so no setting
+   * names a preset that no longer exists.
+   */
+  static withoutPreset(
+    settings: PasteWithSourceSettings,
+    presetId: string
+  ): Pick<PasteWithSourceSettings, "userPresets" | "selectedPresetId" | "templateString" | "presetSlotB" | "presetSlotC"> {
+    return {
+      userPresets: settings.userPresets.filter((p) => p.id !== presetId),
+      selectedPresetId: DEFAULT_SETTINGS.selectedPresetId,
+      templateString: DEFAULT_SETTINGS.templateString,
+      presetSlotB: settings.presetSlotB === presetId ? DEFAULT_SETTINGS.presetSlotB : settings.presetSlotB,
+      presetSlotC: settings.presetSlotC === presetId ? DEFAULT_SETTINGS.presetSlotC : settings.presetSlotC,
+    };
+  }
 }
 
 export interface TemplateContext {

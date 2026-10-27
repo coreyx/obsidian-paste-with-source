@@ -23,7 +23,7 @@ None at this time.
 ### Settings
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-1:** Add `PresetManager.withoutPreset(settings, presetId)`, documented in TSDoc. It returns the settings changes for deleting a custom preset:
+- [x] **TASK-1:** Add `PresetManager.withoutPreset(settings, presetId)`, documented in TSDoc. It returns the settings changes for deleting a custom preset:
   - `userPresets` without that preset.
   - `selectedPresetId` and `templateString` set to the default preset's id and template, from `DEFAULT_SETTINGS`.
   - `presetSlotB` reset to `DEFAULT_SETTINGS.presetSlotB` if it named the deleted preset, and `presetSlotC` reset the same way.
