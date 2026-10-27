@@ -53,7 +53,7 @@ None at this time.
   - `(see [link](https://example.com) |`
   - `- (item |`
   - `> (quoted |`
-- [ ] **TASK-4:** Add an accepted group, "Closed, escaped or hidden parentheses accept a citation":
+- [x] **TASK-4:** Add an accepted group, "Closed, escaped or hidden parentheses accept a citation":
   - `(a) and |`
   - `(a)) |`
   - `\( |`

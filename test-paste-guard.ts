@@ -183,6 +183,18 @@ expectAll("An unclosed parenthesis refuses a citation", false, [
   "> (quoted |",
 ]);
 
+expectAll("Closed, escaped or hidden parentheses accept a citation", true, [
+  "(a) and |",
+  "(a)) |",
+  "\\( |",
+  "`(` and |",
+  "$f(x$ and |",
+  "%% ( %% and |",
+  "$$ ( $$ and |",
+  "(\n|",
+  "1) item |",
+]);
+
 /** Loads settings from `stored` the way Obsidian would and returns the resulting fallback. */
 async function loadedFallback(stored: object | null): Promise<string> {
   const plugin = new PasteWithSourcePlugin({} as any, {} as any);
