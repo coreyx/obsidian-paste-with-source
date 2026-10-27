@@ -41,7 +41,7 @@ None at this time.
   - `name: "Paste with Source URL (Chromium plain text)"`
   - `hotkeys: [{ modifiers: ["Mod", "Alt"], key: "V" }]`. On Windows, `Mod` is Ctrl.
   - Its callback uses the active editor, as the existing paste commands do.
-- [ ] **TASK-4:** In the settings tab, extend the Windows-only toggle's description with one sentence: when it's off, the "Paste with Source URL (Chromium plain text)" command (Ctrl+Alt+V) still reads the format.
+- [x] **TASK-4:** In the settings tab, extend the Windows-only toggle's description with one sentence: when it's off, the "Paste with Source URL (Chromium plain text)" command (Ctrl+Alt+V) still reads the format.
 
 ### Tests
 

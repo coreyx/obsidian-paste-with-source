@@ -1817,7 +1817,8 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
         .setName("Cite plain-text copies from Chromium apps")
         .setDesc(
           "When a browser or app built on Chromium (Chrome, Edge, Brave, Slack, …) copies plain text only, such as from a Copy button, " +
-          "read the page address it leaves on the clipboard. Turn off if plain-text copies from desktop apps get citations you don't want."
+          "read the page address it leaves on the clipboard. Turn off if plain-text copies from desktop apps get citations you don't want. " +
+          "When it's off, the \"Paste with Source URL (Chromium plain text)\" command (Ctrl+Alt+V) still reads it."
         )
         .addToggle((toggle) =>
           toggle
