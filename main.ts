@@ -1860,12 +1860,26 @@ export default class PasteWithSourcePlugin extends Plugin {
   }
 }
 
-class PasteWithSourceSettingTab extends PluginSettingTab {
+export class PasteWithSourceSettingTab extends PluginSettingTab {
   plugin: PasteWithSourcePlugin;
 
   constructor(plugin: PasteWithSourcePlugin) {
     super(plugin.app, plugin);
     this.plugin = plugin;
+  }
+
+  /**
+   * Rebuilds the page after a setting changes, keeping its scroll position.
+   * display() empties the page and builds it again, which leaves it at the top.
+   * The page scrolls in containerEl, Obsidian's `.vertical-tab-content`. This is
+   * separate from display() because Obsidian calls display() to open the tab,
+   * and opening should still start at the top.
+   */
+  redraw(): void {
+    const { scrollTop } = this.containerEl;
+    this.display();
+    // On a shorter page, the browser stops at the new bottom.
+    this.containerEl.scrollTop = scrollTop;
   }
 
   display(): void {

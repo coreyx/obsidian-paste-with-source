@@ -29,7 +29,7 @@ None at this time.
 ### Settings tab
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-1:** Add `redraw()` to `PasteWithSourceSettingTab`, documented in TSDoc. It reads `containerEl.scrollTop`, calls `display()`, then sets `scrollTop` back. Its TSDoc says why it's separate from `display()`: Obsidian calls `display()` to open the tab, and that should start at the top.
+- [x] **TASK-1:** Add `redraw()` to `PasteWithSourceSettingTab`, documented in TSDoc. It reads `containerEl.scrollTop`, calls `display()`, then sets `scrollTop` back. Its TSDoc says why it's separate from `display()`: Obsidian calls `display()` to open the tab, and that should start at the top.
 - [ ] **TASK-2:** Replace every `this.display()` inside the settings tab with `this.redraw()`. In `switchToSlot`, replace `this.settingTab.display()` with `this.settingTab.redraw()`.
 
 ### Tests
