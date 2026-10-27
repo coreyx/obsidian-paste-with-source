@@ -35,7 +35,7 @@ None at this time.
 ### Tests
 
 #### [MODIFY] `test-templates.ts`
-- [ ] **TASK-3:** Add a "Settings redraw" check. It uses a settings tab whose `display()` is stubbed to reset a fake `containerEl.scrollTop` to 0, and checks two things:
+- [x] **TASK-3:** Add a "Settings redraw" check. It uses a settings tab whose `display()` is stubbed to reset a fake `containerEl.scrollTop` to 0, and checks two things:
   - `redraw()` brings back the earlier position.
   - `switchToSlot` keeps it too.
 

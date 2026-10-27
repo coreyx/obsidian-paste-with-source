@@ -30,6 +30,7 @@ import PasteWithSourcePlugin, {
   TemplatePreset,
   PresetImportExportService,
   DEFAULT_SETTINGS,
+  PasteWithSourceSettingTab,
 } from "./main";
 
 function assert(condition: boolean, message: string) {
@@ -476,6 +477,27 @@ console.log("Running TemplateEngine unit tests...");
   plugin.settings.presetSlotB = "non-existent-preset-id";
   const fallbackActive = plugin.getActiveTemplate();
   assert(fallbackActive.name === "Minimal Domain", "Deleted Slot B preset falls back to default slot preset");
+
+  // Test 11: Settings redraw keeps the scroll position
+  console.log("\nRunning Settings redraw tests...");
+  {
+    const tab = new PasteWithSourceSettingTab(plugin) as any;
+    // display() empties and rebuilds the page, which leaves Obsidian's scrolling element at the top.
+    let displays = 0;
+    tab.containerEl = { scrollTop: 0 };
+    tab.display = () => {
+      displays++;
+      tab.containerEl.scrollTop = 0;
+    };
+    tab.containerEl.scrollTop = 420;
+    tab.redraw();
+    assert(displays === 1 && tab.containerEl.scrollTop === 420, "redraw() rebuilds the page once and keeps its scroll position");
+
+    plugin.settingTab = tab;
+    tab.containerEl.scrollTop = 250;
+    await plugin.switchToSlot("C");
+    assert(displays === 2 && tab.containerEl.scrollTop === 250, "Switching slots with the settings open keeps the scroll position");
+  }
 
   console.log("\nAll TemplateEngine and Preset tests passed successfully! 🎉\n");
 })();
