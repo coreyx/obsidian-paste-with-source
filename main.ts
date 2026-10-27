@@ -1513,7 +1513,8 @@ export default class PasteWithSourcePlugin extends Plugin {
 
       const isMac = process.platform === "darwin";
       const isCmdV = isMac && event.metaKey && event.key.toLowerCase() === "v";
-      const isCtrlV = !isMac && event.ctrlKey && event.key.toLowerCase() === "v";
+      // Ctrl+Alt+V belongs to the Chromium paste command, which pastes on its own.
+      const isCtrlV = !isMac && event.ctrlKey && !event.altKey && event.key.toLowerCase() === "v";
       const isShiftInsert = !isMac && event.shiftKey && event.key === "Insert";
 
       const shouldIntercept =

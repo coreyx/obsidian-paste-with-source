@@ -208,13 +208,15 @@ async function loadedFallback(stored: object | null): Promise<string> {
  * cursor at the `|` in `text`, and reports whether preventDefault() ran before
  * the listener first yielded (the only point at which it can still stop
  * Obsidian's paste) and what the plugin inserted. `focused: false` simulates
- * the key being pressed in another field while the note is the active view.
+ * the key being pressed in another field while the note is the active view, and
+ * `alt: true` the key pressed with Alt held, as Ctrl+Alt+V.
  */
 async function pressPaste(
   text: string,
   pasteMode: "default+source" | "clipboard+source",
   fallback: "native" | "plain",
-  focused = true
+  focused = true,
+  alt = false
 ): Promise<{ preventedBeforeYield: boolean; inserted: string[] }> {
   const cursor = text.indexOf("|");
   const lines = (text.slice(0, cursor) + text.slice(cursor + 1)).split("\n");
@@ -251,7 +253,7 @@ async function pressPaste(
   });
 
   let prevented = false;
-  const pending = keydown!({ ctrlKey: true, metaKey: true, shiftKey: false, key: "v", preventDefault: () => (prevented = true) });
+  const pending = keydown!({ ctrlKey: true, metaKey: true, shiftKey: false, altKey: alt, key: "v", preventDefault: () => (prevented = true) });
   const preventedBeforeYield = prevented;
   await pending;
   // default+source inserts its citation on a 50 ms timer, after Obsidian's paste.
@@ -280,6 +282,7 @@ async function pressPaste(
     pasteMode: "default+source" | "clipboard+source";
     fallback: "native" | "plain";
     focused?: boolean;
+    alt?: boolean;
     prevented: boolean;
     inserted: string[];
   }[] = [
@@ -292,8 +295,15 @@ async function pressPaste(
     { name: "content mode, guarded, plain, unfocused: leaves the paste to the focused field", text: "`code |`", pasteMode: "clipboard+source", fallback: "plain", focused: false, prevented: false, inserted: [] },
     { name: "default mode, prose, unfocused: adds no citation to the note", text: "see |", pasteMode: "default+source", fallback: "native", focused: false, prevented: false, inserted: [] },
   ];
+  // On Windows, Ctrl+Alt+V runs the Chromium paste command, which pastes by itself.
+  if (process.platform !== "darwin") {
+    shortcutCases.push(
+      { name: "content mode, Ctrl+Alt+V: leaves the paste to the Chromium command", text: "see |", pasteMode: "clipboard+source", fallback: "native", alt: true, prevented: false, inserted: [] },
+      { name: "default mode, Ctrl+Alt+V: adds no citation of its own", text: "see |", pasteMode: "default+source", fallback: "native", alt: true, prevented: false, inserted: [] },
+    );
+  }
   for (const c of shortcutCases) {
-    const result = await pressPaste(c.text, c.pasteMode, c.fallback, c.focused);
+    const result = await pressPaste(c.text, c.pasteMode, c.fallback, c.focused, c.alt);
     const ok = result.preventedBeforeYield === c.prevented && JSON.stringify(result.inserted) === JSON.stringify(c.inserted);
     if (!ok) failures++;
     console.log(`  [${ok ? "PASS" : "FAIL"}] ${c.name}${ok ? "" : ` (got ${JSON.stringify(result)})`}`);
