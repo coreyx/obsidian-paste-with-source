@@ -35,7 +35,7 @@ None at this time.
   - On Windows, `onload` sets it to `new WindowsClipboardProvider(() => true)`.
   - On other platforms it stays undefined.
   - A second provider avoids a flag shared with the main provider, which an intercepted paste could read mid-command.
-- [ ] **TASK-2:** Add `pasteWithChromiumSource(editor, info)`. It reads the clipboard text and the source URL from `chromiumClipboardProvider`, then calls `insertWithCitation`, as `pasteWithSource` does.
+- [x] **TASK-2:** Add `pasteWithChromiumSource(editor, info)`. It reads the clipboard text and the source URL from `chromiumClipboardProvider`, then calls `insertWithCitation`, as `pasteWithSource` does.
 - [ ] **TASK-3:** On Windows only, register the command in `onload`:
   - `id: "paste-with-source-url-chromium"`
   - `name: "Paste with Source URL (Chromium plain text)"`

@@ -1626,6 +1626,19 @@ export default class PasteWithSourcePlugin extends Plugin {
     this.insertWithCitation(editor, info, clipboardText, sourceUrl);
   }
 
+  /**
+   * Like {@link pasteWithSource}, but takes the source URL from
+   * {@link chromiumClipboardProvider}, so a plain-text copy from a Chromium app is
+   * cited even when "Cite plain-text copies from Chromium apps" is off. Does nothing
+   * where that provider doesn't exist, which is everywhere but Windows.
+   */
+  async pasteWithChromiumSource(editor: Editor, info: MarkdownFileInfo) {
+    if (!this.chromiumClipboardProvider) return;
+    const clipboardText = await navigator.clipboard.readText();
+    const sourceUrl = await this.chromiumClipboardProvider.getSourceUrl();
+    this.insertWithCitation(editor, info, clipboardText, sourceUrl);
+  }
+
   async pasteSourceOnly(editor: Editor) {
     const sourceUrl = await this.getClipboardSourceUrl();
     if (sourceUrl) {
