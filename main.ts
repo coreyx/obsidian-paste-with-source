@@ -380,12 +380,72 @@ export class TemplateEngine {
  */
 export type LineSource = Pick<Editor, "getLine" | "lineCount">;
 
-/** Blockquote markers, then an optional list marker (with task checkbox). */
-const CONTAINER = /^(\s*(?:>\s?)*)(\s*(?:[-*+]|\d+[.)])\s+(?:\[.\]\s+)?)?/;
-const FENCE = /^(`{3,}|~{3,})(.*)$/;
+const isBlank = (char: string): boolean => char === " " || char === "\t";
 
-/** A line's text with any blockquote and list markers removed, so fences inside them are recognized. */
-const stripContainer = (text: string): string => text.slice(CONTAINER.exec(text)?.[0].length ?? 0).trimStart();
+/**
+ * A line's content once the markers that nest it are skipped: any depth of
+ * blockquote `>`, then one list item marker (`-`, `*`, `+`, or digits followed
+ * by `.` or `)`), then a task checkbox such as `[ ]` or `[x]`. A fence opened
+ * inside a quote or a list item is still a fence, so fences are looked for here.
+ * A list marker or checkbox only counts when whitespace follows it, so `-x` and
+ * `[x]y` stay content.
+ */
+function lineBody(text: string): string {
+  let pos = 0;
+  const skipBlanks = () => {
+    while (isBlank(text.charAt(pos))) pos++;
+  };
+
+  skipBlanks();
+  // Each `>` takes at most one following space or tab, so `>  >` is a quote holding a literal `>`.
+  while (text.charAt(pos) === ">") {
+    pos++;
+    if (isBlank(text.charAt(pos))) pos++;
+  }
+  skipBlanks();
+
+  const bullet = text.charAt(pos);
+  let markerEnd = pos;
+  if (bullet === "-" || bullet === "*" || bullet === "+") {
+    markerEnd = pos + 1;
+  } else {
+    let digits = pos;
+    while (text.charAt(digits) >= "0" && text.charAt(digits) <= "9") digits++;
+    const delimiter = text.charAt(digits);
+    if (digits > pos && (delimiter === "." || delimiter === ")")) markerEnd = digits + 1;
+  }
+  if (markerEnd > pos && isBlank(text.charAt(markerEnd))) {
+    pos = markerEnd;
+    skipBlanks();
+    const isCheckbox = text.charAt(pos) === "[" && text.charAt(pos + 2) === "]" && isBlank(text.charAt(pos + 3));
+    if (isCheckbox) {
+      pos += 3;
+      skipBlanks();
+    }
+  }
+  return text.slice(pos).trimStart();
+}
+
+/** A fence line's opening run of backticks or tildes, and whatever follows it on the line. */
+interface Fence {
+  char: "`" | "~";
+  length: number;
+  info: string;
+}
+
+/** The fence `body` opens or closes with, or null when it doesn't start with three or more backticks or tildes. */
+function parseFence(body: string): Fence | null {
+  const char = body.charAt(0);
+  if (char !== "`" && char !== "~") return null;
+  let length = 1;
+  while (body.charAt(length) === char) length++;
+  return length < 3 ? null : { char, length, info: body.slice(length) };
+}
+
+/** Whether `fence` ends the block `open` started: the same character, at least as long, and nothing after it, as in CommonMark. */
+function closesFence(open: { char: string; length: number }, fence: Fence | null): boolean {
+  return fence !== null && fence.char === open.char && fence.length >= open.length && fence.info.trim() === "";
+}
 
 /**
  * Whether the given line is in the frontmatter, including its `---` delimiters.
@@ -598,18 +658,16 @@ export function canAddCitation(doc: LineSource, line: number, ch: number): boole
   let state: BlockState = null;
   for (let i = bodyStart(doc); i <= line; i++) {
     const text = doc.getLine(i);
-    const fence = FENCE.exec(stripContainer(text));
-    const run = fence?.[1] ?? "";
+    const fence = parseFence(lineBody(text));
     if (state?.kind === "fence") {
       // Inside the block, or on its closing line.
       if (i === line) return false;
-      // A fence closes only with the same character, at least as many, and no info string, as in CommonMark.
-      if (fence && run.charAt(0) === state.char && run.length >= state.length && (fence[2] ?? "").trim() === "") state = null;
+      if (closesFence(state, fence)) state = null;
       continue;
     }
     if (state === null && fence) {
       if (i === line) return false;
-      state = { kind: "fence", char: run.charAt(0), length: run.length };
+      state = { kind: "fence", char: fence.char, length: fence.length };
       continue;
     }
     if (i < line) {
