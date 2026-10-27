@@ -465,9 +465,9 @@ function frontmatterEnd(doc: LineSource): number {
 }
 
 /** Whether the given line is in the frontmatter, including its delimiter lines. */
-export function isInsideFrontmatter(doc: LineSource, line: number): boolean {
-  const end = frontmatterEnd(doc);
-  return end !== -1 && line <= end;
+export function isInsideFrontmatter(note: LineSource, lineIndex: number): boolean {
+  const end = frontmatterEnd(note);
+  return end !== -1 && lineIndex <= end;
 }
 
 /** Index of the first line after the frontmatter, or 0 when the note has none. */
