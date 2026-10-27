@@ -141,29 +141,41 @@ const HTML_WITH_SOURCE = "Version:0.9\r\nStartHTML:0\r\nSourceURL:https://html.e
   check("a value that isn't a boolean resets to on", await loaded({ readChromiumSourceUrl: "no" }), true);
 
   console.log("\nChromium paste command");
+  /** What Obsidian's own paste puts in the note in these tests, so it can be told apart from the plugin's inserts. */
+  const NATIVE_PASTE = "<Obsidian's paste>";
   /**
    * Loads the plugin as if on `platform`, over a fake clipboard holding `formats` and
-   * the text "pasted text", with `readChromiumSourceUrl` stored as `setting`. Returns
-   * the commands it registered, what running the Chromium command inserted, and the
-   * plugin. Both providers' PowerShell fallbacks are stubbed, so nothing is spawned.
+   * the text "pasted text", with `readChromiumSourceUrl` stored as `setting` and
+   * `pasteMode` as stored. The cursor sits at the end of `line`. Electron's remote
+   * paste is faked: it records a call, inserts NATIVE_PASTE and fires a paste event,
+   * unless `pasteFires` is false, and `remote: false` leaves it out altogether.
+   * Runs the Chromium command and waits for its citation. Both providers'
+   * PowerShell fallbacks are stubbed, so nothing is spawned.
    */
-  async function loadOn(platform: string, formats: Record<string, string>, setting: boolean) {
+  async function loadOn(
+    platform: string,
+    formats: Record<string, string>,
+    options: { setting?: boolean; pasteMode?: string; line?: string; remote?: boolean; pasteFires?: boolean } = {}
+  ) {
+    const { setting = false, pasteMode = "default+source", line = "", remote = true, pasteFires = true } = options;
     const realPlatform = Object.getOwnPropertyDescriptor(process, "platform")!;
     Object.defineProperty(process, "platform", { value: platform, configurable: true });
     const inserted: string[] = [];
+    let focused = false;
     const editor = {
-      getLine: () => "",
+      getLine: () => line,
       lineCount: () => 1,
-      getCursor: () => ({ line: 0, ch: 0 }),
+      getCursor: () => ({ line: 0, ch: line.length }),
       replaceSelection: (value: string) => inserted.push(value),
-      hasFocus: () => true,
+      hasFocus: () => focused,
+      focus: () => (focused = true),
       posToOffset: () => 0,
     };
     const commands: any[] = [];
     const plugin = new PasteWithSourcePlugin({} as any, {} as any) as any;
     try {
       plugin.app = { workspace: { activeEditor: { editor }, on: () => ({}) } };
-      plugin.loadData = async () => ({ readChromiumSourceUrl: setting });
+      plugin.loadData = async () => ({ readChromiumSourceUrl: setting, pasteMode });
       plugin.addSettingTab = () => {};
       plugin.addCommand = (command: any) => commands.push(command);
       plugin.registerEvent = () => {};
@@ -184,35 +196,76 @@ const HTML_WITH_SOURCE = "Version:0.9\r\nStartHTML:0\r\nSourceURL:https://html.e
       value: { clipboard: { readText: async () => "pasted text" } },
       configurable: true,
     });
+    const pasteListeners = new Set<() => void>();
+    (globalThis as any).activeDocument = {
+      addEventListener: (type: string, listener: () => void) => type === "paste" && pasteListeners.add(listener),
+      removeEventListener: (_type: string, listener: () => void) => pasteListeners.delete(listener),
+    };
+    let electronPastes = 0;
+    const webContents = {
+      paste: () => {
+        electronPastes++;
+        if (!pasteFires) return;
+        // Electron's paste arrives after the request returns, as it does in Obsidian. Arriving later
+        // than Ctrl+V's fixed 50 ms shows the citation waits for the paste rather than for the clock.
+        setTimeout(() => {
+          inserted.push(NATIVE_PASTE);
+          for (const listener of [...pasteListeners]) listener();
+        }, 70);
+      },
+    };
+    (globalThis as any).activeWindow = remote ? { electron: { remote: { getCurrentWebContents: () => webContents } } } : {};
     const command = commands.find((c) => c.id === "paste-with-source-url-chromium");
     if (command) await command.callback();
-    return { command, inserted, plugin };
+    // A citation after a native paste waits 50 ms.
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    return { command, inserted, plugin, electronPastes: () => electronPastes, focused: () => focused };
   }
 
   const PLAIN_TEXT_COPY = { [SOURCE_FORMAT]: "https://example.com/test-page\0" };
+  const CITATION = "\n\nFrom: [https://example.com/test-page](https://example.com/test-page) – example.com";
   {
-    const { command } = await loadOn("win32", PLAIN_TEXT_COPY, false);
+    const { command } = await loadOn("win32", PLAIN_TEXT_COPY);
     check("it's registered on Windows with its id and name", command && [command.id, command.name],
-      ["paste-with-source-url-chromium", "Paste with Source URL (Chromium plain text)"]);
+      ["paste-with-source-url-chromium", "Paste, citing Chromium plain-text copies"]);
     check("its default hotkey is Mod+Alt+V, which is Ctrl+Alt+V on Windows", command?.hotkeys, [{ modifiers: ["Mod", "Alt"], key: "V" }]);
   }
   {
-    const { inserted, plugin } = await loadOn("win32", PLAIN_TEXT_COPY, false);
-    check("with the setting off, it cites a plain-text copy from Chromium's source URL", inserted,
-      [`pasted text\n\nFrom: [https://example.com/test-page](https://example.com/test-page) – example.com`]);
-    check("... while ordinary pastes still ignore Chromium's source URL", await plugin.clipboardProvider.getSourceUrl(), "");
+    const run = await loadOn("win32", PLAIN_TEXT_COPY);
+    check("default mode: it focuses the editor and requests one Electron paste", [run.focused(), run.electronPastes()], [true, 1]);
+    check("... lets Obsidian paste, then cites Chromium's source URL with the setting off", run.inserted, [NATIVE_PASTE, CITATION]);
+    check("... while ordinary pastes still ignore Chromium's source URL", await run.plugin.clipboardProvider.getSourceUrl(), "");
   }
   {
-    const { inserted } = await loadOn("win32", { "HTML Format": HTML_WITH_SOURCE, ...PLAIN_TEXT_COPY }, false);
+    const { inserted } = await loadOn("win32", { "HTML Format": HTML_WITH_SOURCE, ...PLAIN_TEXT_COPY });
     check("HTML Format's SourceURL still wins over Chromium's",
-      inserted.length === 1 && inserted[0].includes("(https://html.example.com/page)"), true);
+      inserted.length === 2 && inserted[0] === NATIVE_PASTE && inserted[1].includes("(https://html.example.com/page)"), true);
   }
   {
-    const { inserted } = await loadOn("win32", {}, false);
-    check("with no source URL anywhere, it pastes the text alone", inserted, ["pasted text"]);
+    const { inserted } = await loadOn("win32", {});
+    check("with no source URL anywhere, only Obsidian's paste goes in", inserted, [NATIVE_PASTE]);
   }
   {
-    const { command, plugin } = await loadOn("darwin", PLAIN_TEXT_COPY, false);
+    const run = await loadOn("win32", PLAIN_TEXT_COPY, { pasteMode: "clipboard+source" });
+    check("content mode: plain text plus the citation, with no Electron paste", [run.inserted, run.electronPastes()],
+      [[`pasted text${CITATION}`], 0]);
+  }
+  {
+    const run = await loadOn("win32", PLAIN_TEXT_COPY, { line: "see `code " });
+    check("inside inline code: Obsidian's paste, with no citation", [run.inserted, run.electronPastes()], [[NATIVE_PASTE], 1]);
+  }
+  {
+    const run = await loadOn("win32", PLAIN_TEXT_COPY, { remote: false });
+    check("without Electron's remote: the plain text, then the citation", run.inserted, [`pasted text${CITATION}`]);
+  }
+  {
+    const started = Date.now();
+    const run = await loadOn("win32", PLAIN_TEXT_COPY, { pasteFires: false });
+    check("when no paste event arrives: no citation, after waiting about a second",
+      [run.inserted, run.electronPastes(), Date.now() - started >= 1000], [[], 1, true]);
+  }
+  {
+    const { command, plugin } = await loadOn("darwin", PLAIN_TEXT_COPY);
     check("it isn't registered on macOS", command, undefined);
     check("... and there's no Chromium-only provider there", plugin.chromiumClipboardProvider, undefined);
   }

@@ -99,15 +99,15 @@ None at this time.
   - **`finishPaste(editor, info, plan, provider)`** does what the plan says, apart from Obsidian's paste itself. It reads the text and the source URL from `provider`, inserts them, and for `"native+cite"` adds the citation after Obsidian's paste.
   - The keydown listener calls `planPaste` and calls `preventDefault()` before its first `await` unless the plan is native, exactly as now. Then it calls `finishPaste` with the main provider.
   - The existing Ctrl+V tests in `test-paste-guard.ts` must pass unchanged, which confirms that Ctrl+V's behavior doesn't change.
-- [ ] **TASK-9:** Rework `pasteWithChromiumSource(editor, info)` to paste as Ctrl+V does, using `chromiumClipboardProvider`:
+- [x] **TASK-9:** Rework `pasteWithChromiumSource(editor, info)` to paste as Ctrl+V does, using `chromiumClipboardProvider`:
   - It calls `editor.focus()` first. Run from the command palette, the paste has to reach the editor.
   - For a native plan, it requests Obsidian's paste with `electron.remote.getCurrentWebContents().paste()`, then waits for the next `paste` event on the editor's document. After that event it adds the citation 50 ms later, as Ctrl+V does. If no event arrives within 1 s, it adds no citation.
   - If `remote` isn't available, a native plan falls back to the plain clipboard text through `replaceSelection`, and still adds the citation for `"native+cite"`.
   - For a text plan, it does what Ctrl+V does, through `finishPaste`.
-- [ ] **TASK-10:** Rename the command to **Paste, citing Chromium plain-text copies**, keeping its id. The settings toggle's description names the new command name.
+- [x] **TASK-10:** Rename the command to **Paste, citing Chromium plain-text copies**, keeping its id. The settings toggle's description names the new command name.
 
 #### [MODIFY] `test-windows-clipboard.ts`
-- [ ] **TASK-11:** Rework the "Chromium paste command" group for the new behavior. The `remote` paste is stubbed so it fires a fake `paste` event, and the checks are:
+- [x] **TASK-11:** Rework the "Chromium paste command" group for the new behavior. The `remote` paste is stubbed so it fires a fake `paste` event, and the checks are:
   - **Registration:** the name, id and hotkey.
   - **Default handler + source:**
     - The command requests one Electron paste and doesn't insert the text itself.

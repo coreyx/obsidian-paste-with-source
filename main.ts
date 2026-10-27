@@ -36,6 +36,38 @@ function isNativePaste(plan: PastePlan): boolean {
 }
 
 /**
+ * The focused window's Electron webContents, whose paste() runs a real paste,
+ * the same one a paste shortcut runs. It comes through the `remote` module
+ * Obsidian exposes on each window, which Obsidian's own context-menu Paste uses.
+ * `remote` isn't part of the documented plugin API, so this is undefined
+ * wherever it's missing.
+ */
+function currentWebContents(): { paste(): void } | undefined {
+  try {
+    const win = activeWindow as any;
+    const remote = win.electron?.remote ?? win.require?.("electron")?.remote;
+    return remote?.getCurrentWebContents?.() ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Resolves to true at the next paste event in `doc`, or to false if none arrives within `timeoutMs`. */
+function nextPasteEvent(doc: Document, timeoutMs: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const finish = (pasted: boolean) => {
+      doc.removeEventListener("paste", onPaste, true);
+      clearTimeout(timer);
+      resolve(pasted);
+    };
+    const onPaste = () => finish(true);
+    // Capturing, so the event is seen even when a handler stops it from bubbling.
+    doc.addEventListener("paste", onPaste, true);
+    const timer = setTimeout(() => finish(false), timeoutMs);
+  });
+}
+
+/**
  * How `{link}` labels its link: the URL itself, the word "Source", the page name
  * guessed from the URL's path (what `{page}` gives), or the title fetched from the
  * page. Only "title" makes a network request.
@@ -1477,7 +1509,7 @@ export default class PasteWithSourcePlugin extends Plugin {
     if (process.platform === "win32") {
       this.addCommand({
         id: "paste-with-source-url-chromium",
-        name: "Paste with Source URL (Chromium plain text)",
+        name: "Paste, citing Chromium plain-text copies",
         // Mod is Ctrl on Windows, so this is Ctrl+Alt+V.
         hotkeys: [
           {
@@ -1569,18 +1601,31 @@ export default class PasteWithSourcePlugin extends Plugin {
    * plain text, and a cited plan adds a citation for the address `sourceUrl`
    * finds. After a native paste the citation waits 50 ms, so it lands after
    * the pasted content rather than before it.
+   *
+   * @param nativePasted For a native paste that was requested rather than let
+   *   run, resolves once the paste has happened, or to false if it never did, in
+   *   which case no citation is added. A key press's own paste runs as soon as its
+   *   listener yields, so the default needs no wait.
    */
-  async finishPaste(editor: Editor, info: MarkdownFileInfo, plan: PastePlan, sourceUrl: () => Promise<string>): Promise<void> {
+  async finishPaste(
+    editor: Editor,
+    info: MarkdownFileInfo,
+    plan: PastePlan,
+    sourceUrl: () => Promise<string>,
+    nativePasted: Promise<boolean> = Promise.resolve(true)
+  ): Promise<void> {
     if (plan === "native") return;
     if (plan === "text") {
       editor.replaceSelection(await navigator.clipboard.readText());
       return;
     }
-    const url = await sourceUrl();
     if (plan === "text+cite") {
+      const url = await sourceUrl();
       this.insertWithCitation(editor, info, await navigator.clipboard.readText(), url);
       return;
     }
+    const [url, pasted] = await Promise.all([sourceUrl(), nativePasted]);
+    if (!pasted) return;
     setTimeout(() => {
       if (url) this.insertWithCitation(editor, info, "", url);
     }, 50);
@@ -1681,16 +1726,36 @@ export default class PasteWithSourcePlugin extends Plugin {
   }
 
   /**
-   * Like {@link pasteWithSource}, but takes the source URL from
-   * {@link chromiumClipboardProvider}, so a plain-text copy from a Chromium app is
-   * cited even when "Cite plain-text copies from Chromium apps" is off. Does nothing
-   * where that provider doesn't exist, which is everywhere but Windows.
+   * Pastes exactly as the paste shortcut does, following Paste Mode and the paste
+   * guard, but looks the citation's address up with {@link chromiumClipboardProvider},
+   * so a plain-text copy from a Chromium app is cited even when "Cite plain-text
+   * copies from Chromium apps" is off. Does nothing where that provider doesn't
+   * exist, which is everywhere but Windows.
+   *
+   * A command has no key press whose default action could paste, and Obsidian's
+   * HTML conversion runs only inside a real paste event. So a native paste is
+   * requested from Electron, as Obsidian's own context-menu Paste does, and the
+   * citation waits for that paste event.
    */
   async pasteWithChromiumSource(editor: Editor, info: MarkdownFileInfo) {
-    if (!this.chromiumClipboardProvider) return;
-    const clipboardText = await navigator.clipboard.readText();
-    const sourceUrl = await this.chromiumClipboardProvider.getSourceUrl();
-    this.insertWithCitation(editor, info, clipboardText, sourceUrl);
+    const provider = this.chromiumClipboardProvider;
+    if (!provider) return;
+    // Run from the command palette, the editor isn't focused, and a paste goes to whatever is.
+    editor.focus();
+    let plan = this.planPaste(editor);
+    let pasted: Promise<boolean> | undefined;
+    if (isNativePaste(plan)) {
+      const webContents = currentWebContents();
+      if (webContents) {
+        // Listen first, so the paste can't arrive before anyone is waiting for it.
+        pasted = nextPasteEvent(activeDocument, 1000);
+        webContents.paste();
+      } else {
+        // Without Electron's remote, Obsidian's own context-menu Paste falls back to plain text too.
+        plan = plan === "native+cite" ? "text+cite" : "text";
+      }
+    }
+    await this.finishPaste(editor, info, plan, () => provider.getSourceUrl(), pasted);
   }
 
   async pasteSourceOnly(editor: Editor) {
@@ -1853,7 +1918,7 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
         .setDesc(
           "When a browser or app built on Chromium (Chrome, Edge, Brave, Slack, …) copies plain text only, such as from a Copy button, " +
           "read the page address it leaves on the clipboard. Turn off if plain-text copies from desktop apps get citations you don't want. " +
-          "When it's off, the \"Paste with Source URL (Chromium plain text)\" command (Ctrl+Alt+V) still reads it."
+          "When it's off, the \"Paste, citing Chromium plain-text copies\" command (Ctrl+Alt+V) still reads it."
         )
         .addToggle((toggle) =>
           toggle
