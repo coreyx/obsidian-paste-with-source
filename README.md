@@ -285,7 +285,7 @@ What the paste does instead depends on **Paste Mode**:
 - **Default handler + source**: Obsidian's own paste always runs; only the citation is skipped.
 - **Paste content + source**: set by **When a citation can't be added**. *Obsidian's native paste* (the default) behaves exactly as if the plugin were off. *Plain clipboard text* inserts the clipboard's text, as this mode does elsewhere, but without the citation.
 
-This applies only to the intercepted keyboard paste. The **Paste with Source URL** and **Paste (Default) + Source URL** commands and context menu items add a citation wherever the cursor is, so you can still add one deliberately.
+This applies only to the intercepted keyboard paste. The **Paste with Source URL**, **Paste with Source URL (Chromium plain text)** and **Paste (Default) + Source URL** commands and the context menu items add a citation wherever the cursor is, so you can still add one deliberately.
 
 ---
 
