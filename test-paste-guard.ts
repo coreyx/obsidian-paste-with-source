@@ -173,6 +173,16 @@ expectAll("Closed fences and what isn't frontmatter accept a citation", true, [
   "-x |",
 ]);
 
+expectAll("An unclosed parenthesis refuses a citation", false, [
+  "see (this |",
+  "((a) |",
+  "(a) and (b |",
+  ":) and (see |",
+  "(see [link](https://example.com) |",
+  "- (item |",
+  "> (quoted |",
+]);
+
 /** Loads settings from `stored` the way Obsidian would and returns the resulting fallback. */
 async function loadedFallback(stored: object | null): Promise<string> {
   const plugin = new PasteWithSourcePlugin({} as any, {} as any);

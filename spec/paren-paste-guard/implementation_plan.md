@@ -45,7 +45,7 @@ None at this time.
 ### Tests
 
 #### [MODIFY] `test-paste-guard.ts`
-- [ ] **TASK-3:** Add a refused group, "An unclosed parenthesis refuses a citation":
+- [x] **TASK-3:** Add a refused group, "An unclosed parenthesis refuses a citation":
   - `see (this |`
   - `((a) |`
   - `(a) and (b |`
