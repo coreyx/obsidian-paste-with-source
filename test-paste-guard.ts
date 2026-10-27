@@ -143,6 +143,36 @@ expectAll("Prose accepts a citation", true, [
   "text\n---\n|",
 ]);
 
+expectAll("Fences inside quotes and list items, and fences left open, refuse a citation", false, [
+  ">>```\n>>code |",
+  "> > ```\n> > code |",
+  "> - ```\n>   code |",
+  "1. ```\n   code |",
+  "2) ```\n   code |",
+  "-\t```\n\tcode |",
+  "- [ ] ```\n  code |",
+  "```\ncode\n``\n|",
+  "```\n~~~\n|",
+  "~~~\n```\n|",
+  "```\n``` js\n|",
+]);
+
+expectAll("Frontmatter closed by ... refuses a citation up to its closing line", false, [
+  "---\nkey: |\n...",
+  "---\nkey: v\n...|",
+]);
+
+expectAll("Closed fences and what isn't frontmatter accept a citation", true, [
+  "```\ncode\n```   \n|",
+  "```\ncode\n````\n|",
+  "> ```\n> code\n> ```\n|",
+  "- [x] ```\n  code\n  ```\n|",
+  "---\nkey: v\n...\n|",
+  "---\nnever closed |",
+  "text\n---\nkey: |\n---",
+  "-x |",
+]);
+
 /** Loads settings from `stored` the way Obsidian would and returns the resulting fallback. */
 async function loadedFallback(stored: object | null): Promise<string> {
   const plugin = new PasteWithSourcePlugin({} as any, {} as any);
