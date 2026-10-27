@@ -39,7 +39,7 @@ None at this time.
     - A `$` that opens closed inline math, per `findInlineMathClose`, skips to its closing `$`.
     - `(` counts up, and `)` counts down but never below zero.
   - It's documented in TSDoc, like its neighbors.
-- [ ] **TASK-2:** In `canAddCitation`, refuse when `isInsideParentheses(scan.prose)` is true, alongside the `isInsideLinkSyntax` check. Add parentheses to the function's TSDoc list of refused positions.
+- [x] **TASK-2:** In `canAddCitation`, refuse when `isInsideParentheses(scan.prose)` is true, alongside the `isInsideLinkSyntax` check. Add parentheses to the function's TSDoc list of refused positions.
   - A link destination is unaffected. `[a](url` is already refused by the link rule, and `[a](url)` is balanced.
 
 ### Tests

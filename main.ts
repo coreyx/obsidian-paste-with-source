@@ -685,8 +685,9 @@ function isInsideParentheses(prose: string): boolean {
  * Whether a paste at (line, ch) is prose that can take a citation, rather than
  * part of other syntax a citation would break: the frontmatter, a code block or
  * its fence line, inline code, a `$$` or `$…$` formula, a `%%` comment, a
- * link's text or `( )` URL, a wikilink, or an HTML tag or attribute being
- * typed. Only the intercepted keyboard paste asks; the explicit paste commands
+ * link's text or `( )` URL, a wikilink, a parenthesis left open on the
+ * cursor's line, or an HTML tag or attribute being typed. Only the
+ * intercepted keyboard paste asks; the explicit paste commands
  * add a citation wherever the user invokes them.
  *
  * The document is read from the end of the frontmatter to the cursor in one
@@ -719,7 +720,7 @@ export function canAddCitation(doc: LineSource, line: number, ch: number): boole
     // The cursor's own line is judged by what has been typed up to it.
     const typed = text.slice(0, ch);
     const scan = scanSpans(typed, state, true);
-    if (scan.state !== null || scan.codeOpen || isInsideLinkSyntax(scan.prose)) return false;
+    if (scan.state !== null || scan.codeOpen || isInsideLinkSyntax(scan.prose) || isInsideParentheses(scan.prose)) return false;
     if (isInsideInlineMath(text, ch)) return false;
     // Right after `<` or `="`/`='`, an HTML tag or attribute value is being typed.
     if (typed.endsWith("<") || /=["']$/.test(typed)) return false;
