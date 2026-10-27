@@ -28,7 +28,7 @@ None at this time.
   - `selectedPresetId` and `templateString` set to the default preset's id and template, from `DEFAULT_SETTINGS`.
   - `presetSlotB` reset to `DEFAULT_SETTINGS.presetSlotB` if it named the deleted preset, and `presetSlotC` reset the same way.
   - It's a plain function of the settings, so it can be tested without the settings tab.
-- [ ] **TASK-2:** The settings tab's **Delete Preset** handler applies `withoutPreset` in place of its two assignments, then saves and redraws as before.
+- [x] **TASK-2:** The settings tab's **Delete Preset** handler applies `withoutPreset` in place of its two assignments, then saves and redraws as before.
 
 ### Tests
 

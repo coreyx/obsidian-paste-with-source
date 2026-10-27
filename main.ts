@@ -2095,8 +2095,7 @@ class PasteWithSourceSettingTab extends PluginSettingTab {
         .setDisabled(!!selectedPreset.isBuiltIn)
         .onClick(async () => {
           if (selectedPreset.isBuiltIn) return;
-          this.plugin.settings.userPresets = this.plugin.settings.userPresets.filter((p) => p.id !== selectedPreset.id);
-          this.plugin.settings.selectedPresetId = DEFAULT_SETTINGS.selectedPresetId;
+          Object.assign(this.plugin.settings, PresetManager.withoutPreset(this.plugin.settings, selectedPreset.id));
           await this.plugin.saveSettings();
           new Notice(`Deleted preset "${selectedPreset.name}".`);
           this.display();
