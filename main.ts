@@ -653,6 +653,35 @@ function isInsideLinkSyntax(text: string): boolean {
 }
 
 /**
+ * Whether prose before the cursor leaves a `(` open, as in "(see this". A
+ * citation pasted there would read as part of the parenthetical. Like
+ * {@link isInsideLinkSyntax}, it takes the line's prose with code spans,
+ * comments and `$$` math already removed, and an escaped `\(` doesn't count.
+ * Closed inline `$…$` math is skipped too, since its parentheses are part of
+ * the formula, as in `$f(x$`.
+ *
+ * A `)` with no opener is ignored rather than counted against a later `(`, so
+ * text such as `1)` or `:)` doesn't hide an unclosed parenthesis after it.
+ */
+function isInsideParentheses(prose: string): boolean {
+  let open = 0;
+  for (let i = 0; i < prose.length; i++) {
+    const char = prose.charAt(i);
+    if (char === "\\") {
+      i++;
+    } else if (char === "$") {
+      const close = findInlineMathClose(prose, i);
+      if (close !== -1) i = close;
+    } else if (char === "(") {
+      open++;
+    } else if (char === ")") {
+      open = Math.max(0, open - 1);
+    }
+  }
+  return open > 0;
+}
+
+/**
  * Whether a paste at (line, ch) is prose that can take a citation, rather than
  * part of other syntax a citation would break: the frontmatter, a code block or
  * its fence line, inline code, a `$$` or `$…$` formula, a `%%` comment, a

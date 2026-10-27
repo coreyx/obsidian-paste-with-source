@@ -32,7 +32,7 @@ None at this time.
 ### Paste guard
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-1:** Add `isInsideParentheses(prose: string): boolean`, next to `isInsideLinkSyntax`.
+- [x] **TASK-1:** Add `isInsideParentheses(prose: string): boolean`, next to `isInsideLinkSyntax`.
   - It takes the cursor line's prose up to the cursor, with code spans, `%%` comments and `$$` math already removed by `scanSpans`. It returns whether a `(` is still open.
   - It scans left to right:
     - A backslash skips the next character.
