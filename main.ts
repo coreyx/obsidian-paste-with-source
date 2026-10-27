@@ -36,6 +36,23 @@ function isNativePaste(plan: PastePlan): boolean {
 }
 
 /**
+ * Which paste shortcut `event` is, if any: Cmd+V on macOS, Ctrl+V elsewhere
+ * ("v"), or Shift+Insert outside macOS. Each must be pressed with no other
+ * modifier held, so any other combination stays Obsidian's:
+ * - Ctrl+Shift+V or Cmd+Shift+V is "paste as plain text".
+ * - Ctrl+Alt+V on Windows runs the Chromium paste command, which pastes on its own.
+ * - AltGr+V arrives as Ctrl+Alt+V too.
+ */
+export function pasteShortcut(event: KeyboardEvent, isMac: boolean): "v" | "shift+insert" | null {
+  const { ctrlKey, metaKey, shiftKey, altKey } = event;
+  if (event.key.toLowerCase() === "v" && !shiftKey && !altKey) {
+    if (isMac ? metaKey && !ctrlKey : ctrlKey && !metaKey) return "v";
+  }
+  if (!isMac && event.key === "Insert" && shiftKey && !ctrlKey && !altKey && !metaKey) return "shift+insert";
+  return null;
+}
+
+/**
  * The focused window's Electron webContents, whose paste() runs a real paste,
  * the same one a paste shortcut runs. It comes through the `remote` module
  * Obsidian exposes on each window, which Obsidian's own context-menu Paste uses.
@@ -1555,16 +1572,11 @@ export default class PasteWithSourcePlugin extends Plugin {
     this.registerDomEvent(document, "keydown", async (event: KeyboardEvent) => {
       if (!this.settings.interceptPaste) return;
 
-      const isMac = process.platform === "darwin";
-      const isCmdV = isMac && event.metaKey && event.key.toLowerCase() === "v";
-      // Ctrl+Alt+V belongs to the Chromium paste command, which pastes on its own.
-      const isCtrlV = !isMac && event.ctrlKey && !event.altKey && event.key.toLowerCase() === "v";
-      const isShiftInsert = !isMac && event.shiftKey && event.key === "Insert";
-
+      const shortcut = pasteShortcut(event, process.platform === "darwin");
       const shouldIntercept =
-        (this.settings.interceptShortcut === "both" && (isCmdV || isCtrlV || isShiftInsert)) ||
-        (this.settings.interceptShortcut === "ctrl+v" && (isCmdV || isCtrlV)) ||
-        (this.settings.interceptShortcut === "shift+insert" && isShiftInsert);
+        (this.settings.interceptShortcut === "both" && shortcut !== null) ||
+        (this.settings.interceptShortcut === "ctrl+v" && shortcut === "v") ||
+        (this.settings.interceptShortcut === "shift+insert" && shortcut === "shift+insert");
 
       if (!shouldIntercept) return;
 

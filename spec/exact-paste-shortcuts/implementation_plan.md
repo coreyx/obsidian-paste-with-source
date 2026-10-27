@@ -28,7 +28,7 @@ None at this time.
 ### Paste listener
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-1:** Add `pasteShortcut(event: KeyboardEvent, isMac: boolean): "v" | "shift+insert" | null`, documented in TSDoc, next to `isNativePaste`.
+- [x] **TASK-1:** Add `pasteShortcut(event: KeyboardEvent, isMac: boolean): "v" | "shift+insert" | null`, documented in TSDoc, next to `isNativePaste`.
   - It returns `"v"` for exactly Cmd+V on macOS, or exactly Ctrl+V elsewhere.
   - It returns `"shift+insert"` for exactly Shift+Insert, outside macOS.
   - It returns `null` for anything else.
@@ -38,7 +38,7 @@ None at this time.
 ### Tests
 
 #### [MODIFY] `test-paste-guard.ts`
-- [ ] **TASK-2:** `pressPaste` takes the modifiers and key as an object, in place of its `alt` flag. New shortcut cases, run on the current platform:
+- [x] **TASK-2:** `pressPaste` takes the modifiers and key as an object, in place of its `alt` flag. New shortcut cases, run on the current platform:
   - **Ignored, with nothing inserted and no `preventDefault()`, in both Paste Modes:**
     - Ctrl+Shift+V, or Cmd+Shift+V on macOS
     - Ctrl+Shift+Insert, outside macOS

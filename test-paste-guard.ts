@@ -14,7 +14,7 @@ Module.prototype.require = function (id: string, ...rest: any[]) {
   return originalRequire.apply(this, [id, ...rest]);
 };
 
-import PasteWithSourcePlugin, { canAddCitation, LineSource } from "./main";
+import PasteWithSourcePlugin, { canAddCitation, LineSource, pasteShortcut } from "./main";
 
 let failures = 0;
 
@@ -203,20 +203,27 @@ async function loadedFallback(stored: object | null): Promise<string> {
   return plugin.settings.guardedPasteFallback;
 }
 
+/** A key press: the key, plus whichever modifiers are held. */
+type Keys = { key: string; ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean; altKey?: boolean };
+
+const IS_MAC = process.platform === "darwin";
+/** This platform's paste shortcut: Cmd+V on macOS, Ctrl+V elsewhere. */
+const PASTE_V: Keys = IS_MAC ? { key: "v", metaKey: true } : { key: "v", ctrlKey: true };
+
 /**
- * Loads the plugin with stubbed Obsidian APIs, presses Ctrl/Cmd+V with the
- * cursor at the `|` in `text`, and reports whether preventDefault() ran before
- * the listener first yielded (the only point at which it can still stop
- * Obsidian's paste) and what the plugin inserted. `focused: false` simulates
- * the key being pressed in another field while the note is the active view, and
- * `alt: true` the key pressed with Alt held, as Ctrl+Alt+V.
+ * Loads the plugin with stubbed Obsidian APIs, presses `keys` (this platform's
+ * paste shortcut by default) with the cursor at the `|` in `text`, and reports
+ * whether preventDefault() ran before the listener first yielded (the only
+ * point at which it can still stop Obsidian's paste) and what the plugin
+ * inserted. `focused: false` simulates the key being pressed in another field
+ * while the note is the active view.
  */
 async function pressPaste(
   text: string,
   pasteMode: "default+source" | "clipboard+source",
   fallback: "native" | "plain",
   focused = true,
-  alt = false
+  keys: Keys = PASTE_V
 ): Promise<{ preventedBeforeYield: boolean; inserted: string[] }> {
   const cursor = text.indexOf("|");
   const lines = (text.slice(0, cursor) + text.slice(cursor + 1)).split("\n");
@@ -253,7 +260,14 @@ async function pressPaste(
   });
 
   let prevented = false;
-  const pending = keydown!({ ctrlKey: true, metaKey: true, shiftKey: false, altKey: alt, key: "v", preventDefault: () => (prevented = true) });
+  const pending = keydown!({
+    ctrlKey: false,
+    metaKey: false,
+    shiftKey: false,
+    altKey: false,
+    ...keys,
+    preventDefault: () => (prevented = true),
+  });
   const preventedBeforeYield = prevented;
   await pending;
   // default+source inserts its citation on a 50 ms timer, after Obsidian's paste.
@@ -275,14 +289,13 @@ async function pressPaste(
     console.log(`  [${ok ? "PASS" : "FAIL"}] ${name}`);
   }
 
-  console.log("\nPaste shortcut handling");
   const shortcutCases: {
     name: string;
     text: string;
     pasteMode: "default+source" | "clipboard+source";
     fallback: "native" | "plain";
     focused?: boolean;
-    alt?: boolean;
+    keys?: Keys;
     prevented: boolean;
     inserted: string[];
   }[] = [
@@ -295,15 +308,57 @@ async function pressPaste(
     { name: "content mode, guarded, plain, unfocused: leaves the paste to the focused field", text: "`code |`", pasteMode: "clipboard+source", fallback: "plain", focused: false, prevented: false, inserted: [] },
     { name: "default mode, prose, unfocused: adds no citation to the note", text: "see |", pasteMode: "default+source", fallback: "native", focused: false, prevented: false, inserted: [] },
   ];
-  // On Windows, Ctrl+Alt+V runs the Chromium paste command, which pastes by itself.
-  if (process.platform !== "darwin") {
+  // Any other modifier held with a paste shortcut leaves the key to Obsidian, in both modes.
+  const ignored: [string, Keys][] = [[IS_MAC ? "Cmd+Shift+V, paste as plain text" : "Ctrl+Shift+V, paste as plain text", { ...PASTE_V, shiftKey: true }]];
+  if (!IS_MAC) {
+    // On Windows, Ctrl+Alt+V runs the Chromium paste command, which pastes by itself.
+    ignored.push(
+      ["Ctrl+Alt+V, the Chromium paste command", { ...PASTE_V, altKey: true }],
+      ["Ctrl+Alt+Shift+V", { ...PASTE_V, altKey: true, shiftKey: true }],
+      ["Ctrl+Shift+Insert", { key: "Insert", ctrlKey: true, shiftKey: true }],
+    );
     shortcutCases.push(
-      { name: "content mode, Ctrl+Alt+V: leaves the paste to the Chromium command", text: "see |", pasteMode: "clipboard+source", fallback: "native", alt: true, prevented: false, inserted: [] },
-      { name: "default mode, Ctrl+Alt+V: adds no citation of its own", text: "see |", pasteMode: "default+source", fallback: "native", alt: true, prevented: false, inserted: [] },
+      { name: "content mode, prose, Shift+Insert: prevents and adds a citation", text: "see |", pasteMode: "clipboard+source", fallback: "native", keys: { key: "Insert", shiftKey: true }, prevented: true, inserted: ["pasted text + cite"] },
+      { name: "default mode, prose, Shift+Insert: adds the citation after Obsidian's paste", text: "see |", pasteMode: "default+source", fallback: "native", keys: { key: "Insert", shiftKey: true }, prevented: false, inserted: [" + cite"] },
     );
   }
+  for (const [name, keys] of ignored) {
+    shortcutCases.push(
+      { name: `content mode, ${name}: left to Obsidian`, text: "see |", pasteMode: "clipboard+source", fallback: "native", keys, prevented: false, inserted: [] },
+      { name: `default mode, ${name}: adds no citation`, text: "see |", pasteMode: "default+source", fallback: "native", keys, prevented: false, inserted: [] },
+    );
+  }
+  console.log("\nPaste shortcut recognition, on both platforms");
+  /** Which shortcut `keys` is on macOS (`mac`) or elsewhere. */
+  const recognized = (keys: Keys, mac: boolean) =>
+    pasteShortcut({ ctrlKey: false, metaKey: false, shiftKey: false, altKey: false, ...keys } as KeyboardEvent, mac);
+  const recognitionCases: [string, Keys, boolean, "v" | "shift+insert" | null][] = [
+    ["Cmd+V on macOS", { key: "v", metaKey: true }, true, "v"],
+    ["Cmd+V with Caps Lock on macOS", { key: "V", metaKey: true }, true, "v"],
+    ["Cmd+Shift+V on macOS", { key: "V", metaKey: true, shiftKey: true }, true, null],
+    ["Cmd+Option+V on macOS", { key: "v", metaKey: true, altKey: true }, true, null],
+    ["Cmd+Ctrl+V on macOS", { key: "v", metaKey: true, ctrlKey: true }, true, null],
+    ["Ctrl+V on macOS", { key: "v", ctrlKey: true }, true, null],
+    ["Shift+Insert on macOS", { key: "Insert", shiftKey: true }, true, null],
+    ["Ctrl+V on Windows", { key: "v", ctrlKey: true }, false, "v"],
+    ["Ctrl+Shift+V on Windows", { key: "V", ctrlKey: true, shiftKey: true }, false, null],
+    ["Ctrl+Alt+V on Windows", { key: "v", ctrlKey: true, altKey: true }, false, null],
+    ["Ctrl+Win+V on Windows", { key: "v", ctrlKey: true, metaKey: true }, false, null],
+    ["Shift+Insert on Windows", { key: "Insert", shiftKey: true }, false, "shift+insert"],
+    ["Ctrl+Shift+Insert on Windows", { key: "Insert", ctrlKey: true, shiftKey: true }, false, null],
+    ["Alt+Shift+Insert on Windows", { key: "Insert", altKey: true, shiftKey: true }, false, null],
+    ["V alone", { key: "v" }, false, null],
+  ];
+  for (const [name, keys, mac, expected] of recognitionCases) {
+    const got = recognized(keys, mac);
+    const ok = got === expected;
+    if (!ok) failures++;
+    console.log(`  [${ok ? "PASS" : "FAIL"}] ${name} → ${expected ?? "not a paste shortcut"}${ok ? "" : ` (got ${got})`}`);
+  }
+
+  console.log("\nPaste shortcut handling");
   for (const c of shortcutCases) {
-    const result = await pressPaste(c.text, c.pasteMode, c.fallback, c.focused, c.alt);
+    const result = await pressPaste(c.text, c.pasteMode, c.fallback, c.focused, c.keys);
     const ok = result.preventedBeforeYield === c.prevented && JSON.stringify(result.inserted) === JSON.stringify(c.inserted);
     if (!ok) failures++;
     console.log(`  [${ok ? "PASS" : "FAIL"}] ${c.name}${ok ? "" : ` (got ${JSON.stringify(result)})`}`);
