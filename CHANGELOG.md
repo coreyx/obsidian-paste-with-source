@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Paste as Plain Text Is Left to Obsidian**: Ctrl+Shift+V, or Cmd+Shift+V on macOS, is Obsidian's "paste as plain text", and it was intercepted as if it were Ctrl+V. In *Default handler + source* mode the plain-text paste got a citation, and in *Paste content + source* mode the plugin took the paste over. Only Ctrl+V, Cmd+V and Shift+Insert are intercepted now, each with no other modifier held, so Ctrl+Shift+Insert is left alone too.
+
 ### Planned
 - Direct Chromium/Edge browser extension companion integration.
 

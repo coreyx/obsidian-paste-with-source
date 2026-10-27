@@ -254,7 +254,7 @@ Every preset that uses `{link}` follows **Link Label**. With *Page name* the lin
 - `Paste Clipboard with Source URL`
 
 ### Keyboard Shortcuts
-- **Standard Paste**: If "Intercept Paste" is enabled, intercepts `Cmd+V` (macOS), `Ctrl+V` (Windows), or `Shift+Insert` (Windows) to append the currently active citation preset. The shortcut is intercepted only while a note's editor has keyboard focus. A paste into any other field, such as the search box, the find bar or a settings field, is left to Obsidian, and nothing is added to the open note.
+- **Standard Paste**: If "Intercept Paste" is enabled, intercepts `Cmd+V` (macOS), `Ctrl+V` (Windows), or `Shift+Insert` (Windows) to append the currently active citation preset. The shortcut is intercepted only while a note's editor has keyboard focus. A paste into any other field, such as the search box, the find bar or a settings field, is left to Obsidian, and nothing is added to the open note. Only those exact shortcuts are intercepted. With any other modifier held, the key is left to Obsidian, so `Ctrl+Shift+V` (`Cmd+Shift+V`), Obsidian's "paste as plain text", pastes plain text with no citation.
 - **Preset Switcher Hotkeys**:
   - `Ctrl+Alt+A` (`Cmd+Opt+A`): Activate Preset Slot A (Always uses the editable Citation Template from settings)
   - `Ctrl+Alt+B` (`Cmd+Opt+B`): Activate Preset Slot B (Configurable preset, default: *Minimal Domain*)

@@ -51,7 +51,7 @@ None at this time.
 ### Docs
 
 #### [MODIFY] `README.md`, `CHANGELOG.md`
-- [ ] **TASK-3:** Docs:
+- [x] **TASK-3:** Docs:
   - In the README's **Keyboard Shortcuts**, the Standard Paste entry says that other combinations, such as Ctrl+Shift+V for Obsidian's "paste as plain text", are left to Obsidian.
   - The CHANGELOG gets a `Fixed` entry under `[Unreleased]`.
 
