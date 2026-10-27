@@ -14,11 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **No Citation Inside an Open Parenthesis**: An intercepted paste after an unclosed `(` on the same line, as in `(see this`, gets no citation, which would otherwise land inside the aside. Pairs closed before the cursor, escaped `\(`, and parentheses in code, math or comments don't count. The paste commands still add a citation wherever the cursor is.
 - **Chromium Plain-Text Paste Command** (Windows): **Paste, citing Chromium plain-text copies**, on `Ctrl+Alt+V` by default, pastes exactly as `Ctrl+V` does, following **Paste Mode** and the paste guard. The only difference is where it looks for the citation's address: when the clipboard's HTML has none, it also reads the page address Chromium leaves for plain-text copies, such as a site's Copy button, even when **Cite plain-text copies from Chromium apps** is off. So the setting can stay off for everyday pastes. For Obsidian's own paste it asks Electron for a real paste, as Obsidian's right-click **Paste** does, so links and formatting come through as with `Ctrl+V`. On keyboards with AltGr, AltGr+V also runs it, and it can be rebound in **Settings → Hotkeys**.
 
-### Fixed
-- **Ctrl+Alt+V No Longer Counts as Ctrl+V**: The paste shortcut listener matched Ctrl+V with Alt held, which would have run the intercepted paste alongside the new command.
-
 ### Changed
 - **Default Citation**: A fresh install now uses the Paste with Source preset instead of OneNote Style, and so does deleting a custom preset. Saved settings keep their template and selected preset. OneNote Style is still available as a built-in preset.
+
+### Fixed
+- **Ctrl+Alt+V No Longer Counts as Ctrl+V**: The paste shortcut listener matched Ctrl+V with Alt held, which would have run the intercepted paste alongside the new command.
 
 ### Planned
 - Direct Chromium/Edge browser extension companion integration.
