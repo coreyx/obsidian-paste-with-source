@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Paste with Source Preset**: A built-in preset named after the plugin, `From: {link} – {domain}`, listed first in the preset dropdown. It follows **Link Label**, so with the default *Page title* a paste ends with `From: [Article Title](https://example.com/article) – example.com`. The en dash keeps the separator apart from hyphens inside page titles.
+- **No Citation Inside an Open Parenthesis**: An intercepted paste after an unclosed `(` on the same line, as in `(see this`, gets no citation, which would otherwise land inside the aside. Pairs closed before the cursor, escaped `\(`, and parentheses in code, math or comments don't count. The paste commands still add a citation wherever the cursor is.
 
 ### Changed
 - **Default Citation**: A fresh install now uses the Paste with Source preset instead of OneNote Style, and so does deleting a custom preset. Saved settings keep their template and selected preset. OneNote Style is still available as a built-in preset.
