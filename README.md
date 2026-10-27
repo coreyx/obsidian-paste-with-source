@@ -86,7 +86,7 @@ To update, replace the two files with the ones from a newer release.
 | **Intercept Shortcut** | Choose which shortcut to intercept (`Cmd+V` on macOS; `Both`, `Ctrl+V only`, or `Shift+Insert only` on Windows) |
 | **Paste Mode** | Choose between default handler + source link or plain clipboard text + source link |
 | **When a citation can't be added** | Shown only with Paste Mode set to *Paste content + source*. Chooses what a paste does where no citation is added (see **When No Citation Is Added** below): *Obsidian's native paste* (default), exactly as if the plugin were off, or *Plain clipboard text* |
-| **Cite plain-text copies from Chromium apps** | Windows only, on by default. When a browser or app built on Chromium copies plain text only, such as from a Copy button, reads the page address Chromium leaves on the clipboard, so the paste is still cited. Turn off if plain-text copies from desktop apps such as Slack get citations you don't want |
+| **Cite plain-text copies from Chromium apps** | Windows only, on by default. When a browser or app built on Chromium copies plain text only, such as from a Copy button, reads the page address Chromium leaves on the clipboard, so the paste is still cited. Turn off if plain-text copies from desktop apps such as Slack get citations you don't want. When it's off, the **Paste with Source URL (Chromium plain text)** command (`Ctrl+Alt+V`) still reads it |
 | **Link Label** | How `{link}` is labeled in every template: *Page title* (default), the title fetched from the page, which shows the URL until it arrives; *Page name*, guessed from the URL; *URL*; or *"Source"*. Only *Page title* makes a network request (see **Network Use** below) |
 | **Template Preset** | Select from 12 built-in presets (Paste with Source, the default; OneNote, Italic Attribution, Minimal Domain, Parenthetical, Academic, Obsidian Callout, Timestamped ISO 8601, Zulu Log, 12h Casual, Markdown Quote, Raw URL) or your custom presets |
 | **Preset Actions** | Save As New, Update, Delete, Export JSON, and Import JSON |
@@ -247,6 +247,7 @@ Every preset that uses `{link}` follows **Link Label**. With *Page name* the lin
 - `Activate Citation Preset C` (`Ctrl+Alt+C` / `Cmd+Opt+C`)
 - `Paste (Default) + Source URL`
 - `Paste with Source URL`
+- `Paste with Source URL (Chromium plain text)` (`Ctrl+Alt+V`, Windows only)
 
 ### Context Menu (Editor Right-Click)
 - `Paste (Default Handler) + Source URL`
@@ -260,6 +261,8 @@ Every preset that uses `{link}` follows **Link Label**. With *Page name* the lin
   - `Ctrl+Alt+C` (`Cmd+Opt+C`): Activate Preset Slot C (Configurable preset, default: *Academic Citation*)
   - *Activating a slot displays a brief Obsidian notification. Normal paste (`Ctrl+V`) always pastes using the active preset.*
   - *All hotkeys can be customized or cleared in Obsidian's **Settings → Hotkeys** menu.*
+- **Chromium Plain-Text Paste** (Windows only): `Ctrl+Alt+V` runs **Paste with Source URL (Chromium plain text)**. It pastes the clipboard text with a citation and reads the page address Chromium leaves for plain-text copies, such as from a site's Copy button, even when **Cite plain-text copies from Chromium apps** is off. Keep the setting off for everyday pastes and use this when you want the citation.
+  - *On keyboards with an AltGr key, Windows reports AltGr as Ctrl+Alt, so AltGr+V runs this command too. If your layout types a character with AltGr+V, such as `@` on the Czech layout, rebind or clear the command in **Settings → Hotkeys**.*
 
 ---
 

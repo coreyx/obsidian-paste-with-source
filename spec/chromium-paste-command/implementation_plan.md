@@ -56,7 +56,7 @@ None at this time.
 ### Docs
 
 #### [MODIFY] `README.md`
-- [ ] **TASK-6:** Document the command:
+- [x] **TASK-6:** Document the command:
   - It joins the command list as `Paste with Source URL (Chromium plain text)` (`Ctrl+Alt+V`, Windows only).
   - It gets an entry under **Keyboard Shortcuts** saying what it does, and that AltGr+V can trigger it on keyboards with AltGr, so rebind it under Settings → Hotkeys if that types a character on your layout.
   - The **Cite plain-text copies from Chromium apps** settings row mentions it.
