@@ -1383,6 +1383,13 @@ export interface PendingCitation {
 export default class PasteWithSourcePlugin extends Plugin {
   settings!: PasteWithSourceSettings;
   clipboardProvider!: IClipboardSourceProvider;
+  /**
+   * Windows only: a provider that always reads Chromium's source-URL format, for the
+   * command that cites plain-text copies even with the setting off. It's separate from
+   * {@link clipboardProvider}, so an ordinary paste running at the same moment still
+   * follows the setting, rather than reading a flag the command had switched on.
+   */
+  chromiumClipboardProvider?: IClipboardSourceProvider;
   settingTab!: PasteWithSourceSettingTab;
   /** Looks up a page title for a pasted citation. Tests replace it so nothing goes over the network. */
   titleFetcher: (url: string) => Promise<string | undefined> = (url) => fetchPageTitle(url);
@@ -1390,6 +1397,7 @@ export default class PasteWithSourcePlugin extends Plugin {
   async onload() {
     await this.loadSettings();
     this.clipboardProvider = createClipboardProvider(() => this.settings.readChromiumSourceUrl);
+    if (process.platform === "win32") this.chromiumClipboardProvider = new WindowsClipboardProvider(() => true);
     this.settingTab = new PasteWithSourceSettingTab(this);
     this.addSettingTab(this.settingTab);
 

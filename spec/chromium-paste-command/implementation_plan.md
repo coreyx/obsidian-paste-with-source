@@ -31,7 +31,7 @@ None at this time.
 ### Command
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-1:** Add `chromiumClipboardProvider?: IClipboardSourceProvider` to the plugin, documented in TSDoc.
+- [x] **TASK-1:** Add `chromiumClipboardProvider?: IClipboardSourceProvider` to the plugin, documented in TSDoc.
   - On Windows, `onload` sets it to `new WindowsClipboardProvider(() => true)`.
   - On other platforms it stays undefined.
   - A second provider avoids a flag shared with the main provider, which an intercepted paste could read mid-command.
