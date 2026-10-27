@@ -1,6 +1,30 @@
 # Release Notes: Paste with Source for Obsidian
 
-Welcome to **Paste with Source** (v1.6.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+Welcome to **Paste with Source** (v1.7.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+
+---
+
+## 🌟 What's New in Version 1.7.0: A Signature Citation, Smarter Pasting and a Citation Shortcut
+
+### 🔖 New Default: the "Paste with Source" Preset
+The plugin now has a citation style of its own, and it's the default on a fresh install:
+
+```markdown
+From: [Article Title](https://example.com/article) – example.com
+```
+
+It shows the page's title as the link, then the site it came from. The en dash keeps the separator apart from the hyphens many page titles contain, as in "Obsidian - Wikipedia". Like the other link presets, it follows **Link Label**, so you can show the URL, the page name or "Source" instead of the title. If you already chose a template, nothing changes for you. OneNote Style is still in the preset list.
+
+### 🛡️ No Citation Inside an Open Parenthesis
+If you're in the middle of a parenthetical, as in "(see this", and paste, the citation is now left out, instead of landing inside your aside. This works like the existing rule for an open `[`. Parentheses you've already closed don't count, and neither do escaped `\(` or parentheses inside code, math or comments. Obsidian's auto-paired `)` after the cursor doesn't matter, because only what's before the cursor is read.
+
+### ⌨️ Ctrl+Alt+V: Cite It Anyway (Windows)
+**Cite plain-text copies from Chromium apps** can now stay off for everyday pastes, while you still get the citation when you want it. Press **Ctrl+Alt+V**, or run **Paste, citing Chromium plain-text copies** from the command palette. It pastes exactly as Ctrl+V does, with the same formatting, links and rules. The only difference is that when the citation would otherwise be missing, such as after a site's plain-text Copy button, it also reads the page address Chrome, Edge and other Chromium browsers leave behind.
+
+On keyboards with an AltGr key, Windows treats AltGr as Ctrl+Alt, so AltGr+V runs the command too. If that's a key you type with, rebind it under **Settings → Hotkeys**.
+
+### 🐛 Fixed
+Ctrl+Alt+V was treated as an ordinary Ctrl+V paste. It's now left to the new command.
 
 ---
 
