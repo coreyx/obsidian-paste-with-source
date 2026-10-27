@@ -33,7 +33,7 @@ None at this time.
 ### Tests
 
 #### [MODIFY] `test-templates.ts`
-- [ ] **TASK-3:** Add "Preset deletion" checks for `withoutPreset`:
+- [x] **TASK-3:** Add "Preset deletion" checks for `withoutPreset`:
   - The preset is removed, and other custom presets are kept.
   - The default preset is selected, and the template box holds its template.
   - A Slot B or C holding the deleted preset goes back to its default.

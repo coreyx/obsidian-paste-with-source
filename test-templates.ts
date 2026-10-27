@@ -297,6 +297,35 @@ console.log("Running TemplateEngine unit tests...");
   );
 }
 
+// Test 7b: Preset deletion
+{
+  console.log("\nRunning Preset deletion tests...");
+  const doomed: TemplatePreset = { id: "user-preset-doomed", name: "Doomed", template: "\n\nVia {url}", isBuiltIn: false };
+  const kept: TemplatePreset = { id: "user-preset-kept", name: "Kept", template: "\n\nKept {url}", isBuiltIn: false };
+  const before = {
+    ...DEFAULT_SETTINGS,
+    userPresets: [doomed, kept],
+    selectedPresetId: doomed.id,
+    templateString: doomed.template,
+    presetSlotB: doomed.id,
+    presetSlotC: kept.id,
+  };
+  const snapshot = JSON.stringify(before);
+  const changes = PresetManager.withoutPreset(before, doomed.id);
+
+  assert(JSON.stringify(changes.userPresets) === JSON.stringify([kept]), "Deleting a preset removes it and keeps the other custom presets");
+  assert(changes.selectedPresetId === DEFAULT_SETTINGS.selectedPresetId, "Deleting a preset selects the default preset");
+  assert(changes.templateString === DEFAULT_SETTINGS.templateString, "Deleting a preset puts the default preset's template in the template box");
+  assert(changes.presetSlotB === DEFAULT_SETTINGS.presetSlotB, "A Slot B that held the deleted preset goes back to its default");
+  assert(changes.presetSlotC === kept.id, "A Slot C holding another preset is left alone");
+
+  const slotC = PresetManager.withoutPreset({ ...before, presetSlotB: "builtin-raw-url", presetSlotC: doomed.id }, doomed.id);
+  assert(slotC.presetSlotC === DEFAULT_SETTINGS.presetSlotC, "A Slot C that held the deleted preset goes back to its default");
+  assert(slotC.presetSlotB === "builtin-raw-url", "A Slot B holding another preset is left alone");
+
+  assert(JSON.stringify(before) === snapshot, "The settings passed in aren't modified");
+}
+
 // Test 8: Preset JSON Import Validation
 {
   console.log("\nRunning Preset JSON schema tests...");
