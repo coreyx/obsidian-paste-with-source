@@ -1689,7 +1689,7 @@ export default class PasteWithSourcePlugin extends Plugin {
     const active = this.getActiveTemplate();
     new Notice(`Active Citation Preset: [Slot ${slot}] ${active.name}`);
     if (this.settingTab) {
-      this.settingTab.display();
+      this.settingTab.redraw();
     }
   }
 
@@ -1935,7 +1935,7 @@ export class PasteWithSourceSettingTab extends PluginSettingTab {
             this.plugin.settings.pasteMode = value as PasteMode;
             await this.plugin.saveSettings();
             // Re-render so the guarded paste setting below appears or disappears with the mode.
-            this.display();
+            this.redraw();
           })
       );
 
@@ -2029,7 +2029,7 @@ export class PasteWithSourceSettingTab extends PluginSettingTab {
             this.plugin.settings.selectedPresetId = chosen.id;
             this.plugin.settings.templateString = chosen.template;
             await this.plugin.saveSettings();
-            this.display();
+            this.redraw();
           }
         });
       });
@@ -2078,7 +2078,7 @@ export class PasteWithSourceSettingTab extends PluginSettingTab {
             this.plugin.settings.selectedPresetId = newPreset.id;
             await this.plugin.saveSettings();
             new Notice(`Saved preset "${name}".`);
-            this.display();
+            this.redraw();
           }).open();
         });
       styleActionButton(btn);
@@ -2095,7 +2095,7 @@ export class PasteWithSourceSettingTab extends PluginSettingTab {
           selectedPreset.template = this.plugin.settings.templateString;
           await this.plugin.saveSettings();
           new Notice(`Updated preset "${selectedPreset.name}".`);
-          this.display();
+          this.redraw();
         });
       styleActionButton(btn);
     });
@@ -2112,7 +2112,7 @@ export class PasteWithSourceSettingTab extends PluginSettingTab {
           Object.assign(this.plugin.settings, PresetManager.withoutPreset(this.plugin.settings, selectedPreset.id));
           await this.plugin.saveSettings();
           new Notice(`Deleted preset "${selectedPreset.name}".`);
-          this.display();
+          this.redraw();
         });
       styleActionButton(btn);
     });
@@ -2149,7 +2149,7 @@ export class PasteWithSourceSettingTab extends PluginSettingTab {
                 this.plugin.settings.templateString = imported.template;
                 await this.plugin.saveSettings();
                 new Notice(`Successfully imported "${imported.name}"!`);
-                this.display();
+                this.redraw();
               } catch (err: any) {
                 new Notice(`Failed to import preset: ${err.message || err}`);
               }
@@ -2361,7 +2361,7 @@ export class PasteWithSourceSettingTab extends PluginSettingTab {
             slotBSetting.setDesc(chosen.description || chosen.template.replace(/\\n/g, " ").trim());
           }
           if (this.plugin.settings.activeSlot === "B") {
-            this.display();
+            this.redraw();
           }
         });
       });
@@ -2389,7 +2389,7 @@ export class PasteWithSourceSettingTab extends PluginSettingTab {
             slotCSetting.setDesc(chosen.description || chosen.template.replace(/\\n/g, " ").trim());
           }
           if (this.plugin.settings.activeSlot === "C") {
-            this.display();
+            this.redraw();
           }
         });
       });
