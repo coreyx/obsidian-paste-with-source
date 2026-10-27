@@ -60,7 +60,7 @@ None at this time.
   - The **Template Preset** settings row says 12 built-in presets, with Paste with Source first.
   - The Features line lists it among the built-in presets.
   - **Built-In Preset Examples** gets Paste with Source as example 1, with the others renumbered after it.
-- [ ] **TASK-5:** Add an `Added` entry under `[Unreleased]` in `CHANGELOG.md` for the preset and the new default.
+- [x] **TASK-5:** Add an `Added` entry under `[Unreleased]` in `CHANGELOG.md` for the preset and the new default.
 
 ## Verification Plan
 

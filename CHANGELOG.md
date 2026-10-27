@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Paste with Source Preset**: A built-in preset named after the plugin, `From: {link} – {domain}`, listed first in the preset dropdown. It follows **Link Label**, so with the default *Page title* a paste ends with `From: [Article Title](https://example.com/article) – example.com`. The en dash keeps the separator apart from hyphens inside page titles.
+
+### Changed
+- **Default Citation**: A fresh install now uses the Paste with Source preset instead of OneNote Style, and so does deleting a custom preset. Saved settings keep their template and selected preset. OneNote Style is still available as a built-in preset.
+
 ### Planned
 - Direct Chromium/Edge browser extension companion integration.
 
