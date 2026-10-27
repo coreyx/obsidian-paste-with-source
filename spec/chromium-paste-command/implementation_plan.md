@@ -60,7 +60,7 @@ None at this time.
   - It joins the command list as `Paste with Source URL (Chromium plain text)` (`Ctrl+Alt+V`, Windows only).
   - It gets an entry under **Keyboard Shortcuts** saying what it does, and that AltGr+V can trigger it on keyboards with AltGr, so rebind it under Settings → Hotkeys if that types a character on your layout.
   - The **Cite plain-text copies from Chromium apps** settings row mentions it.
-- [ ] **TASK-7:** Add an `Added` entry under `[Unreleased]` in `CHANGELOG.md`.
+- [x] **TASK-7:** Add an `Added` entry under `[Unreleased]` in `CHANGELOG.md`.
 
 ## Verification Plan
 
