@@ -56,7 +56,7 @@ None at this time.
 ### Docs
 
 #### [MODIFY] `README.md`
-- [ ] **TASK-4:** Document the preset:
+- [x] **TASK-4:** Document the preset:
   - The **Template Preset** settings row says 12 built-in presets, with Paste with Source first.
   - The Features line lists it among the built-in presets.
   - **Built-In Preset Examples** gets Paste with Source as example 1, with the others renumbered after it.

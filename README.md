@@ -8,7 +8,7 @@ This Obsidian plugin enhances your clipboard pasting workflow by automatically a
 - 🍎 **macOS Support**: In-process Electron clipboard extraction supporting Chromium browsers (Google Chrome, Arc, Microsoft Edge, Brave, Opera) and Apple Safari (via built-in `bplist00` WebArchive decoding)
 - 🪟 **Windows Support**: In-process Electron clipboard extraction with native `CF_HTML` parsing and zero external binary dependencies
 - 📝 **Link Source Templates**: Fully customizable citation template engine with `{var}` placeholders (`{url}`, `{domain}`, `{page}`, `{title}`, `{path}`, `{date}`, `{time}`, `{datetime}`, `{iso}`, `{link}`)
-- 📦 **Presets & JSON Import/Export**: Built-in presets (OneNote, Markdown Quote, Academic), custom preset saving, and one-click JSON import/export
+- 📦 **Presets & JSON Import/Export**: Built-in presets (Paste with Source, OneNote, Markdown Quote, Academic), custom preset saving, and one-click JSON import/export
 - 👁️ **Authoritative Text Box & Live Preview**: The editable text area is always the single source of truth, backed by interactive variable pills and real-time live preview
 - ⌨️ **Keyboard Interception**: Optionally intercepts `Cmd+V` (macOS) or `Ctrl+V` / `Shift+Insert` (Windows) to auto-append source
 - 🛡️ **Markup-Safe Pasting**: Skips the citation when you paste inside code, math, comments, frontmatter, links, or wikilinks, where it would break the markup
@@ -88,7 +88,7 @@ To update, replace the two files with the ones from a newer release.
 | **When a citation can't be added** | Shown only with Paste Mode set to *Paste content + source*. Chooses what a paste does where no citation is added (see **When No Citation Is Added** below): *Obsidian's native paste* (default), exactly as if the plugin were off, or *Plain clipboard text* |
 | **Cite plain-text copies from Chromium apps** | Windows only, on by default. When a browser or app built on Chromium copies plain text only, such as from a Copy button, reads the page address Chromium leaves on the clipboard, so the paste is still cited. Turn off if plain-text copies from desktop apps such as Slack get citations you don't want |
 | **Link Label** | How `{link}` is labeled in every template: *Page title* (default), the title fetched from the page, which shows the URL until it arrives; *Page name*, guessed from the URL; *URL*; or *"Source"*. Only *Page title* makes a network request (see **Network Use** below) |
-| **Template Preset** | Select from 11 built-in presets (OneNote, Italic Attribution, Minimal Domain, Parenthetical, Academic, Obsidian Callout, Timestamped ISO 8601, Zulu Log, 12h Casual, Markdown Quote, Raw URL) or your custom presets |
+| **Template Preset** | Select from 12 built-in presets (Paste with Source, the default; OneNote, Italic Attribution, Minimal Domain, Parenthetical, Academic, Obsidian Callout, Timestamped ISO 8601, Zulu Log, 12h Casual, Markdown Quote, Raw URL) or your custom presets |
 | **Preset Actions** | Save As New, Update, Delete, Export JSON, and Import JSON |
 | **Citation Template** | **Authoritative template box** (Preset Slot A) evaluated on paste; accepts `{var}` tags and multi-line markdown |
 | **Click to Insert Variable** | Quick-insertion buttons for `{url}`, `{domain}`, `{page}`, `{path}`, `{date}`, etc. |
@@ -125,7 +125,16 @@ To update, replace the two files with the ones from a newer release.
 
 If you copy text from a webpage titled "Article Title" and paste it into Obsidian, with **Link Label** on its default, *Page title*:
 
-**1. OneNote Style (`
+**1. Paste with Source, the default (`
+
+From: {link} – {domain}`):**
+```markdown
+Pasted excerpt text...
+
+From: [Article Title](https://example.com/article) – example.com
+```
+
+**2. OneNote Style (`
 
 From <{link}>`):**
 ```markdown
@@ -134,7 +143,7 @@ Pasted excerpt text...
 From <[Article Title](https://example.com/article)>
 ```
 
-**2. Italic Attribution (`
+**3. Italic Attribution (`
 
 — *Source: {link}*`):**
 ```markdown
@@ -143,7 +152,7 @@ Pasted excerpt text...
 — *Source: [Article Title](https://example.com/article)*
 ```
 
-**3. Minimal Domain (`
+**4. Minimal Domain (`
 
 Source: [{domain}]({url})`):**
 ```markdown
@@ -152,7 +161,7 @@ Pasted excerpt text...
 Source: [example.com](https://example.com/article)
 ```
 
-**4. Parenthetical (`
+**5. Parenthetical (`
 
 (Source: {link})`):**
 ```markdown
@@ -161,7 +170,7 @@ Pasted excerpt text...
 (Source: [Article Title](https://example.com/article))
 ```
 
-**5. Academic Citation (`
+**6. Academic Citation (`
 
 Source: {link} via {domain} (Accessed: {date} at {time12h})`):**
 ```markdown
@@ -170,7 +179,7 @@ Pasted excerpt text...
 Source: [Article Title](https://example.com/article) via example.com (Accessed: 2026-09-11 at 02:30 PM)
 ```
 
-**6. Obsidian Callout (`
+**7. Obsidian Callout (`
 
 > [!info] Source: {link}
 > Accessed on {datetime12h}`):**
@@ -181,7 +190,7 @@ Pasted excerpt text...
 > Accessed on 2026-09-11 02:30 PM
 ```
 
-**7. Markdown Quote (`
+**8. Markdown Quote (`
 
 > — [Source]({url})`):**
 ```markdown
@@ -190,7 +199,7 @@ Pasted excerpt text...
 > — [Source](https://example.com/article)
 ```
 
-**8. Raw URL (`
+**9. Raw URL (`
 
 {url}`):**
 ```markdown
@@ -199,7 +208,7 @@ Pasted excerpt text...
 https://example.com/article
 ```
 
-**9. Timestamped (ISO 8601) (`
+**10. Timestamped (ISO 8601) (`
 
 — *Source: {link}* [{datetime}]`):**
 ```markdown
@@ -208,7 +217,7 @@ Pasted excerpt text...
 — *Source: [Article Title](https://example.com/article)* [2026-09-11T14:30-07:00]
 ```
 
-**10. Zulu / UTC Research Log (`
+**11. Zulu / UTC Research Log (`
 
 Source: {link} (Retrieved: {datetimez})`):**
 ```markdown
@@ -217,7 +226,7 @@ Pasted excerpt text...
 Source: [Article Title](https://example.com/article) (Retrieved: 2026-09-11T21:30Z)
 ```
 
-**11. 12-Hour Casual (`
+**12. 12-Hour Casual (`
 
 Source: {link} ({date} at {time12h})`):**
 ```markdown
