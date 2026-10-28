@@ -1811,13 +1811,21 @@ export default class PasteWithSourcePlugin extends Plugin {
     }
   }
 
+  /**
+   * Pastes with Obsidian's own paste, then adds a citation after the pasted
+   * content, for the "Paste (Default) + Source URL" command and menu item.
+   * Neither runs a paste of its own, unlike a key press, so the paste is
+   * requested with {@link requestNativePaste}. Like the other commands, it adds
+   * the citation wherever the cursor is, so the paste guard and Paste Mode don't
+   * apply. With no source URL, the clipboard is still pasted, without a citation.
+   */
   async pasteDefaultPlusSource(editor: Editor, info: MarkdownFileInfo) {
-    const sourceUrl = await this.getClipboardSourceUrl();
-    if (!sourceUrl) return;
-
-    setTimeout(() => {
-      this.insertWithCitation(editor, info, "", sourceUrl);
-    }, 50);
+    // Run from the command palette, the editor isn't focused, and a paste goes to whatever is.
+    editor.focus();
+    const pasted = requestNativePaste();
+    // Without Electron's remote, Obsidian's own context-menu Paste falls back to plain text too.
+    const plan: PastePlan = pasted ? "native+cite" : "text+cite";
+    await this.finishPaste(editor, info, plan, () => this.getClipboardSourceUrl(), pasted);
   }
 
   async getClipboardSourceUrl(): Promise<string> {
