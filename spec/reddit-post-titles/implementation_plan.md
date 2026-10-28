@@ -32,7 +32,7 @@ None at this time.
 ### Title fetching
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-1:** Add `redditTarget(url: string)`, documented in TSDoc. It recognizes Reddit URLs and returns one of three things:
+- [x] **TASK-1:** Add `redditTarget(url: string)`, documented in TSDoc. It recognizes Reddit URLs and returns one of three things:
   - **A post**, `{ kind: "post"; postUrl: string; subreddit: string }`:
     - It matches `reddit.com`, `www.`, `old.`, `new.`, `np.` or `m.reddit.com`, with a path of `/r/<subreddit>/comments/<id>` followed by anything. That includes comment permalinks, which oEmbed answers with the post's own title.
     - `postUrl` is rebuilt as `https://www.reddit.com/r/<subreddit>/comments/<id>/`, which drops the slug, the query string and the fragment.

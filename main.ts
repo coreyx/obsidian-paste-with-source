@@ -1412,6 +1412,42 @@ export function extractPageTitle(html: string): string | undefined {
   return undefined;
 }
 
+/** A Reddit page whose title {@link fetchPageTitle} finds another way. See {@link redditTarget}. */
+export type RedditTarget =
+  | { kind: "post"; postUrl: string; subreddit: string }
+  | { kind: "subreddit"; subreddit: string };
+
+/** The Reddit hosts that serve posts and subreddits at the same paths as www.reddit.com. */
+const REDDIT_SITE_HOSTS = new Set(["reddit.com", "www.reddit.com", "old.reddit.com", "new.reddit.com", "np.reddit.com", "m.reddit.com"]);
+
+/**
+ * Recognizes the Reddit pages that get a real title another way. Reddit answers a
+ * plain request for a post or subreddit page with a JavaScript bot check whose
+ * only title is "Reddit". For a post, the result names the canonical post URL that
+ * Reddit's oEmbed endpoint is asked about. The slug, query string and fragment are
+ * dropped, and a comment permalink becomes its post, since oEmbed answers with the
+ * post's title either way. For a subreddit's front page, the name in the URL is
+ * the title. Anything else, including other Reddit pages, gives undefined.
+ */
+export function redditTarget(url: string): RedditTarget | undefined {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return undefined;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return undefined;
+  if (!REDDIT_SITE_HOSTS.has(parsed.hostname.toLowerCase())) return undefined;
+
+  const post = parsed.pathname.match(/^\/r\/(\w+)\/comments\/([a-z0-9]+)(?:\/|$)/i);
+  if (post) {
+    return { kind: "post", postUrl: `https://www.reddit.com/r/${post[1]}/comments/${post[2]}/`, subreddit: post[1] };
+  }
+  const subreddit = parsed.pathname.match(/^\/r\/(\w+)\/?$/);
+  if (subreddit) return { kind: "subreddit", subreddit: subreddit[1] };
+  return undefined;
+}
+
 /**
  * Looks up the title of the page at `url`. It resolves to undefined rather than
  * throwing whenever there is no usable title, so a paste never waits on or fails
