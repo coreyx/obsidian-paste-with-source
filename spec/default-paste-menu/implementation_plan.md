@@ -26,7 +26,7 @@ None at this time.
 ### Paste
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-1:** Move the native-paste request out of `pasteWithChromiumSource` into a documented helper, `requestNativePaste(): Promise<boolean> | undefined`. It starts listening with `nextPasteEvent(activeDocument, 1000)`, then calls `webContents.paste()`, and returns undefined when `currentWebContents()` finds no `remote`. `pasteWithChromiumSource` uses it with no change in behavior.
+- [x] **TASK-1:** Move the native-paste request out of `pasteWithChromiumSource` into a documented helper, `requestNativePaste(): Promise<boolean> | undefined`. It starts listening with `nextPasteEvent(activeDocument, 1000)`, then calls `webContents.paste()`, and returns undefined when `currentWebContents()` finds no `remote`. `pasteWithChromiumSource` uses it with no change in behavior.
 - [ ] **TASK-2:** Rewrite `pasteDefaultPlusSource(editor, info)`, with TSDoc saying why it requests the paste:
   - It focuses the editor first, since from the command palette the editor isn't focused, and a paste goes wherever focus is.
   - It calls `requestNativePaste()`. With a request, it runs `finishPaste(editor, info, "native+cite", () => this.getClipboardSourceUrl(), pasted)`.

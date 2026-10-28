@@ -85,6 +85,23 @@ function nextPasteEvent(doc: Document, timeoutMs: number): Promise<boolean> {
 }
 
 /**
+ * Runs Obsidian's own paste where no key press is running one, as for a command
+ * or a menu item. Obsidian converts copied HTML to Markdown only inside a real
+ * paste event, so the paste is requested from Electron, as Obsidian's own
+ * context-menu Paste does. Resolves to true once the paste event arrives, or to
+ * false if none arrives within a second. Undefined when there is no `remote` to
+ * request it from, and nothing was pasted.
+ */
+function requestNativePaste(): Promise<boolean> | undefined {
+  const webContents = currentWebContents();
+  if (!webContents) return undefined;
+  // Listen first, so the paste can't arrive before anyone is waiting for it.
+  const pasted = nextPasteEvent(activeDocument, 1000);
+  webContents.paste();
+  return pasted;
+}
+
+/**
  * How `{link}` labels its link: the URL itself, the word "Source", the page name
  * guessed from the URL's path (what `{page}` gives), or the title fetched from the
  * page. Only "title" makes a network request.
@@ -1766,10 +1783,9 @@ export default class PasteWithSourcePlugin extends Plugin {
    * copies from Chromium apps" is off. Does nothing where that provider doesn't
    * exist, which is everywhere but Windows.
    *
-   * A command has no key press whose default action could paste, and Obsidian's
-   * HTML conversion runs only inside a real paste event. So a native paste is
-   * requested from Electron, as Obsidian's own context-menu Paste does, and the
-   * citation waits for that paste event.
+   * A command has no key press whose default action could paste. So the native
+   * paste is requested with {@link requestNativePaste}, and the citation waits
+   * for it.
    */
   async pasteWithChromiumSource(editor: Editor, info: MarkdownFileInfo) {
     const provider = this.chromiumClipboardProvider;
@@ -1779,15 +1795,9 @@ export default class PasteWithSourcePlugin extends Plugin {
     let plan = this.planPaste(editor);
     let pasted: Promise<boolean> | undefined;
     if (isNativePaste(plan)) {
-      const webContents = currentWebContents();
-      if (webContents) {
-        // Listen first, so the paste can't arrive before anyone is waiting for it.
-        pasted = nextPasteEvent(activeDocument, 1000);
-        webContents.paste();
-      } else {
-        // Without Electron's remote, Obsidian's own context-menu Paste falls back to plain text too.
-        plan = plan === "native+cite" ? "text+cite" : "text";
-      }
+      pasted = requestNativePaste();
+      // Without Electron's remote, Obsidian's own context-menu Paste falls back to plain text too.
+      if (!pasted) plan = plan === "native+cite" ? "text+cite" : "text";
     }
     await this.finishPaste(editor, info, plan, () => provider.getSourceUrl(), pasted);
   }
