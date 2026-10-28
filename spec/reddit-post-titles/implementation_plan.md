@@ -43,7 +43,7 @@ None at this time.
   - It reads the subreddit from the first `reddit.com/r/<name>` link in `html`, which carries the subreddit's own capitalization.
   - It returns undefined for anything that isn't JSON or has no title.
   - If a test against a real post shows oEmbed escapes HTML entities such as `&amp;` in `title`, it decodes them. Otherwise it leaves the title alone. The walkthrough will say which.
-- [ ] **TASK-3:** In `fetchPageTitle`, consult `redditTarget` first:
+- [x] **TASK-3:** In `fetchPageTitle`, consult `redditTarget` first:
   - **A subreddit** resolves to `r/<subreddit>` at once.
   - **A post** requests `https://www.reddit.com/oembed?url=<encodeURIComponent(postUrl)>` through the same `request` and timeout. On a 2xx response that `parseRedditOembed` accepts, it resolves to `<title> - r/<subreddit>`, using oEmbed's subreddit and falling back to the URL's. Otherwise it resolves to undefined. The generic HTML check is skipped, because oEmbed answers JSON.
   - **Anything else** keeps the current path, except that on a Reddit host a resulting title of exactly "Reddit", ignoring case, counts as undefined.

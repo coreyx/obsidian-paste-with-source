@@ -1420,6 +1420,12 @@ export type RedditTarget =
 /** The Reddit hosts that serve posts and subreddits at the same paths as www.reddit.com. */
 const REDDIT_SITE_HOSTS = new Set(["reddit.com", "www.reddit.com", "old.reddit.com", "new.reddit.com", "np.reddit.com", "m.reddit.com"]);
 
+/** Whether `hostname` is Reddit's, including its `redd.it` short links, which redirect to reddit.com. */
+function isRedditHost(hostname: string): boolean {
+  const host = hostname.toLowerCase();
+  return host === "reddit.com" || host.endsWith(".reddit.com") || host === "redd.it";
+}
+
 /**
  * Recognizes the Reddit pages that get a real title another way. Reddit answers a
  * plain request for a post or subreddit page with a JavaScript bot check whose
@@ -1478,19 +1484,31 @@ export function parseRedditOembed(text: string): { title: string; subreddit?: st
  * because of it. That covers: a URL that isn't http(s), a failed request, no answer
  * within `timeoutMs`, a non-2xx status, a response that isn't HTML, and a page
  * without a title.
+ *
+ * Reddit pages, which {@link redditTarget} recognizes, are the exception, since
+ * Reddit answers a plain request with a bot check titled just "Reddit":
+ * - A post, comment permalinks included, is titled `<post title> - r/<subreddit>`
+ *   from Reddit's oEmbed endpoint, through the same `request` and timeout. If
+ *   that fails, the result is undefined.
+ * - A subreddit's front page is titled `r/<subreddit>` from its URL, with no request.
+ * - Any other page on a Reddit host takes the usual path, but a title of just
+ *   "Reddit" counts as no title.
  */
 export async function fetchPageTitle(
   url: string,
   request: TitleRequester = requestPage,
   timeoutMs: number = TITLE_FETCH_TIMEOUT_MS
 ): Promise<string | undefined> {
-  let protocol: string;
+  let parsed: URL;
   try {
-    protocol = new URL(url).protocol;
+    parsed = new URL(url);
   } catch {
     return undefined;
   }
-  if (protocol !== "http:" && protocol !== "https:") return undefined;
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return undefined;
+
+  const reddit = redditTarget(url);
+  if (reddit?.kind === "subreddit") return `r/${reddit.subreddit}`;
 
   // requestUrl takes no timeout, so a server that never answers is cut off here instead.
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -1498,12 +1516,24 @@ export async function fetchPageTitle(
     timer = setTimeout(() => reject(new Error(`No response within ${timeoutMs} ms`)), timeoutMs);
   });
   try {
+    if (reddit) {
+      const oembedUrl = `https://www.reddit.com/oembed?url=${encodeURIComponent(reddit.postUrl)}`;
+      const response = await Promise.race([request(oembedUrl), timeout]);
+      if (response.status < 200 || response.status > 299) return undefined;
+      // oEmbed answers JSON, which is always UTF-8, so the HTML checks and decoding below don't apply.
+      const embed = parseRedditOembed(new TextDecoder("utf-8").decode(response.arrayBuffer));
+      return embed && `${embed.title} - r/${embed.subreddit ?? reddit.subreddit}`;
+    }
+
     const response = await Promise.race([request(url), timeout]);
     if (response.status < 200 || response.status > 299) return undefined;
     const contentType = getHeader(response.headers, "content-type");
     if (contentType !== undefined && !/html/i.test(contentType)) return undefined;
     const html = decodeHtml(response.arrayBuffer.slice(0, TITLE_PARSE_BYTES), contentType);
-    return extractPageTitle(html);
+    const title = extractPageTitle(html);
+    // Reddit's bot check, which a share link or a user page gets too, is titled just "Reddit".
+    if (title?.toLowerCase() === "reddit" && isRedditHost(parsed.hostname)) return undefined;
+    return title;
   } catch {
     return undefined;
   } finally {
