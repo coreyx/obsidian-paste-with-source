@@ -47,7 +47,7 @@ None at this time.
 ### Docs
 
 #### [MODIFY] `README.md`, `CHANGELOG.md`
-- [ ] **TASK-4:** Docs:
+- [x] **TASK-4:** Docs:
   - The README's **Commands & Menu Options** section says both entries paste the clipboard with Obsidian's own paste, then add the citation.
   - The CHANGELOG gets a `Fixed` entry under `[Unreleased]`.
 
