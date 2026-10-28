@@ -36,7 +36,7 @@ None at this time.
 ### Tests
 
 #### [MODIFY] `test-windows-clipboard.ts`
-- [ ] **TASK-3:** Add a "Default paste menu item" group using the existing `loadOn` fakes for `activeDocument`, `remote` and the delayed native paste:
+- [x] **TASK-3:** Add a "Default paste menu item" group using the existing `loadOn` fakes for `activeDocument`, `remote` and the delayed native paste:
   - The pasted content lands, and the citation comes after it.
   - With no source URL, the content lands and no citation is added.
   - With no `remote`, the plain text and the citation are inserted.

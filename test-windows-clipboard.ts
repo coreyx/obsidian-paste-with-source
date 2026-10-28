@@ -149,15 +149,22 @@ const HTML_WITH_SOURCE = "Version:0.9\r\nStartHTML:0\r\nSourceURL:https://html.e
    * `pasteMode` as stored. The cursor sits at the end of `line`. Electron's remote
    * paste is faked: it records a call, inserts NATIVE_PASTE and fires a paste event,
    * unless `pasteFires` is false, and `remote: false` leaves it out altogether.
-   * Runs the Chromium command and waits for its citation. Both providers'
-   * PowerShell fallbacks are stubbed, so nothing is spawned.
+   * Runs what `invoke` names, the Chromium command by default, and waits for its
+   * citation. Both providers' PowerShell fallbacks are stubbed, so nothing is spawned.
    */
   async function loadOn(
     platform: string,
     formats: Record<string, string>,
-    options: { setting?: boolean; pasteMode?: string; line?: string; remote?: boolean; pasteFires?: boolean } = {}
+    options: {
+      setting?: boolean;
+      pasteMode?: string;
+      line?: string;
+      remote?: boolean;
+      pasteFires?: boolean;
+      invoke?: "chromium" | "default-command" | "default-menu";
+    } = {}
   ) {
-    const { setting = false, pasteMode = "default+source", line = "", remote = true, pasteFires = true } = options;
+    const { setting = false, pasteMode = "default+source", line = "", remote = true, pasteFires = true, invoke = "chromium" } = options;
     const realPlatform = Object.getOwnPropertyDescriptor(process, "platform")!;
     Object.defineProperty(process, "platform", { value: platform, configurable: true });
     const inserted: string[] = [];
@@ -172,9 +179,14 @@ const HTML_WITH_SOURCE = "Version:0.9\r\nStartHTML:0\r\nSourceURL:https://html.e
       posToOffset: () => 0,
     };
     const commands: any[] = [];
+    const menuHandlers: Array<(menu: any, editor: any, info: any) => void> = [];
     const plugin = new PasteWithSourcePlugin({} as any, {} as any) as any;
     try {
-      plugin.app = { workspace: { activeEditor: { editor }, on: () => ({}) } };
+      const on = (name: string, handler: any) => {
+        if (name === "editor-menu") menuHandlers.push(handler);
+        return {};
+      };
+      plugin.app = { workspace: { activeEditor: { editor }, on } };
       plugin.loadData = async () => ({ readChromiumSourceUrl: setting, pasteMode });
       plugin.addSettingTab = () => {};
       plugin.addCommand = (command: any) => commands.push(command);
@@ -216,7 +228,27 @@ const HTML_WITH_SOURCE = "Version:0.9\r\nStartHTML:0\r\nSourceURL:https://html.e
     };
     (globalThis as any).activeWindow = remote ? { electron: { remote: { getCurrentWebContents: () => webContents } } } : {};
     const command = commands.find((c) => c.id === "paste-with-source-url-chromium");
-    if (command) await command.callback();
+    if (invoke === "chromium") {
+      if (command) await command.callback();
+    } else if (invoke === "default-command") {
+      await commands.find((c) => c.id === "paste-default-plus-source").callback();
+    } else {
+      // A stand-in for Obsidian's editor menu, collecting each item's title and click handler.
+      const items: any[] = [];
+      const menu = {
+        addItem: (build: (item: any) => void) => {
+          const item: any = {
+            setTitle: (title: string) => ((item.title = title), item),
+            setIcon: () => item,
+            onClick: (click: () => unknown) => ((item.click = click), item),
+          };
+          build(item);
+          items.push(item);
+        },
+      };
+      for (const handler of menuHandlers) handler(menu, editor, { editor });
+      await items.find((item) => item.title === "Paste (Default Handler) + Source URL").click();
+    }
     // A citation after a native paste waits 50 ms.
     await new Promise((resolve) => setTimeout(resolve, 80));
     return { command, inserted, plugin, electronPastes: () => electronPastes, focused: () => focused };
@@ -268,6 +300,40 @@ const HTML_WITH_SOURCE = "Version:0.9\r\nStartHTML:0\r\nSourceURL:https://html.e
     const { command, plugin } = await loadOn("darwin", PLAIN_TEXT_COPY);
     check("it isn't registered on macOS", command, undefined);
     check("... and there's no Chromium-only provider there", plugin.chromiumClipboardProvider, undefined);
+  }
+
+  console.log("\nDefault paste command and menu item");
+  const HTML_COPY = { "HTML Format": HTML_WITH_SOURCE };
+  const HTML_CITATION = "\n\nFrom: [https://html.example.com/page](https://html.example.com/page) – html.example.com";
+  {
+    const run = await loadOn("win32", HTML_COPY, { invoke: "default-menu" });
+    check("menu item: it focuses the editor and requests one Electron paste", [run.focused(), run.electronPastes()], [true, 1]);
+    check("... lets Obsidian paste, then adds the citation", run.inserted, [NATIVE_PASTE, HTML_CITATION]);
+  }
+  {
+    const run = await loadOn("win32", HTML_COPY, { invoke: "default-command" });
+    check("command: Obsidian's paste, then the citation", [run.inserted, run.electronPastes()], [[NATIVE_PASTE, HTML_CITATION], 1]);
+  }
+  {
+    const { inserted } = await loadOn("win32", {}, { invoke: "default-menu" });
+    check("with no source URL, Obsidian's paste still goes in, without a citation", inserted, [NATIVE_PASTE]);
+  }
+  {
+    const run = await loadOn("win32", HTML_COPY, { invoke: "default-menu", line: "see `code " });
+    check("inside inline code, the citation is still added", run.inserted, [NATIVE_PASTE, HTML_CITATION]);
+  }
+  {
+    const run = await loadOn("win32", HTML_COPY, { invoke: "default-menu", pasteMode: "clipboard+source" });
+    check("Paste Mode doesn't apply: still Obsidian's paste, then the citation", [run.inserted, run.electronPastes()],
+      [[NATIVE_PASTE, HTML_CITATION], 1]);
+  }
+  {
+    const run = await loadOn("win32", HTML_COPY, { invoke: "default-menu", remote: false });
+    check("without Electron's remote: the plain text, then the citation", run.inserted, [`pasted text${HTML_CITATION}`]);
+  }
+  {
+    const run = await loadOn("win32", HTML_COPY, { invoke: "default-menu", pasteFires: false });
+    check("when no paste event arrives: no citation", [run.inserted, run.electronPastes()], [[], 1]);
   }
 
   if (failures > 0) {
