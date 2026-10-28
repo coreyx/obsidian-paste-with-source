@@ -38,7 +38,7 @@ None at this time.
     - `postUrl` is rebuilt as `https://www.reddit.com/r/<subreddit>/comments/<id>/`, which drops the slug, the query string and the fragment.
   - **A subreddit**, `{ kind: "subreddit"; subreddit: string }`, for a path of exactly `/r/<subreddit>` with an optional trailing slash.
   - **`undefined`** for anything else, including other Reddit paths and other sites.
-- [ ] **TASK-2:** Add `parseRedditOembed(text: string): { title: string; subreddit?: string } | undefined`, documented in TSDoc.
+- [x] **TASK-2:** Add `parseRedditOembed(text: string): { title: string; subreddit?: string } | undefined`, documented in TSDoc.
   - It parses the JSON, and requires a non-empty string `title`, which it trims and whose whitespace it collapses.
   - It reads the subreddit from the first `reddit.com/r/<name>` link in `html`, which carries the subreddit's own capitalization.
   - It returns undefined for anything that isn't JSON or has no title.

@@ -1449,6 +1449,30 @@ export function redditTarget(url: string): RedditTarget | undefined {
 }
 
 /**
+ * Reads a post's title and subreddit from the JSON Reddit's oEmbed endpoint
+ * answers with. The title is plain text there, with no HTML escaping. The
+ * subreddit comes from the first subreddit link in the embed HTML, which carries
+ * the subreddit's own capitalization and names the post's real subreddit, even
+ * when the URL asked about named another. Gives undefined for anything that
+ * isn't JSON or has no title.
+ */
+export function parseRedditOembed(text: string): { title: string; subreddit?: string } | undefined {
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+  if (typeof data !== "object" || data === null) return undefined;
+  const { title, html } = data as { title?: unknown; html?: unknown };
+  if (typeof title !== "string") return undefined;
+  const cleaned = title.replace(/\s+/g, " ").trim();
+  if (!cleaned) return undefined;
+  const subreddit = typeof html === "string" ? html.match(/reddit\.com\/r\/(\w+)/i)?.[1] : undefined;
+  return subreddit ? { title: cleaned, subreddit } : { title: cleaned };
+}
+
+/**
  * Looks up the title of the page at `url`. It resolves to undefined rather than
  * throwing whenever there is no usable title, so a paste never waits on or fails
  * because of it. That covers: a URL that isn't http(s), a failed request, no answer
