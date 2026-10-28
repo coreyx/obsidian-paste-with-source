@@ -104,7 +104,7 @@ To update, replace the two files with the ones from a newer release.
 | `{url}` | Full origin URL | `https://en.wikipedia.org/wiki/Obsidian_(software)` |
 | `{domain}` | Hostname without `www.` | `en.wikipedia.org` |
 | `{page}` | Cleaned page/article name from URL path slug | `Obsidian (software)` |
-| `{title}` | The page's title, fetched from the page (its `og:title`, `twitter:title` or `<title>`). Shows the URL until the title arrives, or if it can't be read. Using it makes a network request | `Obsidian (software) - Wikipedia` |
+| `{title}` | The page's title, fetched from the page (its `og:title`, `twitter:title` or `<title>`). Shows the URL until the title arrives, or if it can't be read. A Reddit post reads `<post title> - r/<subreddit>` (see **Network Use**). Using it makes a network request | `Obsidian (software) - Wikipedia` |
 | `{path}` | Raw URL pathname | `/wiki/Obsidian_(software)` |
 | `{date}` | Current local date (`YYYY-MM-DD`) | `2026-09-11` |
 | `{time}` | Current local 24h time with timezone | `14:30 PDT` |
@@ -297,6 +297,7 @@ To show a page's real title, the plugin requests that page from its website. It 
 
 - **What is sent:** a single `GET` request for the copied page's URL, made through Obsidian when you paste. The site sees the request the way it would see a visit, and may log it. Nothing else is sent, and nothing goes anywhere but the copied page's own site.
 - **What is read:** only the page's title, from its `og:title`, `twitter:title` or `<title>`. The page is parsed without running any of its scripts or loading anything it links to.
+- **Reddit:** Reddit answers a request for a post with a bot check titled just "Reddit", so for a post, comment links included, the request goes to Reddit's oEmbed endpoint on `www.reddit.com` instead, and the citation reads `<post title> - r/<subreddit>`. A subreddit's front page is titled `r/<subreddit>` from its URL, with no request. Any other Reddit page, such as a share link or a user page, keeps the URL rather than the label "Reddit".
 - **While it loads:** the paste goes in at once, with the URL where the title will go, and the title replaces it when the page answers. If the page doesn't answer within 10 seconds, isn't HTML or has no title, the URL stays. If you edit the citation before the title arrives, it's left as you made it.
 - **To turn it off:** set **Link Label** to *Page name*, *URL* or *"Source"*, and don't use `{title}`. The plugin then makes no network requests at all.
 

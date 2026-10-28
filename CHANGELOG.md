@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Reddit Post Titles**: A citation for a Reddit post, or a comment on one, reads `<post title> - r/<subreddit>` in place of "Reddit". Reddit answers a plain request for a post with a bot check titled just "Reddit", so the title comes from Reddit's oEmbed endpoint instead. A subreddit's front page reads `r/<subreddit>`, taken from its URL with no request. Other Reddit pages, such as share links, keep the URL rather than the label "Reddit".
+
 ### Fixed
 - **Paste as Plain Text Is Left to Obsidian**: Ctrl+Shift+V, or Cmd+Shift+V on macOS, is Obsidian's "paste as plain text", and it was intercepted as if it were Ctrl+V. In *Default handler + source* mode the plain-text paste got a citation, and in *Paste content + source* mode the plugin took the paste over. Only Ctrl+V, Cmd+V and Shift+Insert are intercepted now, each with no other modifier held, so Ctrl+Shift+Insert is left alone too.
 - **Deleting a Preset Resets the Template Box**: **Delete Preset** selected the default preset, but left the deleted preset's text in the Citation Template box, so pastes kept using it. Deleting a preset now loads the default preset's template, as choosing it from the dropdown does. A Slot B or C that held the deleted preset goes back to its default.

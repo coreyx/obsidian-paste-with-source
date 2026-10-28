@@ -74,7 +74,7 @@ None at this time.
 ### Docs
 
 #### [MODIFY] `README.md`, `CHANGELOG.md`
-- [ ] **TASK-5:** Docs:
+- [x] **TASK-5:** Docs:
   - The README's **Network Use** section says Reddit post titles come from Reddit's oEmbed endpoint.
   - The **Link Label** row, or the template variables' `{title}` entry, notes the `<post title> - r/<subreddit>` form.
   - The CHANGELOG gets an `Added` entry under `[Unreleased]`.
