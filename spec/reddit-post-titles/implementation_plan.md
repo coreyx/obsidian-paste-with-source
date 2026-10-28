@@ -52,7 +52,7 @@ None at this time.
 ### Tests
 
 #### [MODIFY] `test-page-title.ts`
-- [ ] **TASK-4:** Add a "Reddit" group. All of it uses synthetic data, with names like `r/ExampleSub` and made-up titles, and the existing fake requester, so nothing goes over the network.
+- [x] **TASK-4:** Add a "Reddit" group. All of it uses synthetic data, with names like `r/ExampleSub` and made-up titles, and the existing fake requester, so nothing goes over the network.
   - **`redditTarget` recognizes:**
     - a post URL, and the post URL rebuilt from it
     - the host variants

@@ -15,7 +15,14 @@ Module.prototype.require = function (id: string, ...rest: any[]) {
 };
 
 import { JSDOM } from "jsdom";
-import PasteWithSourcePlugin, { decodeHtml, extractPageTitle, fetchPageTitle, PageResponse } from "./main";
+import PasteWithSourcePlugin, {
+  decodeHtml,
+  extractPageTitle,
+  fetchPageTitle,
+  PageResponse,
+  parseRedditOembed,
+  redditTarget,
+} from "./main";
 
 // Node has no DOM; extractPageTitle parses with whatever DOMParser is global, as it does in Obsidian.
 (globalThis as any).DOMParser = new JSDOM("").window.DOMParser;
@@ -179,6 +186,66 @@ const TITLE_LINK = "[Example Page](https://example.com/a)";
   check("a file: URL gives undefined", await fetchPageTitle("file:///C:/notes/page.html", local.request), undefined);
   check("a file: URL makes no request", local.calls(), 0);
   check("a malformed URL gives undefined", await fetchPageTitle("not a url", local.request), undefined);
+
+  console.log("\nReddit");
+  const POST = { kind: "post", postUrl: "https://www.reddit.com/r/ExampleSub/comments/abc123/", subreddit: "ExampleSub" };
+  check("a post URL is recognized, and its post URL rebuilt without the slug",
+    redditTarget("https://www.reddit.com/r/ExampleSub/comments/abc123/an_example_post/"), POST);
+  check("the host variants are recognized",
+    ["reddit.com", "old.reddit.com", "new.reddit.com", "np.reddit.com", "m.reddit.com"].map((host) =>
+      redditTarget(`https://${host}/r/ExampleSub/comments/abc123/`)), Array(5).fill(POST));
+  check("a comment permalink becomes its post",
+    redditTarget("https://www.reddit.com/r/ExampleSub/comments/abc123/an_example_post/def456/"), POST);
+  check("share-tracking parameters and the fragment are dropped",
+    redditTarget("https://www.reddit.com/r/ExampleSub/comments/abc123/x/?utm_source=share&utm_medium=web#top"), POST);
+  check("a subreddit page is recognized, with and without a trailing slash",
+    [redditTarget("https://www.reddit.com/r/ExampleSub"), redditTarget("https://www.reddit.com/r/ExampleSub/")],
+    Array(2).fill({ kind: "subreddit", subreddit: "ExampleSub" }));
+  check("a share link, a user page, a short link and another site aren't recognized",
+    ["https://www.reddit.com/r/ExampleSub/s/AbCdEf", "https://www.reddit.com/user/someone/", "https://redd.it/abc123",
+      "https://example.com/r/ExampleSub/comments/abc123/"].map(redditTarget), Array(4).fill(undefined));
+
+  /** An oEmbed answer for a post titled `title`, whose embed HTML links to the subreddit spelled `subreddit`. */
+  const oembed = (title: string, subreddit = "ExampleSub") => JSON.stringify({
+    type: "rich",
+    title,
+    html: `<blockquote><a href="https://www.reddit.com/r/${subreddit}/comments/abc123/x/">${title}</a> by ` +
+      `<a href="https://www.reddit.com/user/someone/">u/someone</a></blockquote>`,
+  });
+  check("an oEmbed answer gives its title, and the subreddit spelled as the embed HTML has it",
+    parseRedditOembed(oembed(' An  "Example"\n Post ')), { title: 'An "Example" Post', subreddit: "ExampleSub" });
+  check("an answer with no subreddit link gives just the title",
+    parseRedditOembed(JSON.stringify({ title: "An Example Post" })), { title: "An Example Post" });
+  check("malformed JSON, a missing title and a blank title give undefined",
+    ["<html>Not JSON</html>", JSON.stringify({ html: "<a></a>" }), JSON.stringify({ title: "  " }), "null"].map(parseRedditOembed),
+    Array(4).fill(undefined));
+
+  /** A requester that records each URL it's asked for, and answers with `response`. */
+  function recorder(response: Partial<PageResponse>) {
+    const urls: string[] = [];
+    return { request: async (url: string) => (urls.push(url), answer(response).request(url)), urls };
+  }
+  const embed = recorder({ headers: { "content-type": "application/json" }, arrayBuffer: bytes(oembed("An Example Post")) });
+  check("a post is titled from oEmbed, with the subreddit's own capitalization",
+    await fetchPageTitle("https://old.reddit.com/r/examplesub/comments/abc123/an_example_post/?utm_source=share", embed.request),
+    "An Example Post - r/ExampleSub");
+  check("... with one request, to the oEmbed URL for the rebuilt post URL", embed.urls,
+    ["https://www.reddit.com/oembed?url=https%3A%2F%2Fwww.reddit.com%2Fr%2Fexamplesub%2Fcomments%2Fabc123%2F"]);
+  const noLink = recorder({ arrayBuffer: bytes(JSON.stringify({ title: "An Example Post" })) });
+  check("with no subreddit link in the answer, the URL's subreddit is used",
+    await fetchPageTitle("https://www.reddit.com/r/ExampleSub/comments/abc123/", noLink.request), "An Example Post - r/ExampleSub");
+  const front = recorder({});
+  check("a subreddit page is titled from its URL", await fetchPageTitle("https://www.reddit.com/r/ExampleSub/", front.request),
+    "r/ExampleSub");
+  check("... with no request", front.urls, []);
+  check("a 404 from oEmbed gives undefined",
+    await fetchPageTitle("https://www.reddit.com/r/ExampleSub/comments/abc123/", answer({ status: 404 }).request), undefined);
+  const botCheck = { arrayBuffer: bytes("<html><head><title>Reddit</title></head></html>") };
+  check("a share link whose page is titled just \"Reddit\" gives undefined",
+    await fetchPageTitle("https://www.reddit.com/r/ExampleSub/s/AbCdEf", answer(botCheck).request), undefined);
+  check("... and so does a short link", await fetchPageTitle("https://redd.it/abc123", answer(botCheck).request), undefined);
+  check("another site's page titled \"Reddit\" keeps that title",
+    await fetchPageTitle("https://example.com/page", answer(botCheck).request), "Reddit");
 
   console.log("\nSettings loading");
   /** The linkLabel `stored` loads as, and whether the old toggle's key survived loading. */
