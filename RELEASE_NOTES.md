@@ -1,6 +1,27 @@
 # Release Notes: Paste with Source for Obsidian
 
-Welcome to **Paste with Source** (v1.7.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+Welcome to **Paste with Source** (v1.8.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+
+---
+
+## 🌟 What's New in Version 1.8.0: Real Reddit Titles and Smoother Pasting
+
+### 🧵 Reddit Posts Get Their Real Titles
+Pasting from a Reddit post used to give a citation labeled just "Reddit". It now reads the way the post appears on the site:
+
+```markdown
+From: [An Example Post - r/ExampleSub](https://www.reddit.com/r/ExampleSub/comments/…) – www.reddit.com
+```
+
+That works for comment links too, which get their post's title. A subreddit's front page reads `r/ExampleSub`, straight away. For any other Reddit page, such as a share link, the citation keeps the URL rather than the unhelpful "Reddit".
+
+Reddit answers a plain request for a post with a bot-check page, so the plugin asks Reddit's oEmbed service for the title instead. It's still a single request to reddit.com, made only when your citation uses the page title. If it fails, the URL stays, as it does for any page without a title.
+
+### 🐛 Fixed
+- **Paste (Default Handler) + Source URL now pastes.** The right-click item and its command **Paste (Default) + Source URL** used to add the citation without pasting anything. They now paste with Obsidian's own paste, links and formatting included, and then add the citation.
+- **Paste as plain text is left alone.** Ctrl+Shift+V (Cmd+Shift+V on macOS) is Obsidian's "paste as plain text", and the plugin was treating it as an ordinary paste. Only Ctrl+V, Cmd+V and Shift+Insert, pressed on their own, are intercepted now.
+- **Deleting a preset really switches back.** After **Delete Preset**, the template box kept the deleted preset's text, so pastes kept using it. It now loads the default preset, and a Slot B or C that held the deleted preset goes back to its default.
+- **The settings page stays put.** Choosing, saving or deleting a preset, or changing a slot, no longer jumps the settings page back to the top.
 
 ---
 
