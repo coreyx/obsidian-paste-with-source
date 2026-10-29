@@ -38,7 +38,7 @@ None at this time.
   - The method's TSDoc takes over the listener's current doc comment.
   - It adds that the same method listens in every window, and that it works there because it reads the focused editor rather than the window the key event came from.
 - [x] **TASK-2:** Add `listenForPasteShortcut(doc: Document): void`, documented in TSDoc. It registers `onPasteKeydown` for `keydown` on `doc` through `registerDomEvent`, so unloading the plugin removes the listener. It records `doc` in a `WeakSet<Document>`, named `pasteShortcutDocs`, and returns early for a document already in the set, so no window ever gets a second listener. A second listener would paste and cite twice.
-- [ ] **TASK-3:** In `onload`, set up the listeners:
+- [x] **TASK-3:** In `onload`, set up the listeners:
   - Call `listenForPasteShortcut(document)` where the `registerDomEvent` call is now.
   - Register `this.app.workspace.on("window-open", (_win, popout) => this.listenForPasteShortcut(popout.document))`, which covers each pop-out opened from then on.
   - In `this.app.workspace.onLayoutReady(…)`, call `this.app.workspace.iterateAllLeaves((leaf) => this.listenForPasteShortcut(leaf.getContainer().doc))`. This covers pop-outs that Obsidian restored with the workspace before the plugin loaded, and pop-outs already open when the plugin is turned on mid-session. If the layout is already ready, Obsidian runs the callback at once.
@@ -60,7 +60,7 @@ None at this time.
   5. A second `window-open` for the same document registers nothing.
 
 #### [MODIFY] `test-windows-clipboard.ts`
-- [ ] **TASK-5:** Give `loadOn`'s mocked workspace no-op `onLayoutReady` and `iterateAllLeaves`, so `onload` still runs. Its checks don't change.
+- [x] **TASK-5:** Give `loadOn`'s mocked workspace no-op `onLayoutReady` and `iterateAllLeaves`, so `onload` still runs. Its checks don't change.
 
 ### Docs
 

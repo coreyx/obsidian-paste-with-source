@@ -240,7 +240,7 @@ async function pressPaste(
 
   let keydown: ((event: any) => Promise<void>) | undefined;
   const plugin = new PasteWithSourcePlugin({} as any, {} as any) as any;
-  plugin.app = { workspace: { activeEditor: { editor }, on: () => ({}) } };
+  plugin.app = { workspace: { activeEditor: { editor }, on: () => ({}), onLayoutReady: () => {} } };
   plugin.loadData = async () => ({ pasteMode, guardedPasteFallback: fallback });
   plugin.addSettingTab = () => {};
   plugin.addCommand = () => {};

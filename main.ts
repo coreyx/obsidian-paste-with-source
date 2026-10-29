@@ -1690,7 +1690,16 @@ export default class PasteWithSourcePlugin extends Plugin {
       })
     );
 
-    this.registerDomEvent(document, "keydown", (event: KeyboardEvent) => this.onPasteKeydown(event));
+    this.listenForPasteShortcut(document);
+    // window-open fires only for windows that open after this registers, so the
+    // pop-outs Obsidian restored before the plugin loaded, or that were already open
+    // when it was turned on, are found from their leaves once the layout is ready.
+    this.registerEvent(
+      this.app.workspace.on("window-open", (_win, popout) => this.listenForPasteShortcut(popout.document))
+    );
+    this.app.workspace.onLayoutReady(() =>
+      this.app.workspace.iterateAllLeaves((leaf) => this.listenForPasteShortcut(leaf.getContainer().doc))
+    );
   }
 
   /**
