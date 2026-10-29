@@ -59,7 +59,22 @@ The build is deployed to the test vault. Reload the plugin, or restart Obsidian,
 5. **Restored pop-out:** Leave the pop-out open, quit Obsidian and reopen it. Then press Ctrl+V in the restored pop-out. It gets the citation, once.
 6. **Other fields:** In the pop-out, press Ctrl+V in the search box. Nothing is cited into the note.
 
-These steps hadn't been run yet when this walkthrough was written.
+### Results
+Check 2 was also run by hand in the test vault, and it passed: the paste in a pop-out got its citation.
+
+All six steps were also run against a copy of the test vault, in a separate instance of Obsidian with its own profile:
+- **Obsidian versions:** 1.13.7 for steps 1 to 4 and 6. Obsidian updated itself to 1.14.5 at the restart in step 5, so step 5 ran on 1.14.5.
+- **Input:** key presses and mouse clicks were real input events, sent over the Chrome DevTools Protocol.
+- **Clipboard:** a browser-style copy written with PowerShell, plain text plus CF_HTML with `SourceURL: https://example.com/`. Step 2 used a copy from a web page instead.
+
+1. **Main window: Passed.** Ctrl+V pasted the text, then `From: [Example Domain](https://example.com/) – example.com`. One Ctrl+Z removed both.
+2. **Pop-out: Passed.** In a pop-out opened from the main window, Ctrl+V pasted once and added the "From: …" line.
+3. **Clipboard + Source in a pop-out: Passed.**
+   - Copying `A <b>bold</b> claim.` pasted the plain text `A bold claim.` with its citation, so the plugin handled the paste. Obsidian's own paste would have kept the bold.
+   - With the cursor inside inline code, and the setting on Obsidian's paste, the paste was left to Obsidian (`**bold**` came through) and got no citation.
+4. **Menu in a pop-out: Passed.** Right-clicking in the pop-out and choosing **Paste (Default Handler) + Source URL** pasted, then added the citation.
+5. **Restored pop-out: Passed.** After the layout was saved and Obsidian quit and relaunched, the pop-out came back with its note. Ctrl+V there pasted once and cited once.
+6. **Other fields: Passed.** In the pop-out, Ctrl+V in the note's Find box pasted into the box, and the note was unchanged.
 
 ## Follow-ups
 None.
