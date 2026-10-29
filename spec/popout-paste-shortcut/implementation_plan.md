@@ -65,7 +65,7 @@ None at this time.
 ### Docs
 
 #### [MODIFY] `CHANGELOG.md`
-- [ ] **TASK-6:** Add a `Fixed` entry under `[Unreleased]`: the paste shortcut adds a citation in pop-out windows too (#1).
+- [x] **TASK-6:** Add a `Fixed` entry under `[Unreleased]`: the paste shortcut adds a citation in pop-out windows too (#1).
 
 ## Verification Plan
 
