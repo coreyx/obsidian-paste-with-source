@@ -1,6 +1,15 @@
 # Release Notes: Paste with Source for Obsidian
 
-Welcome to **Paste with Source** (v1.8.0), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+Welcome to **Paste with Source** (v1.8.1), an Obsidian Desktop plugin that captures the origin URL of copied web content and appends formatted citations directly into your markdown notes.
+
+---
+
+## 🌟 What's New in Version 1.8.1: Citations in Pop-Out Windows
+
+### 🪟 The Paste Shortcut Works in Every Window
+Pressing Ctrl+V (Cmd+V on macOS, or Shift+Insert) in a note in a pop-out window used to paste without a citation. That covers a tab dragged out of the main window, or one opened with **Move to new window**. In *Paste content + source* mode, the plugin didn't handle the paste at all. The plugin was only listening for the shortcut in the main window.
+
+It now listens in every window, including pop-outs that Obsidian reopens when it starts. A paste in a pop-out behaves the same as in the main window, including how pastes inside code and links are handled. Reported in [#1](https://github.com/coreyx/obsidian-paste-with-source/issues/1).
 
 ---
 

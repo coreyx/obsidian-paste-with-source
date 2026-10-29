@@ -9,11 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- **Paste Shortcut Works in Pop-Out Windows**: A Ctrl+V, Cmd+V or Shift+Insert in a note in a pop-out window, a tab dragged out of the main window or opened with **Move to new window**, pasted with no citation. In *Paste content + source* mode it wasn't intercepted at all. The plugin listened for the shortcut only in the main window. It now listens in every pop-out too, including pop-outs restored when Obsidian starts, so a paste there behaves as it does in the main window. ([#1](https://github.com/coreyx/obsidian-paste-with-source/issues/1))
-
 ### Planned
 - Direct Chromium/Edge browser extension companion integration.
+
+---
+
+## [1.8.1] - 2026-10-29
+
+### Fixed
+- **Paste Shortcut Works in Pop-Out Windows**: A Ctrl+V, Cmd+V or Shift+Insert in a note in a pop-out window, a tab dragged out of the main window or opened with **Move to new window**, pasted with no citation. In *Paste content + source* mode it wasn't intercepted at all. The plugin listened for the shortcut only in the main window. It now listens in every pop-out too, including pop-outs restored when Obsidian starts, so a paste there behaves as it does in the main window. ([#1](https://github.com/coreyx/obsidian-paste-with-source/issues/1))
 
 ---
 
