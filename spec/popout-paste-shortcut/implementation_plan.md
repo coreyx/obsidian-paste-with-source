@@ -47,7 +47,7 @@ None at this time.
 ### Tests
 
 #### [MODIFY] `test-paste-guard.ts`
-- [ ] **TASK-4:** Record every `registerDomEvent` call as a `(target, type, callback)` triple, and give the mocked workspace `on` and `onLayoutReady`.
+- [x] **TASK-4:** Record every `registerDomEvent` call as a `(target, type, callback)` triple, and give the mocked workspace `on` and `onLayoutReady`.
   - The mock `on` keeps the `window-open` handler.
   - The mock `onLayoutReady` keeps its callback, and a fake `iterateAllLeaves` serves leaves whose `getContainer().doc` is a chosen document.
   - The existing `pressPaste` checks keep working: they use the keydown listener on the main `document`.
