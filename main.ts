@@ -1688,36 +1688,42 @@ export default class PasteWithSourcePlugin extends Plugin {
       })
     );
 
-    /**
-     * Intercepts the paste shortcut to add a citation. The cursor position and
-     * preventDefault() are both decided before the first await: the browser
-     * runs its default action as soon as this listener yields, so a later
-     * preventDefault() cannot stop Obsidian's own paste, and once that paste
-     * runs it moves the cursor away from where the content lands. The editor
-     * must also have keyboard focus, because activeEditor follows the active
-     * view rather than focus: without the check, a paste into the search box or
-     * a settings field would be redirected into, or cited onto, the note.
-     */
-    this.registerDomEvent(document, "keydown", async (event: KeyboardEvent) => {
-      if (!this.settings.interceptPaste) return;
+    this.registerDomEvent(document, "keydown", (event: KeyboardEvent) => this.onPasteKeydown(event));
+  }
 
-      const shortcut = pasteShortcut(event, process.platform === "darwin");
-      const shouldIntercept =
-        (this.settings.interceptShortcut === "both" && shortcut !== null) ||
-        (this.settings.interceptShortcut === "ctrl+v" && shortcut === "v") ||
-        (this.settings.interceptShortcut === "shift+insert" && shortcut === "shift+insert");
+  /**
+   * Intercepts the paste shortcut to add a citation. The cursor position and
+   * preventDefault() are both decided before the first await: the browser
+   * runs its default action as soon as this listener yields, so a later
+   * preventDefault() cannot stop Obsidian's own paste, and once that paste
+   * runs it moves the cursor away from where the content lands. The editor
+   * must also have keyboard focus, because activeEditor follows the active
+   * view rather than focus: without the check, a paste into the search box or
+   * a settings field would be redirected into, or cited onto, the note.
+   *
+   * The same method listens in every window, the main one and each pop-out. It
+   * works in any of them because it acts on the focused editor and the active
+   * window, never on the window the key event came from.
+   */
+  async onPasteKeydown(event: KeyboardEvent): Promise<void> {
+    if (!this.settings.interceptPaste) return;
 
-      if (!shouldIntercept) return;
+    const shortcut = pasteShortcut(event, process.platform === "darwin");
+    const shouldIntercept =
+      (this.settings.interceptShortcut === "both" && shortcut !== null) ||
+      (this.settings.interceptShortcut === "ctrl+v" && shortcut === "v") ||
+      (this.settings.interceptShortcut === "shift+insert" && shortcut === "shift+insert");
 
-      const info = this.app.workspace.activeEditor;
-      const editor = info?.editor;
-      if (!info || !editor || !editor.hasFocus()) return;
+    if (!shouldIntercept) return;
 
-      const plan = this.planPaste(editor);
-      // Leaving the default action alone is what lets Obsidian's own paste run.
-      if (!isNativePaste(plan)) event.preventDefault();
-      await this.finishPaste(editor, info, plan, () => this.getClipboardSourceUrl());
-    });
+    const info = this.app.workspace.activeEditor;
+    const editor = info?.editor;
+    if (!info || !editor || !editor.hasFocus()) return;
+
+    const plan = this.planPaste(editor);
+    // Leaving the default action alone is what lets Obsidian's own paste run.
+    if (!isNativePaste(plan)) event.preventDefault();
+    await this.finishPaste(editor, info, plan, () => this.getClipboardSourceUrl());
   }
 
   /**

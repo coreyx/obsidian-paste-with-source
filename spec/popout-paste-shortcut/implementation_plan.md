@@ -34,7 +34,7 @@ None at this time.
 ### Paste shortcut listener
 
 #### [MODIFY] `main.ts`
-- [ ] **TASK-1:** Move the keydown listener's body out of `onload` into a method, `onPasteKeydown(event: KeyboardEvent): Promise<void>`. The body doesn't change.
+- [x] **TASK-1:** Move the keydown listener's body out of `onload` into a method, `onPasteKeydown(event: KeyboardEvent): Promise<void>`. The body doesn't change.
   - The method's TSDoc takes over the listener's current doc comment.
   - It adds that the same method listens in every window, and that it works there because it reads the focused editor rather than the window the key event came from.
 - [ ] **TASK-2:** Add `listenForPasteShortcut(doc: Document): void`, documented in TSDoc. It registers `onPasteKeydown` for `keydown` on `doc` through `registerDomEvent`, so unloading the plugin removes the listener. It records `doc` in a `WeakSet<Document>`, named `pasteShortcutDocs`, and returns early for a document already in the set, so no window ever gets a second listener. A second listener would paste and cite twice.
