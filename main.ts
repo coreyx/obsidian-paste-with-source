@@ -1583,6 +1583,8 @@ export default class PasteWithSourcePlugin extends Plugin {
   settingTab!: PasteWithSourceSettingTab;
   /** Looks up a page title for a pasted citation. Tests replace it so nothing goes over the network. */
   titleFetcher: (url: string) => Promise<string | undefined> = (url) => fetchPageTitle(url);
+  /** The documents whose paste shortcut is already intercepted, one per window. */
+  pasteShortcutDocs = new WeakSet<Document>();
 
   async onload() {
     await this.loadSettings();
@@ -1688,36 +1690,64 @@ export default class PasteWithSourcePlugin extends Plugin {
       })
     );
 
-    /**
-     * Intercepts the paste shortcut to add a citation. The cursor position and
-     * preventDefault() are both decided before the first await: the browser
-     * runs its default action as soon as this listener yields, so a later
-     * preventDefault() cannot stop Obsidian's own paste, and once that paste
-     * runs it moves the cursor away from where the content lands. The editor
-     * must also have keyboard focus, because activeEditor follows the active
-     * view rather than focus: without the check, a paste into the search box or
-     * a settings field would be redirected into, or cited onto, the note.
-     */
-    this.registerDomEvent(document, "keydown", async (event: KeyboardEvent) => {
-      if (!this.settings.interceptPaste) return;
+    this.listenForPasteShortcut(document);
+    // window-open fires only for windows that open after this registers, so the
+    // pop-outs Obsidian restored before the plugin loaded, or that were already open
+    // when it was turned on, are found from their leaves once the layout is ready.
+    this.registerEvent(
+      this.app.workspace.on("window-open", (_win, popout) => this.listenForPasteShortcut(popout.document))
+    );
+    this.app.workspace.onLayoutReady(() =>
+      this.app.workspace.iterateAllLeaves((leaf) => this.listenForPasteShortcut(leaf.getContainer().doc))
+    );
+  }
 
-      const shortcut = pasteShortcut(event, process.platform === "darwin");
-      const shouldIntercept =
-        (this.settings.interceptShortcut === "both" && shortcut !== null) ||
-        (this.settings.interceptShortcut === "ctrl+v" && shortcut === "v") ||
-        (this.settings.interceptShortcut === "shift+insert" && shortcut === "shift+insert");
+  /**
+   * Intercepts the paste shortcut in the window that owns `doc`. Each window,
+   * the main one or a pop-out, has its own document, and a key press reaches
+   * only its own window's listeners. A document already listened to is skipped:
+   * a second listener would paste and cite twice. The listener is registered
+   * through the plugin, so unloading the plugin removes it.
+   */
+  listenForPasteShortcut(doc: Document): void {
+    if (this.pasteShortcutDocs.has(doc)) return;
+    this.pasteShortcutDocs.add(doc);
+    this.registerDomEvent(doc, "keydown", (event: KeyboardEvent) => this.onPasteKeydown(event));
+  }
 
-      if (!shouldIntercept) return;
+  /**
+   * Intercepts the paste shortcut to add a citation. The cursor position and
+   * preventDefault() are both decided before the first await: the browser
+   * runs its default action as soon as this listener yields, so a later
+   * preventDefault() cannot stop Obsidian's own paste, and once that paste
+   * runs it moves the cursor away from where the content lands. The editor
+   * must also have keyboard focus, because activeEditor follows the active
+   * view rather than focus: without the check, a paste into the search box or
+   * a settings field would be redirected into, or cited onto, the note.
+   *
+   * The same method listens in every window, the main one and each pop-out. It
+   * works in any of them because it acts on the focused editor and the active
+   * window, never on the window the key event came from.
+   */
+  async onPasteKeydown(event: KeyboardEvent): Promise<void> {
+    if (!this.settings.interceptPaste) return;
 
-      const info = this.app.workspace.activeEditor;
-      const editor = info?.editor;
-      if (!info || !editor || !editor.hasFocus()) return;
+    const shortcut = pasteShortcut(event, process.platform === "darwin");
+    const shouldIntercept =
+      (this.settings.interceptShortcut === "both" && shortcut !== null) ||
+      (this.settings.interceptShortcut === "ctrl+v" && shortcut === "v") ||
+      (this.settings.interceptShortcut === "shift+insert" && shortcut === "shift+insert");
 
-      const plan = this.planPaste(editor);
-      // Leaving the default action alone is what lets Obsidian's own paste run.
-      if (!isNativePaste(plan)) event.preventDefault();
-      await this.finishPaste(editor, info, plan, () => this.getClipboardSourceUrl());
-    });
+    if (!shouldIntercept) return;
+
+    const info = this.app.workspace.activeEditor;
+    const editor = info?.editor;
+    if (!info || !editor || !editor.hasFocus()) return;
+
+    const plan = this.planPaste(editor);
+    // Leaving the default action alone is what lets Obsidian's own paste run.
+    if (!isNativePaste(plan)) event.preventDefault();
+    await this.finishPaste(editor, info, plan, () => this.getClipboardSourceUrl());
   }
 
   /**

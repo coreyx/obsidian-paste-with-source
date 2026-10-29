@@ -210,21 +210,23 @@ const IS_MAC = process.platform === "darwin";
 /** This platform's paste shortcut: Cmd+V on macOS, Ctrl+V elsewhere. */
 const PASTE_V: Keys = IS_MAC ? { key: "v", metaKey: true } : { key: "v", ctrlKey: true };
 
+/** A DOM listener the plugin registered: what it listens on, for which event, and the callback. */
+type DomListener = { target: unknown; type: string; callback: (event: any) => Promise<void> };
+
 /**
- * Loads the plugin with stubbed Obsidian APIs, presses `keys` (this platform's
- * paste shortcut by default) with the cursor at the `|` in `text`, and reports
- * whether preventDefault() ran before the listener first yielded (the only
- * point at which it can still stop Obsidian's paste) and what the plugin
- * inserted. `focused: false` simulates the key being pressed in another field
- * while the note is the active view.
+ * Loads the plugin with stubbed Obsidian APIs and the cursor at the `|` in
+ * `text`. `focused: false` simulates the key being pressed in another field
+ * while the note is the active view. Every DOM listener the plugin registers is
+ * recorded, and the workspace's `window-open` handler and layout-ready callback
+ * are kept, so a test can open pop-out windows and finish loading the layout
+ * over the documents in `leafDocs`, one per leaf.
  */
-async function pressPaste(
+async function loadPlugin(
   text: string,
   pasteMode: "default+source" | "clipboard+source",
   fallback: "native" | "plain",
-  focused = true,
-  keys: Keys = PASTE_V
-): Promise<{ preventedBeforeYield: boolean; inserted: string[] }> {
+  focused = true
+) {
   const cursor = text.indexOf("|");
   const lines = (text.slice(0, cursor) + text.slice(cursor + 1)).split("\n");
   const position = { line: text.slice(0, cursor).split("\n").length - 1, ch: cursor - text.lastIndexOf("\n", cursor - 1) - 1 };
@@ -238,17 +240,31 @@ async function pressPaste(
     posToOffset: () => 0,
   };
 
-  let keydown: ((event: any) => Promise<void>) | undefined;
+  const listeners: DomListener[] = [];
+  const windowOpenHandlers: Array<(win: unknown, popout: { document: unknown }) => void> = [];
+  const layoutReadyCallbacks: Array<() => void> = [];
+  const leafDocs: unknown[] = [];
+  const mainDocument = {};
   const plugin = new PasteWithSourcePlugin({} as any, {} as any) as any;
-  plugin.app = { workspace: { activeEditor: { editor }, on: () => ({}) } };
+  plugin.app = {
+    workspace: {
+      activeEditor: { editor },
+      on: (name: string, handler: any) => {
+        if (name === "window-open") windowOpenHandlers.push(handler);
+        return {};
+      },
+      onLayoutReady: (callback: () => void) => layoutReadyCallbacks.push(callback),
+      iterateAllLeaves: (callback: (leaf: any) => void) => {
+        for (const doc of leafDocs) callback({ getContainer: () => ({ doc }) });
+      },
+    },
+  };
   plugin.loadData = async () => ({ pasteMode, guardedPasteFallback: fallback });
   plugin.addSettingTab = () => {};
   plugin.addCommand = () => {};
   plugin.registerEvent = () => {};
-  plugin.registerDomEvent = (_el: unknown, type: string, callback: any) => {
-    if (type === "keydown") keydown = callback;
-  };
-  (globalThis as any).document = {};
+  plugin.registerDomEvent = (target: unknown, type: string, callback: any) => listeners.push({ target, type, callback });
+  (globalThis as any).document = mainDocument;
   await plugin.onload();
   plugin.getClipboardSourceUrl = async () => "https://example.com";
   plugin.renderCitation = () => " + cite";
@@ -259,8 +275,27 @@ async function pressPaste(
     configurable: true,
   });
 
+  return {
+    inserted,
+    mainDocument,
+    leafDocs,
+    /** The keydown listeners registered on `target`. */
+    keydownsOn: (target: unknown) => listeners.filter((l) => l.target === target && l.type === "keydown"),
+    /** Opens a pop-out window whose document is `doc`, as Obsidian's `window-open` would announce it. */
+    openWindow: (doc: unknown) => windowOpenHandlers.forEach((handler) => handler({}, { document: doc })),
+    /** Finishes loading the layout, running whatever the plugin queued for then. */
+    layoutReady: () => layoutReadyCallbacks.forEach((callback) => callback()),
+  };
+}
+
+/**
+ * Presses `keys` (this platform's paste shortcut by default) through `listener`
+ * and reports whether preventDefault() ran before the listener first yielded
+ * (the only point at which it can still stop Obsidian's paste).
+ */
+async function press(listener: DomListener, keys: Keys = PASTE_V): Promise<boolean> {
   let prevented = false;
-  const pending = keydown!({
+  const pending = listener.callback({
     ctrlKey: false,
     metaKey: false,
     shiftKey: false,
@@ -272,7 +307,30 @@ async function pressPaste(
   await pending;
   // default+source inserts its citation on a 50 ms timer, after Obsidian's paste.
   await new Promise((resolve) => setTimeout(resolve, 80));
-  return { preventedBeforeYield, inserted };
+  return preventedBeforeYield;
+}
+
+/**
+ * Loads the plugin, presses `keys` in the main window with the cursor at the `|`
+ * in `text`, and reports whether preventDefault() ran before the listener first
+ * yielded and what the plugin inserted.
+ */
+async function pressPaste(
+  text: string,
+  pasteMode: "default+source" | "clipboard+source",
+  fallback: "native" | "plain",
+  focused = true,
+  keys: Keys = PASTE_V
+): Promise<{ preventedBeforeYield: boolean; inserted: string[] }> {
+  const loaded = await loadPlugin(text, pasteMode, fallback, focused);
+  const preventedBeforeYield = await press(loaded.keydownsOn(loaded.mainDocument)[0], keys);
+  return { preventedBeforeYield, inserted: loaded.inserted };
+}
+
+/** Records one check's result, counting a failure, and prints it. */
+function check(name: string, ok: boolean, detail = ""): void {
+  if (!ok) failures++;
+  console.log(`  [${ok ? "PASS" : "FAIL"}] ${name}${ok ? "" : ` (${detail})`}`);
 }
 
 (async () => {
@@ -362,6 +420,58 @@ async function pressPaste(
     const ok = result.preventedBeforeYield === c.prevented && JSON.stringify(result.inserted) === JSON.stringify(c.inserted);
     if (!ok) failures++;
     console.log(`  [${ok ? "PASS" : "FAIL"}] ${c.name}${ok ? "" : ` (got ${JSON.stringify(result)})`}`);
+  }
+
+  console.log("\nPop-out windows");
+  {
+    const loaded = await loadPlugin("see |", "default+source", "native");
+    const count = loaded.keydownsOn(loaded.mainDocument).length;
+    check("loading listens on the main window's document, once", count === 1, `got ${count}`);
+  }
+  {
+    const loaded = await loadPlugin("see |", "default+source", "native");
+    const popout = {};
+    loaded.openWindow(popout);
+    const count = loaded.keydownsOn(popout).length;
+    check("a pop-out window that opens gets one listener", count === 1, `got ${count}`);
+  }
+  for (const [mode, prevented, inserted] of [
+    ["default+source", false, [" + cite"]],
+    ["clipboard+source", true, ["pasted text + cite"]],
+  ] as const) {
+    const loaded = await loadPlugin("see |", mode, "native");
+    const popout = {};
+    loaded.openWindow(popout);
+    const got = await press(loaded.keydownsOn(popout)[0]);
+    const ok = got === prevented && JSON.stringify(loaded.inserted) === JSON.stringify(inserted);
+    check(
+      `${mode}: a paste in a pop-out is handled as in the main window`,
+      ok,
+      `prevented ${got}, inserted ${JSON.stringify(loaded.inserted)}`
+    );
+  }
+  {
+    const loaded = await loadPlugin("see |", "default+source", "native");
+    const opened = {};
+    const restored = {};
+    loaded.openWindow(opened);
+    // Two leaves in the main window, one in a pop-out already listened to, two in a restored pop-out.
+    loaded.leafDocs.push(loaded.mainDocument, loaded.mainDocument, opened, restored, restored);
+    loaded.layoutReady();
+    const counts = [loaded.mainDocument, opened, restored].map((doc) => loaded.keydownsOn(doc).length);
+    check(
+      "layout-ready listens on a restored pop-out, and nowhere twice",
+      JSON.stringify(counts) === "[1,1,1]",
+      `main, opened, restored: ${counts}`
+    );
+  }
+  {
+    const loaded = await loadPlugin("see |", "default+source", "native");
+    const popout = {};
+    loaded.openWindow(popout);
+    loaded.openWindow(popout);
+    const count = loaded.keydownsOn(popout).length;
+    check("the same window announced twice gets one listener", count === 1, `got ${count}`);
   }
 
   if (failures > 0) {

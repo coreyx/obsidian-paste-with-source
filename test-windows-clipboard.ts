@@ -186,7 +186,7 @@ const HTML_WITH_SOURCE = "Version:0.9\r\nStartHTML:0\r\nSourceURL:https://html.e
         if (name === "editor-menu") menuHandlers.push(handler);
         return {};
       };
-      plugin.app = { workspace: { activeEditor: { editor }, on } };
+      plugin.app = { workspace: { activeEditor: { editor }, on, onLayoutReady: () => {}, iterateAllLeaves: () => {} } };
       plugin.loadData = async () => ({ readChromiumSourceUrl: setting, pasteMode });
       plugin.addSettingTab = () => {};
       plugin.addCommand = (command: any) => commands.push(command);
