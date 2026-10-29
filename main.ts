@@ -1583,6 +1583,8 @@ export default class PasteWithSourcePlugin extends Plugin {
   settingTab!: PasteWithSourceSettingTab;
   /** Looks up a page title for a pasted citation. Tests replace it so nothing goes over the network. */
   titleFetcher: (url: string) => Promise<string | undefined> = (url) => fetchPageTitle(url);
+  /** The documents whose paste shortcut is already intercepted, one per window. */
+  pasteShortcutDocs = new WeakSet<Document>();
 
   async onload() {
     await this.loadSettings();
@@ -1689,6 +1691,19 @@ export default class PasteWithSourcePlugin extends Plugin {
     );
 
     this.registerDomEvent(document, "keydown", (event: KeyboardEvent) => this.onPasteKeydown(event));
+  }
+
+  /**
+   * Intercepts the paste shortcut in the window that owns `doc`. Each window,
+   * the main one or a pop-out, has its own document, and a key press reaches
+   * only its own window's listeners. A document already listened to is skipped:
+   * a second listener would paste and cite twice. The listener is registered
+   * through the plugin, so unloading the plugin removes it.
+   */
+  listenForPasteShortcut(doc: Document): void {
+    if (this.pasteShortcutDocs.has(doc)) return;
+    this.pasteShortcutDocs.add(doc);
+    this.registerDomEvent(doc, "keydown", (event: KeyboardEvent) => this.onPasteKeydown(event));
   }
 
   /**
